@@ -1,0 +1,35 @@
+{
+	"_comment": "STARTING DESIGN DATA for the VSK archery front-end — the editable single source of truth for the colour palette and font choices. Any agent (or human) can edit this file to retune the theme. Values feed the global CSS custom properties / SCSS tokens set up in the foundation layer. Colours sourced from the old VSK site (VSK-archeryClub repo, --header-clr #102E66) with the user's adjustments (discard old #252432 main bg; use a darker navy derived from the footer). Fonts: user reviews visually, so a candidate list is kept here and the `active` one is applied.",
+	"_status": "INITIAL 2026-06-05 — starting values; expect to retune visually.",
+
+	"colors": {
+		"_note": "active palette. bgPrimary is intentionally DARKER than the footer per the user (try-for-now). Edit freely.",
+		"bgPrimary": "#0B1F45",
+		"footer": "#102E66",
+		"accentGold": "#efb52f",
+		"link": "#2352A7",
+		"bgLight": "#eee",
+		"bgSecondary": "#f8f8f8",
+
+		"_sourceReference": {
+			"_note": "original values pulled from the old VSK site (general/VSK-archeryClub/style.css) for reference; not necessarily used.",
+			"oldHeaderClr": "#102E66",
+			"oldSecondaryBlue": "#2352A7",
+			"oldMainBgDiscarded": "#252432",
+			"oldAccentGold": "#efb52f",
+			"oldGoldAlt": "#FFBA3A",
+			"oldRed": "#cd122d",
+			"oldRedAlt": "#ee1737"
+		}
+	},
+
+	"fonts": {
+		"_note": "active = the font currently applied. candidates = the shortlist to try visually. Google Fonts unless noted. Add/remove freely; switch `active` to test another.",
+		"active": "Inter",
+		"candidates": [
+			{ "name": "Inter", "source": "Google Fonts", "use": "clean neutral body + headings; current pick", "googleFamily": "Inter:wght@400;500;600;700;800" },
+			{ "name": "Oswald", "source": "Google Fonts", "use": "condensed sporty headings (RM/FCB feel); pair with a neutral body", "googleFamily": "Oswald:wght@400;500;600;700" },
+			{ "name": "Archivo", "source": "Google Fonts", "use": "modern grotesque; versatile headings + body", "googleFamily": "Archivo:wght@400;500;600;700;800" }
+		]
+	}
+}
