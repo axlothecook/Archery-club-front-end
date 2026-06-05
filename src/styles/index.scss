@@ -11,7 +11,7 @@
 // ---------------------------------------------------------------------------
 // 1. Library variable overrides (must come BEFORE the @import).
 // ---------------------------------------------------------------------------
-$light-bg-primary: #0b1f45; // page background (dark navy, derived from footer)
+$light-bg-primary: #102e66; // page background (navy — swapped with footer)
 $text: #f3f5f8; // ink (body text) — light, for the dark bg
 
 @import 'axlothecook-sass-library/sass-library/index.scss';
@@ -22,8 +22,8 @@ $text: #f3f5f8; // ink (body text) — light, for the dark bg
 // ---------------------------------------------------------------------------
 :root {
 	// --- colours (from starting-data.json) ---
-	--color-bg: #0b1f45; // page background (dark navy)
-	--color-footer: #102e66; // footer navy (lighter than bg, per user)
+	--color-bg: #102e66; // page background (navy — swapped with footer)
+	--color-footer: #0b1f45; // footer navy (dark — swapped with page bg)
 	--color-accent: #efb52f; // accent gold
 	--color-link: #2352a7; // link / interactive blue
 	--color-bg-light: #eee; // light surface

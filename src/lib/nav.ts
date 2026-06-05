@@ -12,7 +12,7 @@ export type NavLink = {
 // Top bar primary links (besides the menu button, the centred logo, and the
 // locale switcher, which the TopBar component renders directly).
 export const TOP_BAR_LINKS = {
-	left: [{ label: 'Najnovije', href: '/najnovije' }] satisfies NavLink[],
+	left: [{ label: 'Vijesti', href: '/najnovije' }] satisfies NavLink[],
 	right: [
 		{ label: 'Momčad', href: '/momcad' },
 		{ label: 'Raspored', href: '/raspored' }
@@ -45,12 +45,57 @@ export const MENU_GROUPS: { heading?: string; links: NavLink[] }[] = [
 	}
 ];
 
-// Locale switcher — flags only (per design). hr is fully populated; others fall
-// back to hr until translated, but we still show the chosen set of flags.
-export const LOCALE_FLAGS: { locale: string; flag: string; label: string }[] = [
-	{ locale: 'hr', flag: '🇭🇷', label: 'Hrvatski' },
-	{ locale: 'en', flag: '🇬🇧', label: 'English' },
-	{ locale: 'de', flag: '🇩🇪', label: 'Deutsch' },
-	{ locale: 'it', flag: '🇮🇹', label: 'Italiano' },
-	{ locale: 'sl', flag: '🇸🇮', label: 'Slovenščina' }
+// Footer columns (RM-style spacing). The social links + sponsor logos render
+// separately (sponsors fetched from the API; socials from ClubInfo).
+export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
+	{
+		heading: 'Klub',
+		links: [
+			{ label: 'Vijesti', href: '/najnovije' },
+			{ label: 'Momčad', href: '/momcad' },
+			{ label: 'Raspored', href: '/raspored' },
+			{ label: 'Sponzori', href: '/sponzori' }
+		]
+	},
+	{
+		heading: 'O klubu',
+		links: [
+			{ label: 'Postignuća', href: '/postignuca' },
+			{ label: 'Povijest', href: '/klub/povijest' },
+			{ label: 'Grb', href: '/klub/identitet/grb' },
+			{ label: 'Dres', href: '/klub/identitet/dres' },
+			{ label: 'Vrijednosti', href: '/klub/identitet' }
+		]
+	},
+	{
+		heading: 'Usluge',
+		links: [
+			{ label: 'Kontakt', href: '/kontakt' },
+			{ label: 'Učlanjenje', href: '/uclanjenje' }
+		]
+	}
+];
+
+// Bottom-bar legal links — placeholders until the legal pages are built.
+export const FOOTER_LEGAL: NavLink[] = [
+	{ label: 'Pravni uvjeti', href: '#' },
+	{ label: 'Pravila privatnosti', href: '#' },
+	{ label: 'Kolačići', href: '#' },
+	{ label: 'Karta stranice', href: '#' }
+];
+
+// Locale switcher. `country` = ISO country code for the flag-icons class (fi-<country>).
+// `short` = the 2-letter language tag shown next to the flag in the dropdown.
+// hr is fully populated; others fall back to hr until translated.
+export const LOCALE_FLAGS: {
+	locale: string;
+	country: string;
+	short: string;
+	label: string;
+}[] = [
+	{ locale: 'hr', country: 'hr', short: 'HR', label: 'Hrvatski' },
+	{ locale: 'en', country: 'gb', short: 'EN', label: 'English' },
+	{ locale: 'de', country: 'de', short: 'DE', label: 'Deutsch' },
+	{ locale: 'it', country: 'it', short: 'IT', label: 'Italiano' },
+	{ locale: 'sl', country: 'si', short: 'SL', label: 'Slovenščina' }
 ];

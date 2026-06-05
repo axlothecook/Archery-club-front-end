@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"archery-contracts": "file:../Archery-contracts",
-		"axlothecook-sass-library": "github:axlothecook/axlothecook-sass-library"
+		"axlothecook-sass-library": "github:axlothecook/axlothecook-sass-library",
+		"flag-icons": "^7.5.0"
 	}
 }

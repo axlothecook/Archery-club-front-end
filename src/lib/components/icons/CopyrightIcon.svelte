@@ -1,0 +1,21 @@
+<script lang="ts">
+	// Copyright glyph (svgrepo "copyright-svgrepo-com"). Stroked outline; uses
+	// currentColor so it inherits the surrounding text colour.
+	let { size = 16 }: { size?: number } = $props();
+</script>
+
+<svg
+	width={size}
+	height={size}
+	viewBox="0 0 24 24"
+	fill="none"
+	stroke="currentColor"
+	stroke-width="2"
+	stroke-linecap="round"
+	stroke-linejoin="round"
+	xmlns="http://www.w3.org/2000/svg"
+	aria-hidden="true"
+>
+	<circle cx="12" cy="12" r="10" />
+	<path d="M15 9.354a4 4 0 100 5.292" />
+</svg>

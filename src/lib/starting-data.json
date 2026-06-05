@@ -4,8 +4,8 @@
 
 	"colors": {
 		"_note": "active palette. bgPrimary is intentionally DARKER than the footer per the user (try-for-now). Edit freely.",
-		"bgPrimary": "#0B1F45",
-		"footer": "#102E66",
+		"bgPrimary": "#102E66",
+		"footer": "#0B1F45",
 		"accentGold": "#efb52f",
 		"link": "#2352A7",
 		"bgLight": "#eee",
