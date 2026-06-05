@@ -1,0 +1,59 @@
+// VSK archery front-end — global styles entry.
+//
+// Pattern (per the axlothecook-sass-library README, same as the portfolio):
+//   1. Override the library's SCSS variables HERE, ABOVE the @import.
+//   2. @import the library so the overrides take effect + utilities generate.
+//   3. Define the :root CSS-custom-property "control panel" — the live theme.
+//
+// The PALETTE + FONT values are documented in src/lib/starting-data.json
+// (the editable source of record). Keep this :root in sync with that file.
+
+// ---------------------------------------------------------------------------
+// 1. Library variable overrides (must come BEFORE the @import).
+// ---------------------------------------------------------------------------
+$light-bg-primary: #102e66; // page background (navy — swapped with footer)
+$text: #f3f5f8; // ink (body text) — light, for the dark bg
+
+@import 'axlothecook-sass-library/sass-library/index.scss';
+
+// ---------------------------------------------------------------------------
+// 3. Theme control panel — CSS custom properties (mirror starting-data.json).
+//    Edit starting-data.json AND here together when retuning the theme.
+// ---------------------------------------------------------------------------
+:root {
+	// --- colours (from starting-data.json) ---
+	--color-bg: #102e66; // page background (navy — swapped with footer)
+	--color-footer: #0b1f45; // footer navy (dark — swapped with page bg)
+	--color-accent: #efb52f; // accent gold
+	--color-link: #2352a7; // link / interactive blue
+	--color-bg-light: #eee; // light surface
+	--color-bg-secondary: #f8f8f8; // secondary light surface
+
+	--color-ink: #f3f5f8; // body text on dark bg
+	--color-ink-dark: #0f2145; // text on light surfaces
+
+	// --- font (active = Inter; candidates in starting-data.json) ---
+	--font-primary: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+// ---------------------------------------------------------------------------
+// Base page styling on top of the library base.
+// ---------------------------------------------------------------------------
+html,
+body {
+	margin: 0;
+	background-color: var(--color-bg);
+	color: var(--color-ink);
+	font-family: var(--font-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a {
+	color: var(--color-link);
+	text-decoration: none;
+}
+
+* {
+	box-sizing: border-box;
+}

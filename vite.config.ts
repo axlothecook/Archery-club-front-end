@@ -4,6 +4,18 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	// rolldown-vite (Vite 8) defaults to the lightningcss CSS transformer/minifier,
+	// which rejects the bleeding-edge customizable-<select> selectors used by the
+	// sass-library's _select.scss (::picker(select):popover-open,
+	// appearance: base-select). Use the postcss transformer AND turn off CSS
+	// minify (the SSR build otherwise hardcodes lightningcss minify) so those
+	// valid modern selectors pass through untouched. Revisit for production polish.
+	css: { transformer: 'postcss' },
+	build: { cssMinify: false },
+	environments: {
+		ssr: { build: { cssMinify: false } },
+		client: { build: { cssMinify: false } }
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
