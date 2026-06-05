@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { ui } from '$lib/ui.svelte';
-	import { MENU_GROUPS } from '$lib/nav';
+	import { MENU_GROUPS, LOCALE_FLAGS } from '$lib/nav';
+	import FlagIcon from './icons/FlagIcon.svelte';
 
 	// Close the menu after navigating (so clicking a link dismisses the panel).
 	function go() {
 		ui.closeMenu();
+	}
+
+	function pickLocale(code: string) {
+		ui.setLocale(code);
 	}
 </script>
 
@@ -37,20 +42,45 @@
 			</div>
 		{/each}
 	</div>
+
+	<!-- Locale switcher (moved here from the top bar) -->
+	<div class="menu-locale">
+		<h3 class="menu-group-heading">Jezik</h3>
+		<div class="menu-locale-flags">
+			{#each LOCALE_FLAGS as l (l.locale)}
+				<button
+					class="menu-locale-flag"
+					class:active={ui.locale === l.locale}
+					title={l.label}
+					aria-label={l.label}
+					aria-pressed={ui.locale === l.locale}
+					onclick={() => pickLocale(l.locale)}
+				>
+					<FlagIcon country={l.country} size={1.5} />
+					<span class="lang-short">{l.short}</span>
+				</button>
+			{/each}
+		</div>
+	</div>
 </nav>
 
 <style lang="scss">
 	// Add a blur to the library's shaded backdrop (per design: the visible half
-	// is blurred, not just dimmed).
+	// is blurred, not just dimmed). Slow the fade (library default is 0.3s).
 	.menu-backdrop {
 		backdrop-filter: blur(6px);
 		background-color: rgba(11, 31, 69, 0.45); // tinted with the bg navy
+		transition:
+			opacity 0.6s ease,
+			visibility 0.6s ease;
 	}
 
 	.half-screen-menu {
 		background-color: var(--color-footer); // navy panel
 		color: var(--color-ink);
 		gap: 1.5rem;
+		// slow the slide in/out (library default is 0.3s)
+		transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.menu-head {
@@ -96,6 +126,47 @@
 		transition: color 0.2s ease;
 		&:hover {
 			color: var(--color-accent);
+		}
+	}
+
+	// Locale switcher inside the menu (moved from the top bar).
+	.menu-locale {
+		margin-top: 2.5rem;
+	}
+	.menu-locale-flags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-top: 0.75rem;
+	}
+	.menu-locale-flag {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		background: none;
+		border: 1px solid transparent;
+		border-radius: 10px;
+		padding: 0.4rem 0.7rem;
+		color: var(--color-ink);
+		opacity: 0.7;
+		cursor: pointer;
+		transition:
+			opacity 0.2s ease,
+			background 0.2s ease;
+
+		.lang-short {
+			font-size: 0.9rem;
+			font-weight: 600;
+			letter-spacing: 0.03em;
+		}
+		&:hover {
+			opacity: 1;
+			background: rgba(255, 255, 255, 0.1);
+		}
+		&.active {
+			opacity: 1;
+			background: rgba(255, 255, 255, 0.16);
+			border-color: rgba(255, 255, 255, 0.25);
 		}
 	}
 
