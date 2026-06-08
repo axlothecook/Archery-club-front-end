@@ -55,7 +55,10 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
 ### Day 6 — Sat 13.6 · 🔴 DEPLOY STACK (highest risk)
 - [ ] Dockerize backend (+ Postgres) and front-end (adapter-node) + `docker-compose.yml`.
 - [ ] Reverse proxy (Caddy/nginx) + Cloudflare Tunnel for the public site.
-- [ ] Migrate Supabase image URLs → R2 (crest, sponsors, identity, roster). Backend R2 plumbing exists.
+- [ ] Migrate Supabase image URLs → R2 (crest, sponsors, identity, roster, hero, navbar logo). Backend R2 plumbing exists.
+- [ ] **🚫 Make archery FULLY INDEPENDENT of Supabase before CI/CD** — sweep every `*.supabase.co` URL (front-end
+  hardcoded URLs in components incl. TopBar logo, identity hero/olimpic image, Footer logo + sponsor logos, and any
+  backend seed/data) and repoint to R2. Grep for `supabase` across both repos; zero references must remain at deploy.
 - [ ] Verify: full stack runs in Docker locally; tunnel serves site on a real hostname.
 
 ### Day 7 — Sun 14.6 · 🔴 CI/CD + backup
