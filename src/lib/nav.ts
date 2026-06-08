@@ -19,31 +19,36 @@ export const TOP_BAR_LINKS = {
 	] satisfies NavLink[]
 };
 
-// The half-screen menu — "everything else", grouped. Each group has an optional
-// heading and a list of links.
-export const MENU_GROUPS: { heading?: string; links: NavLink[] }[] = [
+// The half-screen menu (Gucci-style). Every page link that is NOT already in the
+// TopBar (Vijesti, Momčad, Raspored) or the centred crest (home) lives here.
+// A link may optionally have `children` — if it does, the menu treats it as a
+// drill-down (shows a › arrow on hover, slides into a sub-view) instead of
+// navigating directly. Without `children`, the link navigates directly.
+export type MenuLink = NavLink & { children?: NavLink[] };
+
+export const MENU_LINKS: MenuLink[] = [
+	{ label: 'Povijest', href: '/klub/povijest' },
 	{
-		heading: 'Klub',
-		links: [
-			{ label: 'Povijest', href: '/klub/povijest' },
-			{ label: 'Identitet', href: '/klub/identitet' }
+		label: 'Identitet',
+		href: '/klub/identitet',
+		children: [
+			{ label: 'Grb', href: '/klub/identitet/grb' },
+			{ label: 'Dres', href: '/klub/identitet/dres' },
+			{ label: 'Vrijednosti', href: '/klub/identitet' }
 		]
 	},
-	{
-		heading: 'Natjecanja',
-		links: [
-			{ label: 'Postignuća', href: '/postignuca' },
-			{ label: 'Raspored', href: '/raspored' }
-		]
-	},
-	{
-		heading: 'Više',
-		links: [
-			{ label: 'Sponzori', href: '/sponzori' },
-			{ label: 'Kontakt', href: '/kontakt' }
-		]
-	}
+	{ label: 'Postignuća', href: '/postignuca' },
+	{ label: 'Sponzori', href: '/sponzori' }
 ];
+
+// Middle-tier link (Gucci's secondary block) — rendered between the big page
+// links and the small utility tier, at its own medium size.
+export const MENU_CONTACT: NavLink = { label: 'Kontakt', href: '/kontakt' };
+
+// Smallest-tier utility links shown beneath the main menu links. Email/phone are
+// rendered separately (email from ClubInfo; phone hardcoded until ClubInfo gains
+// a phone field). Prijava (Log In) points to the dashboard — placeholder until deploy.
+export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '#' }];
 
 // Footer columns (RM-style spacing). The social links + sponsor logos render
 // separately (sponsors fetched from the API; socials from ClubInfo).

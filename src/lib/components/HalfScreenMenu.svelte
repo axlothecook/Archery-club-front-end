@@ -1,28 +1,40 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { ui } from '$lib/ui.svelte';
-	import { MENU_GROUPS, LOCALE_FLAGS } from '$lib/nav';
+	import { MENU_LINKS, MENU_CONTACT, MENU_UTILITY, LOCALE_FLAGS, type MenuLink } from '$lib/nav';
 	import FlagIcon from './icons/FlagIcon.svelte';
+	import { fly } from 'svelte/transition';
 
-	// Real-Madrid-style two-column menu: left = categories, right = the selected
-	// category's sub-items. The right column is empty until a category is CLICKED
-	// (no hover/default selection).
-	let activeIndex = $state<number | null>(null);
-	const activeGroup = $derived(activeIndex === null ? null : MENU_GROUPS[activeIndex]);
+	// Gucci-style menu with one level of drill-down. The main list shows direct
+	// links; a link WITH children shows a › arrow and, when clicked, slides the
+	// panel to a sub-view (‹ BACK + title + sub-links) instead of navigating.
+	let activeSub = $state<MenuLink | null>(null);
 
-	// Close the menu after navigating (so clicking a link dismisses the panel).
+	// Navigate: close the menu and reset to the main view (so it reopens fresh).
 	function go() {
 		ui.closeMenu();
+		activeSub = null;
 	}
 
-	function pickLocale(code: string) {
-		ui.setLocale(code);
-	}
+	// Reset to the main list whenever the menu is closed.
+	$effect(() => {
+		if (!ui.menuOpen) activeSub = null;
+	});
 
-	// Locale dropdown (RM shows a collapsible language control bottom-left).
+	// Club contact (smallest tier). Email is data-driven from ClubInfo; phone is
+	// hardcoded until ClubInfo gains a phone field (see PLAN.md backlog).
+	const email = $derived(page.data.clubInfo?.email ?? null);
+	const PHONE = '+385 98 372 912';
+
+	// Locale flag dropdown (opens downward).
 	let localeOpen = $state(false);
 	const activeFlag = $derived(
 		LOCALE_FLAGS.find((l) => l.locale === ui.locale) ?? LOCALE_FLAGS[0]
 	);
+	function pickLocale(code: string) {
+		ui.setLocale(code);
+		localeOpen = false;
+	}
 </script>
 
 <!-- Backdrop: shades + blurs the visible side while the panel is open. -->
@@ -33,74 +45,99 @@
 	aria-hidden="true"
 ></div>
 
-<nav class="half-screen-menu rm-menu" class:open={ui.menuOpen} aria-label="Glavni izbornik">
+<nav class="half-screen-menu gucci-menu" class:open={ui.menuOpen} aria-label="Glavni izbornik">
 	<div class="menu-head">
 		<button class="menu-close" onclick={() => ui.closeMenu()} aria-label="Zatvori izbornik">
-			<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+			<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
 				<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
 			</svg>
 		</button>
 	</div>
 
-	<div class="rm-columns">
-		<!-- Left column: categories -->
-		<ul class="rm-categories">
-			{#each MENU_GROUPS as group, i (group.heading)}
-				<li>
-					<button
-						class="rm-category"
-						class:active={activeIndex === i}
-						onclick={() => (activeIndex = i)}
-					>
-						<span>{group.heading}</span>
-						<svg class="rm-chevron" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-							<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-						</svg>
-					</button>
-				</li>
-			{/each}
-		</ul>
-
-		<!-- Right column: sub-items of the selected category (hidden until clicked) -->
-		{#if activeGroup}
-			<ul class="rm-subitems">
-				{#each activeGroup.links as link (link.href)}
+	<!-- Sliding track: main view + sub view side by side; slides left when a
+	     drill-down category is open. -->
+	<div class="menu-views" class:sub-open={activeSub}>
+		<!-- View 1: main list -->
+		<div class="menu-view" aria-hidden={activeSub ? 'true' : 'false'}>
+			<ul class="menu-links">
+				{#each MENU_LINKS as link (link.href)}
 					<li>
-						<a class="rm-subitem" href={link.href} onclick={go}>{link.label}</a>
+						{#if link.children}
+							<button class="menu-link menu-link-parent" onclick={() => (activeSub = link)}>
+								{link.label}
+								<svg class="menu-arrow" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+								</svg>
+							</button>
+						{:else}
+							<a class="menu-link" href={link.href} onclick={go}>{link.label}</a>
+						{/if}
 					</li>
 				{/each}
 			</ul>
-		{/if}
+
+			<!-- Middle tier (Gucci secondary block): Kontakt alone -->
+			<div class="menu-middle">
+				<a class="menu-link-middle" href={MENU_CONTACT.href} onclick={go}>{MENU_CONTACT.label}</a>
+			</div>
+
+			<!-- Utility tier (smallest size): contact details + Log In -->
+			<div class="menu-utility">
+				{#if email}
+					<span class="menu-small">{email}</span>
+				{/if}
+				<span class="menu-small">{PHONE}</span>
+				{#each MENU_UTILITY as link (link.label)}
+					<a class="menu-small menu-small-link" href={link.href} onclick={go}>{link.label}</a>
+				{/each}
+			</div>
+		</div>
+
+		<!-- View 2: sub-items of the drilled-into category -->
+		<div class="menu-view menu-view--sub" aria-hidden={activeSub ? 'false' : 'true'}>
+			{#if activeSub}
+				<button class="menu-back" onclick={() => (activeSub = null)}>
+					<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<span>Natrag</span>
+				</button>
+				<h2 class="menu-sub-title">{activeSub.label}</h2>
+				<ul class="menu-links">
+					{#each activeSub.children ?? [] as sub (sub.href)}
+						<li><a class="menu-link" href={sub.href} onclick={go}>{sub.label}</a></li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	</div>
 
-	<!-- Locale switcher (RM bottom-left collapsible language control) -->
-	<div class="rm-locale">
+	<!-- Locale flag dropdown -->
+	<div class="menu-locale">
 		<button
-			class="rm-locale-toggle"
+			class="menu-locale-toggle"
 			aria-expanded={localeOpen}
 			onclick={() => (localeOpen = !localeOpen)}
 		>
-			<svg class="rm-translate-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-				<path d="M4 5h7M9 3v2c0 4-2 7-5 9M5 9c0 3 3 5 6 6M12 20l4-9 4 9M13.5 17h5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-			</svg>
-			<span class="rm-locale-short">{activeFlag.short}</span>
-			<svg class="rm-caret" class:open={localeOpen} width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+			<FlagIcon country={activeFlag.country} size={1.1} />
+			<span>{activeFlag.short}</span>
+			<svg class="menu-caret" class:open={localeOpen} width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
 				<path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
 			</svg>
 		</button>
 
 		{#if localeOpen}
-			<div class="rm-locale-flags">
+			<div class="menu-locale-flags" transition:fly={{ y: 10, duration: 250 }}>
 				{#each LOCALE_FLAGS as l (l.locale)}
 					<button
-						class="rm-locale-flag"
+						class="menu-locale-flag"
 						class:active={ui.locale === l.locale}
 						title={l.label}
 						aria-label={l.label}
 						aria-pressed={ui.locale === l.locale}
 						onclick={() => pickLocale(l.locale)}
 					>
-						<FlagIcon country={l.country} size={1.25} />
+						<FlagIcon country={l.country} size={1.1} />
 						<span>{l.short}</span>
 					</button>
 				{/each}
@@ -119,24 +156,23 @@
 			visibility 0.6s ease;
 	}
 
-	// ── RM-style panel: white, wide, two columns ──────────────────────────────
-	.rm-menu {
-		// override the library's navy panel — RM is a light/white menu
+	// ── Gucci-style panel: white, narrow, single column, left-aligned ─────────
+	.gucci-menu {
 		background-color: #ffffff;
-		color: #0f2145;
-		width: 60vw; // wide like RM (covers a large slice, not just half)
-		max-width: 1100px;
-		gap: 0;
+		color: #0f2145; // navy ink (deep-sapphire family)
+		width: 42vw; // match Gucci + a bit more — TUNED LIVE
+		max-width: 620px;
+		min-width: 360px;
 		padding: 1.5rem 2.5rem 2rem;
 		display: flex;
 		flex-direction: column;
-		// slow the slide in/out (library default is 0.3s)
+		overflow: hidden; // clip the off-screen sub-view in the sliding track
 		transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.menu-head {
 		display: flex;
-		justify-content: flex-start; // close X on the left, like RM
+		justify-content: flex-end; // close-X TOP-RIGHT
 		margin-bottom: 2rem;
 	}
 	.menu-close {
@@ -145,92 +181,166 @@
 		color: #0f2145;
 		cursor: pointer;
 		padding: 0.25rem;
+		border-radius: 999px;
 		&:hover {
 			opacity: 0.6;
 		}
 	}
 
-	// ── Two columns ───────────────────────────────────────────────────────────
-	.rm-columns {
-		display: grid;
-		grid-template-columns: minmax(280px, 360px) 1fr;
-		gap: 2rem 3rem;
+	// ── Sliding track (main view ↔ sub view) ──────────────────────────────────
+	.menu-views {
+		display: flex;
 		flex: 1 1 auto;
+		width: 200%; // two views side by side, each 50% of the track
+		transform: translateX(0);
+		transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.menu-views.sub-open {
+		transform: translateX(-50%); // slide so the sub view comes into view
+	}
+	.menu-view {
+		width: 50%;
+		flex: 0 0 50%;
+		display: flex;
+		flex-direction: column;
 	}
 
-	.rm-categories,
-	.rm-subitems {
+	// ── Main links (medium size) ──────────────────────────────────────────────
+	.menu-links {
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem; // airy vertical gap between links (Gucci-style)
+	}
+	.menu-link {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 1.5rem; // medium — Gucci main link size
+		font-weight: 600; // bolder, Gucci-style
+		color: #0f2145;
+		text-decoration: none;
+		width: fit-content;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		text-align: left;
 	}
 
-	// Left: category rows
-	.rm-category {
-		display: flex;
+	// Center-out gold underline on hover for DIRECT links (a.menu-link) — grows
+	// from the word's bottom-centre outward to both edges. Drill parents (<button>)
+	// are excluded. Gold = the library accent (var --color-accent).
+	a.menu-link::after,
+	.menu-link-middle::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.15rem;
+		height: 2px;
+		background-color: var(--color-accent);
+		transform: scaleX(0);
+		transform-origin: center;
+		transition: transform 0.3s ease;
+	}
+	a.menu-link:hover::after,
+	.menu-link-middle:hover::after {
+		transform: scaleX(1);
+	}
+
+	// › arrow on drill-down parents — slow fade-in on hover (Gucci). The drill
+	// parent keeps a colour-shift hover (it has no underline).
+	.menu-link-parent {
+		transition: color 0.15s ease;
+		&:hover {
+			color: #102e66;
+		}
+	}
+	.menu-arrow {
+		opacity: 0;
+		transition: opacity 0.5s ease;
+	}
+	.menu-link-parent:hover .menu-arrow {
+		opacity: 1;
+	}
+
+	// ── Middle tier (Kontakt) — between big links and the small tier ──────────
+	.menu-middle {
+		margin-top: 3.5rem; // generous space above (from the big links)
+	}
+	.menu-link-middle {
+		position: relative; // anchor for the center-out underline
+		display: inline-block;
+		font-size: 1.15rem; // middle — Gucci secondary-block size
+		font-weight: 600; // bolder, Gucci-style
+		color: #0f2145;
+		text-decoration: none;
+		width: fit-content;
+	}
+
+	// ── Sub-view header (‹ Natrag + big category title) ───────────────────────
+	.menu-back {
+		display: inline-flex;
 		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		gap: 1rem;
+		gap: 0.35rem;
 		background: none;
 		border: none;
 		cursor: pointer;
-		text-align: left;
-
-		font-size: 1.25rem; // 20px — RM
-		font-weight: 700;
-		color: #0f2145;
-
-		padding: 1rem; // 16px — RM pill padding
-		border-radius: 12px; // RM pill radius
-		transition:
-			background-color 0.15s ease,
-			color 0.15s ease;
-
-		.rm-chevron {
-			color: #43526e;
-			flex-shrink: 0;
-		}
-
-		// only the SELECTED (clicked) category gets the pill — no hover style
-		&.active {
-			background-color: #eef2fd; // RM active-pill light blue
-			color: #3e31fa; // RM active blue
-			.rm-chevron {
-				color: #3e31fa;
-			}
-		}
-	}
-
-	// Right: sub-items panel — darker surface than the white menu
-	.rm-subitems {
-		background-color: #eee;
-		border-radius: 12px;
-		padding: 1rem 1.25rem;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		align-self: start; // hug its content height, not full column height
-	}
-	.rm-subitem {
-		font-size: 1.25rem; // 20px — RM
-		font-weight: 400;
-		color: #43526e; // RM grey-blue
-		text-decoration: none;
+		padding: 0;
+		color: #43526e;
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-decoration: underline;
 		width: fit-content;
 		transition: color 0.15s ease;
 		&:hover {
-			color: #0f2145;
-			text-decoration: underline;
+			color: #102e66;
+		}
+	}
+	.menu-sub-title {
+		margin: 1.5rem 0 2rem;
+		font-size: 1.9rem;
+		font-weight: 300; // thin, like Gucci's sub-view title
+		color: #0f2145;
+	}
+
+	// Sub-view links (Grb/Dres/Vrijednosti) are smaller + lighter than the main list.
+	.menu-view--sub .menu-link {
+		font-size: 1rem;
+		font-weight: 500; // fatter than the thin (300) sub-view title
+	}
+
+	// ── Utility tier (smallest size) ──────────────────────────────────────────
+	.menu-utility {
+		margin-top: 3.5rem; // generous space below Kontakt (separating tiers)
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.menu-small {
+		font-size: 0.85rem; // smallest — email / phone / Log In
+		font-weight: 400;
+		color: #43526e;
+	}
+	.menu-small-link {
+		text-decoration: underline; // Log In reads as a utility link (Gucci)
+		width: fit-content;
+		transition: color 0.15s ease;
+		&:hover {
+			color: #102e66;
 		}
 	}
 
-	// ── Locale control (bottom-left, RM style) ───────────────────────────────
-	.rm-locale {
-		margin-top: 2rem;
+	// ── Locale flag dropdown ──────────────────────────────────────────────────
+	.menu-locale {
+		margin-top: 1.5rem;
 		position: relative;
 	}
-	.rm-locale-toggle {
+	.menu-locale-toggle {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -238,55 +348,55 @@
 		border: none;
 		cursor: pointer;
 		color: #0f2145;
-		padding: 0.4rem 0;
+		padding: 0.3rem 0;
 		font-weight: 600;
-
-		.rm-caret {
+		font-size: 0.95rem;
+		.menu-caret {
 			transition: transform 0.2s ease;
 			&.open {
 				transform: rotate(180deg);
 			}
 		}
 		&:hover {
-			color: #3e31fa;
+			color: #102e66;
 		}
 	}
-	.rm-locale-flags {
+	.menu-locale-flags {
+		position: absolute;
+		bottom: 100%; // open UPWARD from the toggle (it sits at the panel bottom)
+		left: 0;
+		margin-bottom: 0.6rem;
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-top: 0.75rem;
+		flex-direction: column;
+		gap: 0.35rem;
 	}
-	.rm-locale-flag {
+	.menu-locale-flag {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 0.5rem;
 		background: none;
-		border: 1px solid transparent;
-		border-radius: 10px;
-		padding: 0.35rem 0.6rem;
+		border: none;
+		border-radius: 8px;
+		padding: 0.3rem 0.5rem;
 		color: #43526e;
 		cursor: pointer;
 		font-size: 0.9rem;
 		font-weight: 600;
+		width: fit-content;
 		transition: background-color 0.15s ease;
 		&:hover {
 			background-color: #f1f4fb;
 		}
 		&.active {
-			background-color: #eef2fd;
-			border-color: #cdd6f5;
-			color: #3e31fa;
+			color: #102e66;
 		}
 	}
 
-	// On small screens cover (almost) the full width.
+	// On small screens the panel covers (almost) the full width.
 	@media (max-width: 820px) {
-		.rm-menu {
-			width: 92vw;
-		}
-		.rm-columns {
-			grid-template-columns: 1fr; // stack on small screens
+		.gucci-menu {
+			width: 88vw;
+			max-width: none;
 		}
 	}
 </style>
