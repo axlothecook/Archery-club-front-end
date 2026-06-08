@@ -140,7 +140,8 @@
 		// part of the scrolling content layer — sits above the sticky footer
 		position: relative;
 		z-index: 1;
-		background-color: var(--color-bg);
+		// Swapped: sponsors/social cap now uses the darker footer navy.
+		background-color: var(--color-footer);
 		padding: 4.5rem 0 5rem; // taller, PSG-style; full-bleed so dividers reach edges
 		display: flex;
 		flex-direction: column;
@@ -226,7 +227,7 @@
 		bottom: 0;
 		z-index: 0;
 
-		background-color: var(--color-footer);
+		background-color: var(--color-bg); // swapped: lighter footer block
 		color: var(--color-ink);
 	}
 	.footer-inner {

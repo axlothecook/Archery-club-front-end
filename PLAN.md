@@ -32,7 +32,21 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
 - [ ] Build `klub/identitet` end-to-end as the **template page** (backend `/club-identity`: list/`:slug`/`/default`; kinds blocks/single/gallery). Establishes load→render→style pattern reused by all pages.
 
 ### Day 2 — Tue 9.6 · Data-driven content pages
-- [ ] `klub/povijest` (history grid 4-col + `/:slug` detail).
+- [ ] `klub/povijest` (history grid 4-col + `/:slug` detail). **Include the full VSK Olympic-Charter founding
+  text (user-supplied, transcribe VERBATIM — Croatian, do NOT paraphrase; source vsk.hr/o-klubu):**
+  > Ovo je Olimpijska povelja. / Svi koji se bave sportom, kad ju pročitaju to će i reći. / Olimpijska povelja. /
+  > Savjetujemo svima da je čitaju svaki dan. Čak više puta dnevno. / Kad ju zapamtite, čitajte ponovo. / Čitajte
+  > između redaka. / Razumijete? / Ne? Da Vam pojasnim…. / Između ostalog u tom tekstu piše da sport nije ničije
+  > vlasništvo. / Piše da imate pravo na slobodan odabir vrste sporta kojom se želite baviti, odabir natjecanja na
+  > kojem želite sudjelovati, odabir kluba u kojem ćete trenirati, pravo na trenera s kojim Vi želite trenirati,
+  > pravo na tim čiji dio Vi želite biti. / Pravo na prijatelje s kojima želite dijeliti osmjehe nakon pobjede. /
+  > Pravo na prijatelje koji će razumjeti zašto nakon takmičenja plačete…. / Ovo je samo mali dio toga što se može
+  > isčitati između redaka Olimpijske povelje. / Pročitajte ponovo. Razmislite. / U sportu Vam nitko ne može
+  > nametati svoju volju. / Nitko Vas ne može prisiliti ni da budete u njemu, ako osjećate nelagodu. / Ako trenirate
+  > bez volje. / Ako se ne osjećate kao dio tima. / Ako Vas okružuju ljudi s kojima Vam nije ugodno….. / Pročitajte
+  > još jednom….maknite se, promjenite sport, klub, okolinu….krenite ispočetka. / Oslobodite se. / Sport je samo Vaš
+  > izbor. / 10.10.2014. osnovan je Varaždinski streličarski klub. / Na načelima Olimpijske povelje. / Od strane
+  > ljudi koji su je znali pročitati između redaka.
 - [ ] `sponzori` (sponsors grid; data already in `+layout.ts`).
 - [ ] `postignuca` (achievements; `/achievements/summary` → stats + grouped cards).
 
