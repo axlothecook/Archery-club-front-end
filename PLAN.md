@@ -79,11 +79,11 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
   > redovito donose izvanredne rezultate za klub i za Hrvatsku, što je sve posljedica odličnog rada u klubu
   > te izuzetnog zalaganja samih streličara.”
   Origin (user-supplied): facebook permalink story_fbid=pfbid0QESy8Gm…id=100063458080154. (Which page = TBC; likely homepage/about.)
-- [ ] **500 error page** — implement an app-level 500 error page (SvelteKit `+error.svelte` handling, styled with the library).
-- [ ] **Footer icons must NOT move on hover/click** (or at any point) — applies to BOTH sponsor logos AND social
-  media logos (Facebook/Instagram/YouTube). Remove the current +2px lift in Footer.svelte for both.
-- [ ] **Audit: no pure CSS, use the library** — sweep the project so styling goes through `axlothecook-sass-library`
-  utilities/mixins, not hand-rolled CSS values. (Menu itself uses library colour utils per the active-pill decision.)
+- [x] **Error page DONE** (2026-06-08): root `src/routes/+error.svelte` (one component, switches on `page.status` →
+  404 vs generic 500-type, theme-styled, gold center-out underline on the home link) + `src/error.html` last-resort
+  fallback (inline styles, renders when the layout itself fails).
+- [x] **Footer icons static on hover DONE** (2026-06-08): removed the +2px lift from BOTH sponsor logos and social
+  icons (FB/IG/YT) in Footer.svelte; kept the subtle opacity brighten on socials; kept optical-size `.scale()`.
 
 ## Menu data note (2026-06-08)
 - [ ] **Phone is NOT in ClubInfo** — backend/ClubInfo carries `email` but no phone field. Menu currently hardcodes
