@@ -170,13 +170,9 @@
 			width: auto;
 			object-fit: contain;
 			// colored logos, transparent bg (logos are PNGs without a background)
-			transition: transform 0.2s ease;
 		}
 		&.small img {
 			height: 56px;
-		}
-		&:hover img {
-			transform: translateY(-2px);
 		}
 	}
 	.cap-socials {
@@ -195,8 +191,7 @@
 		opacity: 0.85;
 		transition:
 			opacity 0.2s ease,
-			color 0.2s ease,
-			transform 0.2s ease;
+			color 0.2s ease;
 
 		:global(svg) {
 			width: 100%;
@@ -205,8 +200,7 @@
 		}
 
 		&:hover {
-			opacity: 1;
-			transform: translateY(-2px);
+			opacity: 1; // subtle brighten only — no movement
 		}
 	}
 
