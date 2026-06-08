@@ -43,6 +43,7 @@
 <!-- Part A: sponsor + social cap, shown at the end of every page (PSG style). -->
 <section class="page-cap">
 	{#if bigSponsors.length}
+		<hr class="cap-divider" />
 		<div class="cap-row cap-big">
 			{#each bigSponsors as s (s.id)}
 				<a class="sponsor-logo" href={s.website ?? '#'} target="_blank" rel="noopener" title={s.name}>
