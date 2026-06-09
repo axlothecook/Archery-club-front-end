@@ -4,6 +4,7 @@
 	import { error } from '@sveltejs/kit';
 	import type { ClubHistoryPeriodResolved } from 'archery-contracts';
 	import CrossedArrowsIcon from '$lib/components/icons/CrossedArrowsIcon.svelte';
+	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 
 	const periods = $derived((page.data.periods ?? []) as ClubHistoryPeriodResolved[]);
 	const slug = page.params.slug ?? '';
@@ -16,6 +17,103 @@
 	});
 
 	const coverUrl = $derived(period.coverImage?.url ?? '');
+
+	// Some chapters end with a chronological HIGHLIGHTS list. The entries are
+	// rendered as structured one-line rows: "date - result • competition • archer".
+	// TEMPORARY: structured here on the front-end (transcribed from the prose lists
+	// in the seed). FINAL version will move these to structured backend data
+	// (club-history.json `highlights`), per the data-in-JSON rule.
+	type Highlight = { date: string; result: string; competition: string; archer: string };
+	const HIGHLIGHTS: Record<string, Highlight[]> = {
+		'2019-2021-klub-dostize-svoj-vrhunac': [
+			{ date: 'travanj 2019.', result: 'Zlato', competition: 'Europski Grand Prix', archer: 'Amanda Mlinarić' },
+			{ date: 'kolovoz 2019.', result: 'Zlato', competition: 'Svjetsko juniorsko prvenstvo', archer: 'Amanda Mlinarić' },
+			{ date: 'listopad 2019.', result: 'Zlato', competition: 'Europsko prvenstvo u terenskom streličarstvu', archer: 'Amanda Mlinarić' },
+			{ date: 'svibanj 2021.', result: 'Zlato', competition: "Veronica's Cup", archer: 'Amanda Mlinarić' },
+			{ date: 'lipanj 2021.', result: '9. mjesto', competition: 'Završne olimpijske kvalifikacije', archer: 'Alen Remar' },
+			{ date: 'kolovoz 2021.', result: 'Zlato', competition: 'Svjetsko juniorsko prvenstvo', archer: 'Amanda Mlinarić' }
+		],
+		'2024-novo-doba-kluba': [
+			{ date: 'siječanj 2024.', result: 'Zlato', competition: 'Juniorski dvoranski svjetski kup', archer: 'Leo Sulik' },
+			{ date: 'veljača 2024.', result: 'Ekipno srebro', competition: 'Europsko dvoransko prvenstvo', archer: 'Nikola Portner Pavičević' },
+			{ date: 'rujan 2024.', result: 'Srebro', competition: 'Svjetsko prvenstvo u poljskom streličarstvu', archer: 'Amanda Mlinarić' },
+			{ date: 'studeni 2024.', result: 'Zlato', competition: 'Dvoranski svjetski kup (GT Open)', archer: 'Leo Sulik' },
+			{ date: 'studeni 2024.', result: 'Srebro', competition: 'GT Open', archer: 'Alen Remar' },
+			{ date: 'svibanj 2025.', result: 'Zlato', competition: 'Conquest Cup', archer: 'Amanda Mlinarić' },
+			{ date: 'rujan 2025.', result: 'Zlato', competition: 'Europsko prvenstvo u poljskom streličarstvu', archer: 'Amanda Mlinarić' },
+			{ date: 'prosinac 2025.', result: 'Zlato', competition: 'Taipei Open', archer: 'Amanda Mlinarić' },
+			{ date: 'veljača 2026.', result: 'Srebro', competition: 'Europsko dvoransko prvenstvo', archer: 'Amanda Mlinarić' },
+			{ date: 'svibanj 2026.', result: 'Olimpijske kvote', competition: 'Europske igre 2027.', archer: 'Amanda i Alen Remar' }
+		]
+	};
+
+	// For a paragraph that has a highlights list: take the intro sentence from the
+	// body (the prose before the first blank line) + the structured rows for this
+	// chapter. Returns no items for paragraphs that aren't the highlights section.
+	function parseBody(body: string): { intro: string; items: Highlight[] } {
+		const items = HIGHLIGHTS[slug] ?? [];
+		if (items.length === 0) return { intro: body, items: [] };
+		// Only the paragraph whose body is the dated list gets the rows: detect it by
+		// the blank-line-separated dated entries it still contains.
+		const parts = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+		const isListPara = parts.length > 1 && parts.slice(1).every((p) => p.includes(' - '));
+		if (!isListPara) return { intro: body, items: [] };
+		return { intro: parts[0], items };
+	}
+
+	// Split a paragraph body on blank lines into separate paragraphs (the seed
+	// stores intended paragraph breaks as "\n\n"), so long sections render as
+	// several readable <p> blocks instead of one wall of text.
+	function splitParas(body: string): string[] {
+		return body
+			.split(/\n\s*\n/)
+			.map((p) => p.trim())
+			.filter(Boolean);
+	}
+
+	// Colour the result by medal: zlato + pobjeda → gold; srebro + "9. mjesto" →
+	// silver; olimpijske kvote → bronze; anything else → navy default.
+	function medalClass(result: string): string {
+		const r = result.toLowerCase();
+		if (r.includes('zlato') || r.includes('pobjeda')) return 'medal-gold';
+		if (r.includes('srebro') || r.includes('9. mjesto')) return 'medal-silver';
+		if (r.includes('olimpijske kvote')) return 'medal-bronze';
+		return '';
+	}
+
+	// Bold the medal/title/record STAT phrases in a paragraph (the counts only —
+	// not the commas / connector words between them). Wraps each literal phrase in
+	// <strong>; rendered via {@html} (safe: our own seed text, only <strong> added).
+	const STAT_PHRASES = [
+		'61 zlatnu',
+		'30 srebrnih',
+		'21 brončanu medalju',
+		'46 titula državnih prvaka',
+		'10 postavljenih državnih rekorda',
+		'76 zlatnih',
+		'32 srebrne',
+		'9 brončanih medalja'
+	];
+	function boldStats(text: string): string {
+		let out = text;
+		for (const phrase of STAT_PHRASES) {
+			out = out.replaceAll(phrase, `<strong>${phrase}</strong>`);
+		}
+		return out;
+	}
+
+	// A per-section inline image: certain paragraphs end with a photo below the
+	// text (keyed by chapter slug + section header). Currently the 2024 chapter's
+	// "Deset godina kluba" 10-year-anniversary photo.
+	const SECTION_IMAGES: Record<string, { url: string; alt: string }> = {
+		'2024-novo-doba-kluba|Deset godina kluba': {
+			url: 'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/history/anni-25.jpg',
+			alt: 'Proslava deset godina Varaždinskog streličarskog kluba'
+		}
+	};
+	function sectionImage(header: string) {
+		return SECTION_IMAGES[`${slug}|${header}`];
+	}
 
 	// The club crest for the end-of-article flourish (same as the topbar crest).
 	const LOGO_URL =
@@ -102,9 +200,38 @@
 		<p class="chapter-lead">{period.lead}</p>
 
 		{#each period.paragraphs as para (para.header)}
+			{@const parsed = parseBody(para.body)}
 			<section class="chapter-section">
 				<h2 class="section-header">{para.header}</h2>
-				<p class="section-body">{para.body}</p>
+				{#if parsed.items.length > 0}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					<p class="section-body">{@html boldStats(parsed.intro)}</p>
+					<ul class="section-list">
+						{#each parsed.items as item, i (item.date + item.competition + i)}
+							<li>
+								<span class="item-date">{item.date}</span>
+								<span class="item-dash"> – </span>
+								<span class="item-result {medalClass(item.result)}">{item.result}</span>
+								<span class="item-sep"> • </span>
+								<span class="item-comp">{item.competition}</span>
+								<span class="item-sep"> • </span>
+								<span class="item-archer">{item.archer}</span>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					{#each splitParas(para.body) as chunk, ci (ci)}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<p class="section-body">{@html boldStats(chunk)}</p>
+					{/each}
+				{/if}
+
+				{#if sectionImage(para.header)}
+					{@const img = sectionImage(para.header)}
+					<figure class="section-figure">
+						<ImageWithLoader src={img.url} alt={img.alt} autoHeight rounded />
+					</figure>
+				{/if}
 			</section>
 		{/each}
 
@@ -144,7 +271,7 @@
 					<a class="related-card" href="/klub/povijest/{item.slug}" aria-hidden={i >= related.length}>
 						<div class="related-card-cover">
 							{#if item.coverImage}
-								<img src={item.coverImage.url} alt={item.coverImage.alt} loading="lazy" />
+								<ImageWithLoader src={item.coverImage.url} alt={item.coverImage.alt} />
 							{/if}
 						</div>
 						<span class="related-card-title">{item.title}</span>
@@ -176,7 +303,7 @@
 	// Uses `svh` (small viewport height) — a STABLE unit that does NOT recalc when
 	// a mobile URL bar shows/hides, so the `contain` photo never re-fits mid-scroll
 	// (the shrink/extend jitter came from `vh` recalculating). See research notes.
-	$cover-h: calc(68svh - #{$header-h});
+	$cover-h: calc(75svh - #{$header-h});
 	// How far the white panel pulls UP over the bottom of the cover image.
 	$panel-overlap: 56px;
 
@@ -320,6 +447,17 @@
 		max-width: 668px;
 		margin: 0 auto ($sp * 3.25); // more space BETWEEN section blocks
 	}
+	// Inline section photo (e.g. the 10-year anniversary image below "Deset godina
+	// kluba"): breaks out WIDER than the 668px text column, centred, rounded.
+	.section-figure {
+		margin: ($sp * 2.5) auto 0;
+		width: 90vw; // wider than the text column
+		max-width: 1000px;
+		// re-centre relative to the constrained .chapter-section (668px) it lives in
+		position: relative;
+		left: 50%;
+		transform: translateX(-50%);
+	}
 	.section-header {
 		margin: 0 0 ($sp * 0.5);
 		font-size: 1.35rem;
@@ -334,6 +472,67 @@
 		line-height: 28px;
 		font-weight: 300; // nuked-light body weight
 		color: $shark;
+		// Gap between stacked paragraphs within one section (seed "\n\n" breaks).
+		& + & {
+			margin-top: $sp * 1.25;
+		}
+		// Bolded stat phrases (medal/title/record counts) inside the paragraph.
+		// {@html}-injected <strong> gets no Svelte scope class, so target it globally.
+		:global(strong) {
+			font-weight: 700;
+			color: $navy;
+		}
+	}
+	// Chronological highlights list (Barça-style): no bullet markers, generous
+	// spacing, each entry a single row "date – result • competition • archer".
+	// Date + result + archer in navy; competition in a lighter blue; dot separators
+	// muted. Font sized to keep each entry on ONE line where possible.
+	.section-list {
+		// Equal breathing room above (intro → list) and below (list → next header,
+		// which the section's own bottom margin already provides).
+		margin: ($sp * 3.25) 0 0;
+		padding: 0;
+		list-style: none;
+		li {
+			margin: 0 0 ($sp * 1.25); // airy gap between entries
+			font-size: 15px;
+			line-height: 24px;
+			font-weight: 400;
+			white-space: nowrap; // keep each entry on ONE row
+			overflow-wrap: normal;
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+		.item-date {
+			color: $navy;
+			font-weight: 600; // date stands out a touch
+		}
+		.item-dash,
+		.item-result,
+		.item-archer {
+			color: $navy;
+		}
+		.item-result {
+			font-weight: 600;
+			// Medal-coloured result word (zlato/pobjeda gold, srebro silver,
+			// olimpijske kvote bronze; everything else stays navy).
+			&.medal-gold {
+				color: var(--color-accent);
+			}
+			&.medal-silver {
+				color: #9aa6b2;
+			}
+			&.medal-bronze {
+				color: #b3743c;
+			}
+		}
+		.item-comp {
+			color: $blue; // lighter blue competition
+		}
+		.item-sep {
+			color: map.get(lib.$colors, 'heather'); // muted dot separators
+		}
 	}
 
 	// ── End-of-article flourish (crest + two gold lines fanning out) ──────────
@@ -468,12 +667,6 @@
 	.related-card-cover {
 		aspect-ratio: 16 / 10;
 		background: rgba(0, 0, 0, 0.2);
-		img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-			display: block;
-		}
 	}
 	.related-card-title {
 		position: absolute;

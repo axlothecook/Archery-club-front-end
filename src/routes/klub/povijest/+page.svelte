@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import type { ClubHistoryPeriodResolved } from 'archery-contracts';
 
 	// Newest chapter first → oldest last (reverse of the editorial `order`).
@@ -26,7 +27,7 @@
 		<a class="period-card" href="/klub/povijest/{period.slug}">
 			{#if period.coverImage}
 				<div class="period-cover">
-					<img src={period.coverImage.url} alt={period.coverImage.alt} loading="lazy" />
+					<ImageWithLoader src={period.coverImage.url} alt={period.coverImage.alt} />
 				</div>
 			{/if}
 			<div class="period-text">
@@ -104,12 +105,6 @@
 	.period-cover {
 		aspect-ratio: 16 / 9; // Barça image ratio
 		overflow: hidden;
-		img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-			display: block;
-		}
 	}
 
 	.period-text {
