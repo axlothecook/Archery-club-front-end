@@ -22,7 +22,7 @@
 	);
 
 	const HERO_IMAGE =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/identity-page.jpg';
+		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/achivements/achivements-cover-2.jpg';
 
 	let heroLoaded = $state(false);
 
@@ -103,7 +103,7 @@
 	// ── Hero ──────────────────────────────────────────────────────────────────
 	.ach-hero {
 		position: relative;
-		height: 360px;
+		min-height: 600px; // match the Sponzori hero cover size
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -115,7 +115,7 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: center 12%;
+		object-position: center 80%; // show the LOWER part of the cover photo
 		opacity: 0;
 		transition: opacity 0.8s ease;
 		&.loaded {
@@ -143,26 +143,21 @@
 	}
 
 	// ── Content surface ───────────────────────────────────────────────────────
-	// White card, same width as the Povijest card (85%). Only the TOP corners are
-	// rounded — the golden explore block continues the card's bottom edge.
+	// TRANSPARENT content area (no visible card) — the dark page background shows
+	// through; the honour rows sit directly on it. Constrained to 85% width with
+	// wide side padding so the images keep meeting at the centreline.
 	.ach-content {
 		width: 85%;
 		margin: 0 auto;
-		background-color: $white;
-		color: $navy;
-		border-radius: 12px 12px 0 0;
-		// Wide horizontal padding keeps space between the card sides and the honour
-		// rows; images fill their half up to the centreline (touching the next row's
-		// image corner) — the PSG zig-zag.
+		background-color: transparent;
 		padding: 4.5rem 8rem 3rem;
 	}
-	// The golden explore block matches the white card's width (85%, centred) and
-	// finishes its (square) bottom edge.
+	// The golden explore block spans the FULL viewport width (matching the
+	// individual chapter page's golden "related" block).
 	:global(.achievements .explore) {
-		width: 85%;
-		margin: 0 auto;
-		border-radius: 0 0 12px 12px;
-		overflow: hidden;
+		width: 100%;
+		margin: 0;
+		border-radius: 0;
 	}
 
 	.ach-empty {
@@ -246,7 +241,8 @@
 	.honour-head {
 		padding: 0 ($sp * 2);
 	}
-	// The whole heading — count, ×, and title — is one navy colour (PSG-style).
+	// The whole heading — count, ×, and title — is one WHITE colour (reads on the
+	// dark transparent page background).
 	.honour-heading {
 		margin: 0;
 		display: inline;
@@ -255,7 +251,7 @@
 		font-weight: 800;
 		text-transform: uppercase;
 		letter-spacing: 0.01em;
-		color: $navy;
+		color: $white;
 	}
 	.honour-num {
 		font-size: 1.9rem;
@@ -279,7 +275,7 @@
 		// (e.g. the 12-year Prvenstvo Hrvatske / Državni rekord spans) the wrapped
 		// rows don't look cramped.
 		line-height: 1.75;
-		color: map.get(lib.$colors, 'blue-dress');
+		color: #ccc; // muted light grey on the dark page background
 	}
 
 	// ── Responsive ────────────────────────────────────────────────────────────

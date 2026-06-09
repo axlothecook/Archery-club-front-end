@@ -57,8 +57,17 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
   > još jednom….maknite se, promjenite sport, klub, okolinu….krenite ispočetka. / Oslobodite se. / Sport je samo Vaš
   > izbor. / 10.10.2014. osnovan je Varaždinski streličarski klub. / Na načelima Olimpijske povelje. / Od strane
   > ljudi koji su je znali pročitati između redaka.
-- [ ] `sponzori` (sponsors grid; data already in `+layout.ts`).
-- [ ] `postignuca` (achievements; `/achievements/summary` → stats + grouped cards).
+- [x] **`postignuca` DONE + pushed (2026-06-09 PM, FE 87368ef; BE 5899b3f)**: PSG-honours zig-zag
+  (alternating image/text, images meet at the centreline corners), TRANSPARENT card on the dark bg,
+  white headings + #ccc years, tier-ordered world→EU→state, FULL-width golden explore block, flourish,
+  hero shows lower part of `achivements-cover-2.jpg`. Data = `/achievements/summary`. Backend data fixed
+  at source: Conquest 3, Prvenstvo Hrvatske 66, Državni rekord 65 (2015–2026; PH/DR via year-only filler
+  rows). Hid the date-unknown "Svjetski i europski juniorski rekord" (BE TODO "if adopted").
+- [~] **`sponzori` BUILT, UNCOMMITTED on `feature-sponzori-page`**: mirrors the user's prototype
+  (`axlothecook.github.io/VSK-archeryClub/sponsors.html`, Barça-inspired). Hero "SLUŽBENI PARTNERI" + HR
+  intro + "PRIDRUŽITE SE" → **sponsor-inquiry modal (POST /inquiries/sponsor)**; 5 alternating offset
+  partner cards (logo + HR desc + website link INLINE in the closing sentence); "Počasno priznanje" quote;
+  flourish + golden explore block. NEXT: commit it, then rework `postignuca` to this sponsors-card style.
 
 ### Day 3 — Wed 10.6 · News + Contact
 - [ ] `najnovije` (news feed, cursor-paginated `/articles`, load-older) + article detail template (`/articles/:slug`).
