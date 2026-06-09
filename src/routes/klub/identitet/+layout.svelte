@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { IDENTITY_TABS, identityHref } from '$lib/identity';
+	import SectionExplore from '$lib/components/SectionExplore.svelte';
+	import Flourish from '$lib/components/Flourish.svelte';
 
 	let { children } = $props();
 
@@ -41,8 +43,15 @@
 
 		<div class="identity-body">
 			{@render children()}
+
+			<!-- End-of-card flourish: VSK crest + fanning gold lines (same as the
+			     chapter article + Postignuća), just before the golden explore block. -->
+			<div class="identity-flourish"><Flourish /></div>
 		</div>
 	</div>
+
+	<!-- Golden "explore the club" block at the bottom of the white content. -->
+	<SectionExplore />
 </div>
 
 <style lang="scss">
@@ -183,11 +192,26 @@
 		margin: 0 auto;
 		background-color: $white;
 		color: $navy;
-		border-radius: 12px;
+		// Only the TOP corners are rounded — the golden explore block continues the
+		// card's bottom edge (no bottom rounding).
+		border-radius: 12px 12px 0 0;
+		overflow: hidden;
+	}
+	// The golden explore block matches the white card's width (85%, centred) and
+	// continues from its (square) bottom edge.
+	:global(.identity .explore) {
+		width: 85%;
+		margin: 0 auto;
+		border-radius: 0 0 12px 12px; // round the bottom to finish the card shape
 		overflow: hidden;
 	}
 	.identity-body {
 		// extra top space between the tab bar and the content heading (Barça-like)
 		padding: ($sp * 4) ($sp * 2.5) ($sp * 2.5);
+	}
+	// End-of-card flourish: generous top space from the content, small bottom gap
+	// before the golden block (mirrors the chapter article + Postignuća spacing).
+	.identity-flourish {
+		margin: ($sp * 6) 0 ($sp * 1.5);
 	}
 </style>
