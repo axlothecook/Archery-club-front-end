@@ -1,6 +1,7 @@
 <script lang="ts">
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
+	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import type { AchievementGroup } from './+page.ts';
 
 	let { data } = $props();
@@ -57,7 +58,7 @@
 				{#each groups as g (g.title)}
 					<li class="honour">
 						<div class="honour-media">
-							<img src={g.image.url} alt={g.image.alt} loading="lazy" />
+							<ImageWithLoader src={g.image.url} alt={g.image.alt} />
 						</div>
 						<div class="honour-head">
 							<h2 class="honour-heading" data-medal={g.medal ?? 'none'}>
@@ -227,12 +228,6 @@
 		aspect-ratio: 3 / 2; // PSG-measured 634×423
 		overflow: hidden;
 		background-color: map.get(lib.$colors, 'white-smoke');
-		img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-			display: block;
-		}
 	}
 
 	// Text block: "N× TITLE" heading (bold italic uppercase, PSG-style) + years.
