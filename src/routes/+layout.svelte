@@ -17,9 +17,8 @@
 	import 'flag-icons/css/flag-icons.min.css';
 	import '../styles/index.scss';
 
-	import TopBar from '$lib/components/TopBar.svelte';
+	import NavBar from '$lib/components/NavBar.svelte';
 	import HalfScreenMenu from '$lib/components/HalfScreenMenu.svelte';
-	import SectionNav from '$lib/components/SectionNav.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { onNavigate } from '$app/navigation';
 
@@ -61,14 +60,13 @@
 </svelte:head>
 
 <div class="app-shell">
-	<TopBar />
+	<NavBar />
 	<HalfScreenMenu />
 	<!-- Content layer sits ABOVE the sticky footer (z-index) with a solid bg, so
 	     scrolling up "uncovers" the footer that's pinned beneath it. -->
 	<div class="content-layer">
-		<!-- Club section nav: a strip directly under the (fixed) TopBar; pushes
-		     content down. The top spacer clears the fixed TopBar. -->
-		<div class="section-nav-offset"><SectionNav /></div>
+		<!-- Spacer clears the fixed NavBar (pill + blue strip when present). -->
+		<div class="nav-offset"></div>
 		<main class="app-main">
 			{@render children()}
 		</main>
@@ -87,15 +85,11 @@
 		display: flex;
 		flex-direction: column;
 	}
-	/* clear the fixed TopBar so the section nav sits directly below it */
-	.section-nav-offset {
-		position: relative;
-		z-index: 1;
-		padding-top: 56px;
-		background-color: var(--color-bg);
-		/* view-transition-name applied only DURING the slide (scoped under html.vt-*
-		   in the global stylesheet) so it stays still then, without a permanent
-		   name affecting rest-state rendering. */
+	/* Spacer that clears the fixed NavBar (pill, plus the blue strip on section
+	   pages). The NavBar sets --nav-h to its current natural height. */
+	.nav-offset {
+		height: var(--nav-h, 64px);
+		transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	/* solid page bg + above the footer so the reveal-from-beneath works */
 	.app-main {

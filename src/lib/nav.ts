@@ -19,6 +19,29 @@ export const TOP_BAR_LINKS = {
 	] satisfies NavLink[]
 };
 
+// The blue "section nav" strip's links (Postignuća / Sponzori · Identitet / Povijest).
+// Shown only on these section pages; on scroll they MERGE into the top bar pill
+// (the first two dock left of the logo, the last two right of it). Split = order
+// shown here: left cluster = section.left, right cluster = section.right.
+export const SECTION_NAV_LINKS = {
+	left: [
+		{ label: 'Postignuća', href: '/postignuca' },
+		{ label: 'Sponzori', href: '/sponzori' }
+	] satisfies NavLink[],
+	right: [
+		{ label: 'Identitet', href: '/klub/identitet' },
+		{ label: 'Povijest', href: '/klub/povijest' }
+	] satisfies NavLink[]
+};
+
+// Pages that show the blue section nav (and thus the scroll-merge behaviour).
+export const SECTION_NAV_PATHS = [
+	'/postignuca',
+	'/sponzori',
+	'/klub/identitet',
+	'/klub/povijest'
+];
+
 // The half-screen menu (Gucci-style). Every page link that is NOT already in the
 // TopBar (Vijesti, Momčad, Raspored) or the centred crest (home) lives here.
 // A link may optionally have `children` — if it does, the menu treats it as a
