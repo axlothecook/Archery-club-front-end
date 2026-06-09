@@ -86,7 +86,7 @@
 	// weight 400, centred.
 	.values-title {
 		margin: 0 0 ($sp * 1.5);
-		font-size: 3rem;
+		font-size: 2.25rem; // smaller content-card heading
 		font-weight: 700; // heavier to match Barça's visual heft
 		line-height: 1.25; // room so the gradient-clip doesn't crop descenders (j)
 		padding-bottom: 0.1em;
@@ -108,6 +108,7 @@
 		margin-bottom: $sp * 2.5;
 		blockquote {
 			margin: 0;
+			text-align: center; // match the history founder quote
 			font-size: 1.2rem;
 			font-weight: 300; // nuked weight (Barça-style light)
 			font-style: italic;

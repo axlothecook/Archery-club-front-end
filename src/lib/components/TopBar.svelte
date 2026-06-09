@@ -63,6 +63,9 @@
 		left: 0;
 		right: 0;
 		z-index: 900;
+		// NB: `view-transition-name` is applied only DURING the history slide (scoped
+		// under html.vt-* in the global stylesheet), NOT here — a permanent
+		// view-transition-name breaks the child's backdrop-filter glass at rest.
 
 		// TOP STATE: no padding → inner bar is edge-to-edge, flush to the top.
 		padding: 0;
@@ -108,10 +111,11 @@
 		border-color: rgba(255, 255, 255, 0.12);
 		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 
-		// more transparent, stronger blur — mirrors Apple's frosted glass
-		background-color: rgba(0, 0, 0, 0.4);
-		backdrop-filter: blur(20px) saturate(180%);
-		-webkit-backdrop-filter: blur(20px) saturate(180%);
+		// Apple's exact frosted-glass recipe (from apple.com #globalnav, verified
+		// live): near-black #1d1d1f at 0.8 opacity + saturate(1.8) blur(20px).
+		background-color: rgba(29, 29, 31, 0.8);
+		backdrop-filter: saturate(180%) blur(20px);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
 	}
 
 	.topbar-cluster {
@@ -129,7 +133,8 @@
 		color: inherit;
 		font: inherit;
 		font-weight: 600;
-		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
 		cursor: pointer;
 		padding: 0.25rem 0;
 
@@ -145,6 +150,8 @@
 		color: inherit;
 		text-decoration: none;
 		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
 		&:hover {
 			color: var(--color-accent);
 		}

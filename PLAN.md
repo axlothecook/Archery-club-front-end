@@ -29,7 +29,11 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
   Vrijednosti, slow 0.7s slide, slow-fade › arrow), 3 text tiers (big/middle Kontakt/small email-phone-Prijava),
   center-out gold (`var(--color-accent)`) underline on direct links, upward-flying locale flag dropdown, close-X
   top-right. svelte-check 0 errors. ⏳ NOT yet committed/merged — awaiting user OK to commit+merge `feature-menu`→main+push.
-- [ ] Build `klub/identitet` end-to-end as the **template page** (backend `/club-identity`: list/`:slug`/`/default`; kinds blocks/single/gallery). Establishes load→render→style pattern reused by all pages.
+- [x] **`klub/identitet` DONE** (2026-06-08, pushed): Barça-style frame (gold "Identitet" hero fading into page bg,
+  tab bar inside the white card with animated gold center-out underline) + all 3 tabs — Vrijednosti (quote + olympic
+  image + 4 value blocks), Dres (jersey timeline), Grb (crest). `$lib/identity.ts` slug map; `[slug]` route handles
+  single+gallery kinds; page bg = sponsors-cap colour (rule). Library palette throughout. This is the TEMPLATE for the
+  rest of the content pages. Gotcha: Croatian URL slugs (grb/dres) map to backend slugs (crest/jersey) via `apiSlugFor`.
 
 ### Day 2 — Tue 9.6 · Data-driven content pages
 - [ ] `klub/povijest` (history grid 4-col + `/:slug` detail). **Include the full VSK Olympic-Charter founding
@@ -90,7 +94,22 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
 
 ---
 
+## PHASE 2 — DASHBOARD / ADMIN UI (separate app, AFTER the public site ships 15.6)
+The backend already exposes a full `/admin/*` CRUD API (auth, every entity, image upload, inquiries inbox)
+but there is NO admin frontend yet. Per the handoff the dashboard is a SEPARATE app/subdomain; the public
+site only links to it via a discreet footer "Prijava". Decided 2026-06-08: finish + deploy the public site
+by 15.6 FIRST, then write a dedicated dashboard plan and build it. Rough scope (its own multi-day project):
+- [ ] Scaffold the dashboard app (own repo or subdir) + auth (login/logout, protected routes, session cookie).
+- [ ] CRUD UIs per entity: sponsors, archers/roster, articles/news, events, achievements, event-levels, hero,
+  club-info (contact fields), club-identity/history (if editable).
+- [ ] Image/video upload UI → `/admin/upload` (R2). Inquiries inbox (membership/sponsor/donation) + reply.
+- [ ] Invite/accept-invite + forgot/reset password flows. Deploy (its own subdomain + tunnel).
+
 ## Backlog (added 2026-06-08, do AFTER the menu)
+- [ ] **Import a custom font (down the line)** — the whole site currently uses Inter (`--font-primary` in
+  `src/styles/index.scss`, self-hosted via @fontsource in `+layout.svelte`). Pick + self-host a brand font
+  (e.g. via @fontsource or local woff2), wire it into `--font-primary`, keep Inter as the fallback. Re-check
+  the gradient-clip headings + Barça-matched weights after swapping (different fonts render weight differently).
 - [ ] **Founding/about page text** — add this paragraph (Croatian, transcribe VERBATIM, do not edit):
   > „Varaždinski streličarski klub od svojeg osnutka ima svoje streličare u redovima reprezentacije i oni
   > redovito donose izvanredne rezultate za klub i za Hrvatsku, što je sve posljedica odličnog rada u klubu
