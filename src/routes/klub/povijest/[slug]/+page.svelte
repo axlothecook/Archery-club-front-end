@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { error } from '@sveltejs/kit';
-	import type { ClubHistoryPeriodResolved } from 'archery-contracts';
+	import type { ClubHistoryPeriodResolved, ClubHistoryParagraph } from 'archery-contracts';
 	import CrossedArrowsIcon from '$lib/components/icons/CrossedArrowsIcon.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 
@@ -18,48 +18,11 @@
 
 	const coverUrl = $derived(period.coverImage?.url ?? '');
 
-	// Some chapters end with a chronological HIGHLIGHTS list. The entries are
-	// rendered as structured one-line rows: "date - result • competition • archer".
-	// TEMPORARY: structured here on the front-end (transcribed from the prose lists
-	// in the seed). FINAL version will move these to structured backend data
-	// (club-history.json `highlights`), per the data-in-JSON rule.
-	type Highlight = { date: string; result: string; competition: string; archer: string };
-	const HIGHLIGHTS: Record<string, Highlight[]> = {
-		'2019-2021-klub-dostize-svoj-vrhunac': [
-			{ date: 'travanj 2019.', result: 'Zlato', competition: 'Europski Grand Prix', archer: 'Amanda Mlinarić' },
-			{ date: 'kolovoz 2019.', result: 'Zlato', competition: 'Svjetsko juniorsko prvenstvo', archer: 'Amanda Mlinarić' },
-			{ date: 'listopad 2019.', result: 'Zlato', competition: 'Europsko prvenstvo u terenskom streličarstvu', archer: 'Amanda Mlinarić' },
-			{ date: 'svibanj 2021.', result: 'Zlato', competition: "Veronica's Cup", archer: 'Amanda Mlinarić' },
-			{ date: 'lipanj 2021.', result: '9. mjesto', competition: 'Završne olimpijske kvalifikacije', archer: 'Alen Remar' },
-			{ date: 'kolovoz 2021.', result: 'Zlato', competition: 'Svjetsko juniorsko prvenstvo', archer: 'Amanda Mlinarić' }
-		],
-		'2024-novo-doba-kluba': [
-			{ date: 'siječanj 2024.', result: 'Zlato', competition: 'Juniorski dvoranski svjetski kup', archer: 'Leo Sulik' },
-			{ date: 'veljača 2024.', result: 'Ekipno srebro', competition: 'Europsko dvoransko prvenstvo', archer: 'Nikola Portner Pavičević' },
-			{ date: 'rujan 2024.', result: 'Srebro', competition: 'Svjetsko prvenstvo u poljskom streličarstvu', archer: 'Amanda Mlinarić' },
-			{ date: 'studeni 2024.', result: 'Zlato', competition: 'Dvoranski svjetski kup (GT Open)', archer: 'Leo Sulik' },
-			{ date: 'studeni 2024.', result: 'Srebro', competition: 'GT Open', archer: 'Alen Remar' },
-			{ date: 'svibanj 2025.', result: 'Zlato', competition: 'Conquest Cup', archer: 'Amanda Mlinarić' },
-			{ date: 'rujan 2025.', result: 'Zlato', competition: 'Europsko prvenstvo u poljskom streličarstvu', archer: 'Amanda Mlinarić' },
-			{ date: 'prosinac 2025.', result: 'Zlato', competition: 'Taipei Open', archer: 'Amanda Mlinarić' },
-			{ date: 'veljača 2026.', result: 'Srebro', competition: 'Europsko dvoransko prvenstvo', archer: 'Amanda Mlinarić' },
-			{ date: 'svibanj 2026.', result: 'Olimpijske kvote', competition: 'Europske igre 2027.', archer: 'Amanda i Alen Remar' }
-		]
-	};
-
-	// For a paragraph that has a highlights list: take the intro sentence from the
-	// body (the prose before the first blank line) + the structured rows for this
-	// chapter. Returns no items for paragraphs that aren't the highlights section.
-	function parseBody(body: string): { intro: string; items: Highlight[] } {
-		const items = HIGHLIGHTS[slug] ?? [];
-		if (items.length === 0) return { intro: body, items: [] };
-		// Only the paragraph whose body is the dated list gets the rows: detect it by
-		// the blank-line-separated dated entries it still contains.
-		const parts = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-		const isListPara = parts.length > 1 && parts.slice(1).every((p) => p.includes(' - '));
-		if (!isListPara) return { intro: body, items: [] };
-		return { intro: parts[0], items };
-	}
+	// Some chapter paragraphs carry a structured `highlights` list (from the backend
+	// seed): a chronological achievement list rendered as one-line rows
+	// "date – result • competition • archer". The paragraph's `body` holds the intro
+	// prose; `highlights` holds the rows.
+	type Highlight = NonNullable<ClubHistoryParagraph['highlights']>[number];
 
 	// Split a paragraph body on blank lines into separate paragraphs (the seed
 	// stores intended paragraph breaks as "\n\n"), so long sections render as
@@ -200,14 +163,13 @@
 		<p class="chapter-lead">{period.lead}</p>
 
 		{#each period.paragraphs as para (para.header)}
-			{@const parsed = parseBody(para.body)}
 			<section class="chapter-section">
 				<h2 class="section-header">{para.header}</h2>
-				{#if parsed.items.length > 0}
+				{#if para.highlights && para.highlights.length > 0}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					<p class="section-body">{@html boldStats(parsed.intro)}</p>
+					<p class="section-body">{@html boldStats(para.body)}</p>
 					<ul class="section-list">
-						{#each parsed.items as item, i (item.date + item.competition + i)}
+						{#each para.highlights as item, i (item.date + item.competition + i)}
 							<li>
 								<span class="item-date">{item.date}</span>
 								<span class="item-dash"> – </span>
