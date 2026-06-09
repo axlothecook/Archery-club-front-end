@@ -20,6 +20,7 @@
 	import NavBar from '$lib/components/NavBar.svelte';
 	import HalfScreenMenu from '$lib/components/HalfScreenMenu.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import RouteLoader from '$lib/components/RouteLoader.svelte';
 	import { onNavigate } from '$app/navigation';
 
 	let { children } = $props();
@@ -62,6 +63,7 @@
 <div class="app-shell">
 	<NavBar />
 	<HalfScreenMenu />
+	<RouteLoader />
 	<!-- Content layer sits ABOVE the sticky footer (z-index) with a solid bg, so
 	     scrolling up "uncovers" the footer that's pinned beneath it. -->
 	<div class="content-layer">
