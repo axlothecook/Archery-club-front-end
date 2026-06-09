@@ -65,7 +65,7 @@
 	// Section title: same blue→navy gradient as the Vrijednosti page.
 	.section-title {
 		margin: 0 0 ($sp * 1.5);
-		font-size: 3rem;
+		font-size: 2.25rem; // smaller content-card heading
 		font-weight: 700;
 		line-height: 1.25;
 		padding-bottom: 0.1em;

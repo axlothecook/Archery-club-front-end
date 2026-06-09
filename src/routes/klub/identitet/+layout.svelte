@@ -63,15 +63,16 @@
 	.identity {
 		// full-width: the page fills the viewport (footer is a separate sibling,
 		// unaffected). Inner content gets its own padding/constraints as needed.
+		// No bottom gap — breathing room before the sponsor div is the cap's own
+		// top padding (uniform site-wide, sponsor colour).
 		width: 100%;
-		padding-bottom: $sp * 4;
 		background-color: $page-bg;
 	}
 
 	// ── Hero ──────────────────────────────────────────────────────────────────
 	.identity-hero {
 		position: relative;
-		height: 480px; // taller band → less crop, shows more of the 16:9 image
+		height: 360px; // shorter hero band
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -106,9 +107,10 @@
 		position: relative;
 		margin: 0;
 		color: $gold;
-		font-size: 3rem;
+		font-size: 4rem; // larger page hero title
 		font-weight: 700;
 		letter-spacing: 0.02em;
+		text-transform: uppercase;
 	}
 
 	// ── Tab bar (Barça secondary-nav style) ───────────────────────────────────
@@ -174,10 +176,10 @@
 
 	// ── Content surface ───────────────────────────────────────────────────────
 	.identity-content {
-		// Centred white panel with wider navy gutters than Barça's near-full width.
+		// Centred white panel; width matches the Povijest content card (85%).
 		// The tab bar lives at its TOP; overflow:hidden clips the bar to the
 		// rounded corners. Padding moves to .identity-body so the bar is full-width.
-		width: 78%;
+		width: 85%;
 		margin: 0 auto;
 		background-color: $white;
 		color: $navy;

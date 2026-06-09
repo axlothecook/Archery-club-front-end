@@ -143,7 +143,9 @@
 		z-index: 1;
 		// Swapped: sponsors/social cap now uses the darker footer navy.
 		background-color: var(--color-footer);
-		padding: 4.5rem 0 5rem; // taller, PSG-style; full-bleed so dividers reach edges
+		// Top padding absorbs the breathing room that used to be a separate navy gap
+		// on each page (now in the SPONSOR colour, so there's no two-tone band).
+		padding: 8.5rem 0 5rem; // full-bleed so dividers reach edges
 		display: flex;
 		flex-direction: column;
 		align-items: center;
