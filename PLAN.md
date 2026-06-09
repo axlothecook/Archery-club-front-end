@@ -36,7 +36,13 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
   rest of the content pages. Gotcha: Croatian URL slugs (grb/dres) map to backend slugs (crest/jersey) via `apiSlugFor`.
 
 ### Day 2 — Tue 9.6 · Data-driven content pages
-- [ ] `klub/povijest` (history grid 4-col + `/:slug` detail). **Include the full VSK Olympic-Charter founding
+- [x] **`klub/povijest` DONE + pushed (2026-06-09, FE c190ff5)**: history LIST grid (Klub kroz godine +
+  founder quote) + chapter `[slug]` detail (Barça-mirror: sticky cover, scroll-over title, flourish, related
+  "POVEZANO" auto-scroll marquee, sticky-in-panel X button, View-Transitions list↔chapter slide). Design
+  LOCKED IN by user. The Olympic-Charter founding text below is on the Identitet/Vrijednosti page.
+  IN PROGRESS (uncommitted): shared `SectionExplore` "MOŽDA ĆE VAM SE SVIDJETI" block on Identitet (needs real
+  Postignuća/Sponzori images + roll-out). TODO: bullet-point last-paragraph per chapter; global page-load loader SVG.
+- [~] `klub/povijest` (history grid 4-col + `/:slug` detail). **Include the full VSK Olympic-Charter founding
   text (user-supplied, transcribe VERBATIM — Croatian, do NOT paraphrase; source vsk.hr/o-klubu):**
   > Ovo je Olimpijska povelja. / Svi koji se bave sportom, kad ju pročitaju to će i reći. / Olimpijska povelja. /
   > Savjetujemo svima da je čitaju svaki dan. Čak više puta dnevno. / Kad ju zapamtite, čitajte ponovo. / Čitajte
