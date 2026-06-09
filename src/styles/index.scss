@@ -107,36 +107,26 @@ html.vt-close::view-transition-new(root) {
 	}
 }
 
-// The topbar + section-nav have their OWN view-transition snapshots (named above),
-// so they are excluded from the sliding `root` snapshot. Pin them dead-still (no
-// cross-fade) during BOTH directions — they must never move while the page slides.
-html.vt-open::view-transition-group(topbar),
-html.vt-close::view-transition-group(topbar),
-html.vt-open::view-transition-group(section-nav),
-html.vt-close::view-transition-group(section-nav) {
+// The unified NavBar has its OWN view-transition snapshot (named below), so it is
+// excluded from the sliding `root` snapshot. Pin it dead-still (no cross-fade)
+// during BOTH directions — it must never move while the page slides.
+html.vt-open::view-transition-group(navbar),
+html.vt-close::view-transition-group(navbar) {
 	animation: none;
 }
-html.vt-open::view-transition-old(topbar),
-html.vt-open::view-transition-new(topbar),
-html.vt-close::view-transition-old(topbar),
-html.vt-close::view-transition-new(topbar),
-html.vt-open::view-transition-old(section-nav),
-html.vt-open::view-transition-new(section-nav),
-html.vt-close::view-transition-old(section-nav),
-html.vt-close::view-transition-new(section-nav) {
+html.vt-open::view-transition-old(navbar),
+html.vt-open::view-transition-new(navbar),
+html.vt-close::view-transition-old(navbar),
+html.vt-close::view-transition-new(navbar) {
 	animation: none;
 	mix-blend-mode: normal;
 }
 
-// Assign view-transition-names to the bars ONLY while a history slide is active
-// (the html.vt-* class is present only during the transition). Applying the name
-// permanently would break the topbar's backdrop-filter glass at rest, so it's
-// scoped here. :global so it reaches the component-scoped .topbar.
-html.vt-open .topbar,
-html.vt-close .topbar {
-	view-transition-name: topbar;
-}
-html.vt-open .section-nav-offset,
-html.vt-close .section-nav-offset {
-	view-transition-name: section-nav;
+// Assign the view-transition-name to the NavBar ONLY while a history slide is
+// active (the html.vt-* class is present only during the transition). Applying the
+// name permanently would break the pill's backdrop-filter glass at rest, so it's
+// scoped here.
+html.vt-open .navbar,
+html.vt-close .navbar {
+	view-transition-name: navbar;
 }
