@@ -14,14 +14,14 @@
 	const BASE = 'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public';
 	const OLYMPIC_IMG = `${BASE}/identity/olimpic-logo.jpg`;
 	const LATEST_CHAPTER_IMG = `${BASE}/history/ch-9.jpg`; // 2024 "Novo doba kluba" cover
-	const ACHIEVEMENTS_IMG = `${BASE}/achivements/achivements-cover.png`; // Postignuća cover
-	const PLACEHOLDER_IMG = `${BASE}/identity/identity-page.jpg`; // TODO: real Sponzori image
+	const ACHIEVEMENTS_IMG = `${BASE}/achivements/achivements-cover-2.jpg`; // Postignuća cover
+	const SPONSORS_IMG = `${BASE}/achivements/sponsors-cover.jpg`; // Sponzori cover
 
 	const SECTIONS = [
 		{ label: 'Povijest', href: '/klub/povijest', image: LATEST_CHAPTER_IMG },
 		{ label: 'Identitet', href: '/klub/identitet', image: OLYMPIC_IMG },
 		{ label: 'Postignuća', href: '/postignuca', image: ACHIEVEMENTS_IMG },
-		{ label: 'Sponzori', href: '/sponzori', image: PLACEHOLDER_IMG }
+		{ label: 'Sponzori', href: '/sponzori', image: SPONSORS_IMG }
 	];
 </script>
 

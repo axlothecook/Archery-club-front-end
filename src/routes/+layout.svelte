@@ -10,6 +10,10 @@
 	import '@fontsource/inter/600.css';
 	import '@fontsource/inter/700.css';
 	import '@fontsource/inter/800.css';
+	// Italic faces (only the upright weights were loaded, so `font-style: italic`
+	// rendered upright — quotes need the real italic glyphs to slant).
+	import '@fontsource/inter/300-italic.css';
+	import '@fontsource/inter/400-italic.css';
 	import 'flag-icons/css/flag-icons.min.css';
 	import '../styles/index.scss';
 

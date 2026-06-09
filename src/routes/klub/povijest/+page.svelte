@@ -13,10 +13,10 @@
 <!-- Founder quote below the section heading. -->
 <figure class="history-quote">
 	<blockquote>
-		„Varaždinski streličarski klub od svojeg osnutka ima svoje streličare u redovima
+		Varaždinski streličarski klub od svojeg osnutka ima svoje streličare u redovima
 		reprezentacije i oni redovito donose izvanredne rezultate za klub i za Hrvatsku,
 		što je sve posljedica odličnog rada u klubu te izuzetnog zalaganja samih
-		streličara.”
+		streličara.
 	</blockquote>
 	<figcaption>Osnivač Tomislav Mlinarić</figcaption>
 </figure>
