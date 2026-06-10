@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { error } from '@sveltejs/kit';
 	import type { ClubHistoryPeriodResolved, ClubHistoryParagraph } from 'archery-contracts';
+	import { splitParagraphs } from '$lib/text';
 	import CrossedArrowsIcon from '$lib/components/icons/CrossedArrowsIcon.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 
@@ -24,15 +25,6 @@
 	// prose; `highlights` holds the rows.
 	type Highlight = NonNullable<ClubHistoryParagraph['highlights']>[number];
 
-	// Split a paragraph body on blank lines into separate paragraphs (the seed
-	// stores intended paragraph breaks as "\n\n"), so long sections render as
-	// several readable <p> blocks instead of one wall of text.
-	function splitParas(body: string): string[] {
-		return body
-			.split(/\n\s*\n/)
-			.map((p) => p.trim())
-			.filter(Boolean);
-	}
 
 	// Colour the result by medal: zlato + pobjeda → gold; srebro + "9. mjesto" →
 	// silver; olimpijske kvote → bronze; anything else → navy default.
@@ -182,7 +174,7 @@
 						{/each}
 					</ul>
 				{:else}
-					{#each splitParas(para.body) as chunk, ci (ci)}
+					{#each splitParagraphs(para.body) as chunk, ci (ci)}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						<p class="section-body">{@html boldStats(chunk)}</p>
 					{/each}

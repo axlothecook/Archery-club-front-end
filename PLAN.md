@@ -120,6 +120,26 @@ by 15.6 FIRST, then write a dedicated dashboard plan and build it. Rough scope (
 - [ ] Image/video upload UI → `/admin/upload` (R2). Inquiries inbox (membership/sponsor/donation) + reply.
 - [ ] Invite/accept-invite + forgot/reset password flows. Deploy (its own subdomain + tunnel).
 
+## If website gets adopted (only build IF the club commits to running the site)
+Features that only make sense once the club actively maintains the site; skip until then.
+- [ ] **⚖️ TOP PRIORITY — LEGAL IP REVIEW before formally adopting as the OFFICIAL site.** Get a binding read
+  from a Croatian / EU intellectual-property attorney. Context: the site recreates common layout/look patterns
+  inspired by other sports clubs' sites (carousel, "mentioned players" cards, alternating-image honours, hero/cover,
+  newsletter band) — all built FROM SCRATCH, with NO copied logos, brand names, photos, text, code, fonts, or icons.
+  Research (2026-06-10, 15+ confirmed US + EU sources: idea/expression dichotomy, *Cofemel*, *BSA v Ministerstvo
+  kultury* C-393/09, *Apple v Microsoft*, *Lotus v Borland*, *Wal-Mart v Samara*, *TrafFix*, EU unfair-competition
+  / passing-off / slavish-imitation) concluded the risk is **very low / negligible** for generic from-scratch
+  patterns — but that is general info, NOT legal advice. The Croatia-specific contour is supported only by ANALOGY
+  to the harmonized EU framework + representative CEE imitation rules (the Croatian statute text couldn't be pulled
+  directly), so an attorney should confirm before the club puts its name on it. 🔴 STAYS RED until reviewed: copied
+  code/CSS, copied images/photos/icons, unlicensed fonts, any reproduced logo/crest/wordmark, or a look so close it
+  implies affiliation with a famous brand.
+- [ ] **Newsletter email signup — WIRE IT UP** — the "enter your email" subscribe box on the news page
+  (email/phone/zip + SUBSCRIBE, mirrors the reference `news.html`) is BUILT as a VISUAL-ONLY placeholder
+  (2026-06-10): the SUBSCRIBE button is inert (no POST). Making it real needs a mailing-list backend (list
+  storage + double opt-in + an email provider e.g. Brevo) the club would have to run. When adopted: add a
+  `POST /newsletter/subscribe` endpoint + DB table + provider, then wire the form's button to it.
+
 ## Backlog (added 2026-06-08, do AFTER the menu)
 - [ ] **Import a custom font (down the line)** — the whole site currently uses Inter (`--font-primary` in
   `src/styles/index.scss`, self-hosted via @fontsource in `+layout.svelte`). Pick + self-host a brand font
