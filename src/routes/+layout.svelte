@@ -14,6 +14,7 @@
 	// rendered upright — quotes need the real italic glyphs to slant).
 	import '@fontsource/inter/300-italic.css';
 	import '@fontsource/inter/400-italic.css';
+	import '@fontsource/inter/900-italic.css';
 	import 'flag-icons/css/flag-icons.min.css';
 	import '../styles/index.scss';
 

@@ -3,6 +3,8 @@
 	import { ui } from '$lib/ui.svelte';
 	import { MENU_LINKS, MENU_CONTACT, MENU_UTILITY, LOCALE_FLAGS, type MenuLink } from '$lib/nav';
 	import FlagIcon from './icons/FlagIcon.svelte';
+	import CloseIcon from './icons/CloseIcon.svelte';
+	import ChevronIcon from './icons/ChevronIcon.svelte';
 	import { fly } from 'svelte/transition';
 
 	// Gucci-style menu with one level of drill-down. The main list shows direct
@@ -48,9 +50,7 @@
 <nav class="half-screen-menu gucci-menu" class:open={ui.menuOpen} aria-label="Glavni izbornik">
 	<div class="menu-head">
 		<button class="menu-close" onclick={() => ui.closeMenu()} aria-label="Zatvori izbornik">
-			<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-				<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-			</svg>
+			<CloseIcon size={22} />
 		</button>
 	</div>
 
@@ -65,9 +65,7 @@
 						{#if link.children}
 							<button class="menu-link menu-link-parent" onclick={() => (activeSub = link)}>
 								{link.label}
-								<svg class="menu-arrow" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-									<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-								</svg>
+								<span class="menu-arrow"><ChevronIcon size={18} direction="right" /></span>
 							</button>
 						{:else}
 							<a class="menu-link" href={link.href} onclick={go}>{link.label}</a>
@@ -97,9 +95,7 @@
 		<div class="menu-view menu-view--sub" aria-hidden={activeSub ? 'false' : 'true'}>
 			{#if activeSub}
 				<button class="menu-back" onclick={() => (activeSub = null)}>
-					<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-						<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
+					<ChevronIcon size={16} direction="left" />
 					<span>Natrag</span>
 				</button>
 				<h2 class="menu-sub-title">{activeSub.label}</h2>
@@ -121,9 +117,7 @@
 		>
 			<FlagIcon country={activeFlag.country} size={1.1} />
 			<span>{activeFlag.short}</span>
-			<svg class="menu-caret" class:open={localeOpen} width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-				<path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-			</svg>
+			<span class="menu-caret" class:open={localeOpen}><ChevronIcon size={14} direction="up" /></span>
 		</button>
 
 		{#if localeOpen}
@@ -261,6 +255,7 @@
 		}
 	}
 	.menu-arrow {
+		display: inline-flex;
 		opacity: 0;
 		transition: opacity 0.5s ease;
 	}
@@ -352,6 +347,7 @@
 		font-weight: 600;
 		font-size: 0.95rem;
 		.menu-caret {
+			display: inline-flex;
 			transition: transform 0.2s ease;
 			&.open {
 				transform: rotate(180deg);

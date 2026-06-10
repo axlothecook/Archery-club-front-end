@@ -11,6 +11,7 @@
 	import { page } from '$app/state';
 	import { ui } from '$lib/ui.svelte';
 	import { TOP_BAR_LINKS, SECTION_NAV_LINKS, SECTION_NAV_PATHS } from '$lib/nav';
+	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import { gsap } from 'gsap';
 	import { Flip } from 'gsap/Flip';
 
@@ -117,9 +118,7 @@
 					aria-label="Otvori meni"
 				>
 					<span>Meni</span>
-					<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-						<path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-					</svg>
+					<MenuIcon size={22} />
 				</button>
 				{#each TOP_BAR_LINKS.left as link (link.href)}
 					<a class="nav-link" data-flip-shift href={link.href}>{link.label}</a>
@@ -209,8 +208,7 @@
 	.pill {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: 4rem;
+		gap: 2rem;
 		padding: 0.7rem 2rem;
 		color: var(--color-ink);
 
@@ -243,9 +241,17 @@
 	}
 
 	.cluster {
+		flex: 1 1 0; // each cluster = equal half → logo stays dead-centre
 		display: flex;
 		align-items: center;
 		gap: 2.25rem;
+		min-width: 0;
+	}
+	.cluster-left {
+		justify-content: flex-end; // links hug the logo from the left
+	}
+	.cluster-right {
+		justify-content: flex-start; // links hug the logo from the right
 	}
 
 	.menu-button {
@@ -261,7 +267,8 @@
 		letter-spacing: 0.03em;
 		cursor: pointer;
 		padding: 0.25rem 0;
-		svg {
+		// the MenuIcon component renders the <svg>, so target it globally
+		:global(svg) {
 			display: block;
 		}
 		&:hover {
@@ -287,7 +294,14 @@
 		color: var(--color-accent);
 	}
 
+	// The two clusters each take an EQUAL half of the pill (flex: 1), so the logo
+	// between them always sits at the pill's exact centre — which, with the pill
+	// centred in the full-width navbar, is screen centre. The clusters justify
+	// toward the logo (left cluster right-aligned, right cluster left-aligned) so
+	// the links sit near the crest. Changing cluster CONTENTS no longer shifts the
+	// logo, because each side's BOX stays half-width.
 	.logo {
+		flex: 0 0 auto;
 		display: inline-flex;
 		img {
 			height: 44px;
