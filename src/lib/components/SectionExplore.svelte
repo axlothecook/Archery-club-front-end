@@ -23,9 +23,17 @@
 		{ label: 'Postignuća', href: '/postignuca', image: ACHIEVEMENTS_IMG },
 		{ label: 'Sponzori', href: '/sponzori', image: SPONSORS_IMG }
 	];
+
+	// Optional content rendered at the TOP of the golden band, above the explore row
+	// (e.g. the Momčad page injects a news roster here).
+	let { top }: { top?: import('svelte').Snippet } = $props();
 </script>
 
 <section class="explore" aria-label="Istraži klub">
+	{#if top}
+		<div class="explore-top">{@render top()}</div>
+	{/if}
+
 	<h2 class="explore-heading"><strong>MOŽDA</strong> ĆE VAM SE SVIDJETI</h2>
 
 	<div class="explore-row">

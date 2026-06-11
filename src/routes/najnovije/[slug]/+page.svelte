@@ -14,7 +14,7 @@
 	import YouTubeIcon from '$lib/components/icons/YouTubeIcon.svelte';
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
-	import type { Bow } from 'archery-contracts';
+	import { bowLabel } from '$lib/archer';
 
 	let { data } = $props();
 	const article = $derived(data.article);
@@ -84,13 +84,6 @@
 		return { destroy: () => io.disconnect() };
 	}
 
-	// Croatian bow-type label for an archer card's primary bow.
-	const BOW_LABEL: Record<Bow, string> = {
-		recurve: 'Klasični luk',
-		compound: 'Složeni luk',
-		barebow: 'Goli luk'
-	};
-	const bowLabel = (bows: Bow[]) => (bows[0] ? BOW_LABEL[bows[0]] : '');
 </script>
 
 <article class="post">
