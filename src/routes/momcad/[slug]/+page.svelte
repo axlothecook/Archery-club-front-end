@@ -4,13 +4,12 @@
 	//   2. DETAILS + BIO — Real-Madrid style: personal details (left) | scrollable bio.
 	//   3. ACHIEVEMENTS — RM honours grid: one count card per distinct title/record.
 	//   4. STATS / RESULTS — a Momčad-tab switch toggling a fixed-height (scrollable) table.
-	//   5. BOW DATA — image (left) + text (right). Image is a placeholder until the 3D asset.
-	//   6. RELATED ARCHERS — roster cards (teammates sharing this archer's primary bow).
-	//   7. RELATED ARTICLES — recent news cards.
+	//   5. BOW DATA — interactive 3D bow model (left) + description (right), by bow type.
+	//   6. COACHES / "TRENIRA" — coach cards + this coach's students (paged).
+	//   7. RELATED ARTICLES — news mentioning this archer (topped up with newest).
 	//
-	// NOTE: birthPlace, the per-archer honours join, the bow-data copy and the
-	// 3D bow asset are not in the backend yet — those blocks use PLACEHOLDER data
-	// (flagged inline) so the design is final and only the data gets swapped in.
+	// NOTE: the bow-description copy is still placeholder-ish (fact-based but generic);
+	// everything else (achievements, coaches/students, news) is real backend data.
 	import type { ArcherProfile, ArcherCard, ArticleCard } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
@@ -209,9 +208,9 @@
 		a.worldArcheryId ? `https://worldarchery.sport/athletes/${a.worldArcheryId}` : null
 	);
 
-	// NOTE: the profile contract sends only the derived `age` (null for minors), never
-	// the raw birth date. PLACEHOLDER — birthplace is not in the backend yet.
-	const birthPlace = 'Varaždin, Hrvatska';
+	// NOTE: birthDate/birthplace are admin/privacy-only (used server-side to derive age
+	// and to hide sections / withhold photos for minors) — they are intentionally NOT
+	// shown on the public profile, so there's no birthplace row here.
 
 	// ── Stats / Results switch (styled like the Momčad "Svi / Klasični luk" tabs) ──
 	type Tab = 'stats' | 'results';
@@ -252,7 +251,8 @@
 	// a count. Empty for archers (e.g. coaches) with none → the section is hidden.
 	const honours = $derived(a.achievements ?? []);
 
-	// ── Bow data (5th div) — PLACEHOLDER copy + image; the 3D asset lands here later.
+	// ── Bow data (5th div) — title + description per bow type (the bow itself renders
+	//    as a live 3D model via BowViewer; copy is fact-based, no stored photo).
 	const primaryBow = $derived(a.bowType[0] ?? 'recurve');
 	// The bow image is rendered as a live 3D model (BowViewer), NOT a stored photo —
 	// so this map only carries the heading title + description copy. Descriptions are
@@ -481,10 +481,6 @@
 					<div class="pf-detail">
 						<dt>Ime</dt>
 						<dd>{a.firstName} {a.lastName}</dd>
-					</div>
-					<div class="pf-detail">
-						<dt>Mjesto rođenja</dt>
-						<dd>{birthPlace}</dd>
 					</div>
 					{#if a.age !== null}
 						<div class="pf-detail">
