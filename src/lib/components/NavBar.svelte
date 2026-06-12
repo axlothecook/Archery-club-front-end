@@ -21,7 +21,16 @@
 		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
 
 	// Scroll state drives the pill morph (full bar ↔ rounded glass pill).
-	let scrolled = $state(false);
+	// Initialise from the pre-paint marker set by the inline script in app.html (which
+	// reads SvelteKit's saved scroll position), OR the live scrollY. This way a reload
+	// while scrolled mid-page renders the pill shape on the FIRST paint — no flash of
+	// the top-of-page shape, even while the heavy hero blocks the main thread. NB:
+	// SvelteKit restores scroll MANUALLY a frame or two after init, so window.scrollY
+	// alone is 0 at this point; the data-scrolled attribute is the reliable signal.
+	let scrolled = $state(
+		typeof document !== 'undefined' &&
+			(document.documentElement.hasAttribute('data-scrolled') || window.scrollY > 10)
+	);
 
 	// Section pages show the blue strip + get the scroll-merge behaviour.
 	const path = $derived(page.url.pathname.replace(/\/$/, ''));
@@ -65,6 +74,18 @@
 		};
 		onScroll();
 		window.addEventListener('scroll', onScroll, { passive: true });
+
+		// SvelteKit restores scroll position (manual mode) a frame or two AFTER mount,
+		// which would otherwise leave the pill in the top-of-page shape until then. Re-
+		// sync for the first few frames, setting `scrolled` DIRECTLY (no Flip capture) so
+		// the correction snaps instantly instead of animating the merge on load.
+		let frames = 0;
+		const settle = () => {
+			scrolled = window.scrollY > 10;
+			if (++frames < 10) requestAnimationFrame(settle);
+		};
+		requestAnimationFrame(settle);
+
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 
@@ -115,7 +136,7 @@
 	class="navbar"
 	class:scrolled
 	class:section={onSectionPage}
-	class:transparent={transparentTop}
+	class:nav-clear={transparentTop}
 	bind:this={navEl}
 >
 	<!-- ── The morphing top pill ─────────────────────────────────────────────── -->
@@ -247,19 +268,23 @@
 			box-shadow 0.4s ease,
 			border-color 0.4s ease;
 	}
-	// Raspored hero exception: transparent pill, black text/icons over the video.
+	// Raspored hero exception: clear pill, black text/icons over the video.
+	// NB: the modifier is `nav-clear`, NOT `transparent` — the sass library defines a
+	// global `.transparent` glass utility (blur + 120deg gradient) that would
+	// otherwise paint a glassy strip on the navbar.
 	// `color` cascades to .menu-button / .nav-link (color: inherit) and MenuIcon
 	// (currentColor), so they all turn black with no per-element overrides.
-	.navbar.transparent .pill,
-	.navbar.transparent.scrolled .pill {
-		// Nothing but the black text over the video: no fill, glass, blur, or shadow.
+	.navbar.nav-clear .pill,
+	.navbar.nav-clear.scrolled .pill {
+		// Nothing but the text over the video: no fill, glass, blur, or shadow.
 		background-color: transparent !important;
 		box-shadow: none !important;
 		border-color: transparent !important;
 		backdrop-filter: none !important;
 		-webkit-backdrop-filter: none !important;
 		transition: none;
-		color: #000;
+		// White unselected links/icons (the active link keeps its gold via .active).
+		color: #fff;
 	}
 	.navbar.scrolled .pill {
 		padding: 0.4rem 2rem;
