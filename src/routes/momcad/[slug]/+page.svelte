@@ -29,6 +29,11 @@
 
 	let { data } = $props();
 
+	// Flips true when the PageLoader finishes (page becomes visible). Gates the cover's
+	// echo slide-in so the user actually SEES it play, instead of it running hidden
+	// behind the loader.
+	let revealed = $state(false);
+
 	// The "‹ Momčad" back-link should return the user to the roster EXACTLY where they
 	// left it (scroll position preserved). If they arrived here from the roster, a
 	// real history.back() reuses SvelteKit's saved scroll; otherwise (deep-link/refresh)
@@ -365,7 +370,7 @@
 <!-- Page loader: holds a #34302d 0→100% screen until the cover photo has loaded, then
      fades the page in over 0.7s. Every archer has a cover photo in practice
      (profilePhoto → cardPhoto fallback); the optional chain keeps it type-safe. -->
-<PageLoader assets={coverPhoto?.url ? [coverPhoto.url] : []} />
+<PageLoader assets={coverPhoto?.url ? [coverPhoto.url] : []} onreveal={() => (revealed = true)} />
 
 <div class="profile">
 	{#if cover?.design === 'filter'}
@@ -375,6 +380,7 @@
 		<header
 			class="pf-fcover"
 			data-orient={cover.orient}
+			data-revealed={revealed}
 			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}"
 		>
 			<a class="pf-back" href="/momcad" onclick={handleBack}>
@@ -1113,11 +1119,16 @@
 	// a vivid red; the translate offsets it; it sits behind the main photo (DOM order + no veil).
 	.pf-fphoto--echo {
 		filter: grayscale(1) brightness(0.9) sepia(1) saturate(8) hue-rotate(-18deg) blur(14px);
-		transform: translate(3rem, 1.5rem);
 		z-index: 0;
-		// On load/reload the shade starts EXACTLY behind the photo (no offset, hidden) and slides
-		// OUT to its resting offset once over 0.7s (ease-out), so the red ghost emerges from
-		// directly behind the image rather than flying in from off-frame.
+		// Hold at the START of the slide-in (directly behind the photo, no offset) until
+		// the loader has finished and the page is VISIBLE — so the user actually sees the
+		// shade emerge. The animation only runs once [data-revealed='true'] is set.
+		transform: translate(0, 0);
+	}
+	// Play the echo slide-in only after the loader reveals the page.
+	[data-revealed='true'] .pf-fphoto--echo {
+		// Slides OUT to its resting offset over 0.7s (ease-out) — the red ghost emerges
+		// from directly behind the image rather than flying in from off-frame.
 		animation: pf-echo-in 0.7s ease-out both;
 	}
 	@keyframes pf-echo-in {
@@ -1129,8 +1140,11 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.pf-fphoto--echo {
+		// No slide-in for reduced motion — show the echo at its resting offset directly.
+		.pf-fphoto--echo,
+		[data-revealed='true'] .pf-fphoto--echo {
 			animation: none;
+			transform: translate(3rem, 1.5rem);
 		}
 	}
 	.pf-fphoto--window {

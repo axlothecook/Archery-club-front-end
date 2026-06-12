@@ -13,8 +13,11 @@
 	let {
 		assets = [],
 		/** Hard cap (ms): force-finish even if an asset never loads. */
-		timeout = 8000
-	}: { assets?: string[]; timeout?: number } = $props();
+		timeout = 8000,
+		/** Fires the moment the loader starts fading out (the page becomes visible), so
+		 *  the page can kick off intro animations only AFTER the loader is gone. */
+		onreveal
+	}: { assets?: string[]; timeout?: number; onreveal?: () => void } = $props();
 
 	// `pct` is the DISPLAYED number; it eases toward `target` (the REAL load progress)
 	// each frame so the count visibly climbs instead of jumping. `done` flips after the
@@ -52,8 +55,13 @@
 		const startFade = () => {
 			if (faded) return;
 			faded = true;
-			// Let 100% sit for a beat, then fade out 0.7s, then remove from DOM.
-			setTimeout(() => (hiding = true), 120);
+			// Let 100% sit for a beat, then fade out 0.7s, then remove from DOM. Signal
+			// `onreveal` as the fade STARTS so the page can begin its intro animations
+			// right as it becomes visible (e.g. the cover's echo slide-in).
+			setTimeout(() => {
+				hiding = true;
+				onreveal?.();
+			}, 120);
 			setTimeout(() => (done = true), 120 + 700);
 		};
 
