@@ -22,7 +22,8 @@
 	import ArcherCardComp from '$lib/components/ArcherCard.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
-	import { BOW_LABEL } from '$lib/archer';
+	import PageLoader from '$lib/components/PageLoader.svelte';
+	import { BOW_LABEL, ARCHER_CARD_SCALE } from '$lib/archer';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
 	import { afterNavigate } from '$app/navigation';
@@ -361,6 +362,11 @@
 	<title>{a.firstName} {a.lastName} | Momčad — VSK</title>
 </svelte:head>
 
+<!-- Page loader: holds a #34302d 0→100% screen until the cover photo has loaded, then
+     fades the page in over 0.7s. Every archer has a cover photo in practice
+     (profilePhoto → cardPhoto fallback); the optional chain keeps it type-safe. -->
+<PageLoader assets={coverPhoto?.url ? [coverPhoto.url] : []} />
+
 <div class="profile">
 	{#if cover?.design === 'filter'}
 		<!-- ── 1b. FILTER cover (Amanda / Alen): triptych. The photo fills the band three
@@ -469,7 +475,7 @@
 	<div class="pf-sheet">
 		<!-- ── 2. DETAILS (left) + BIO (right) ──────────────────────────────────── -->
 		<section class="pf-block pf-intro">
-			<div class="pf-details">
+			<div class="pf-details" use:reveal>
 				<h2 class="pf-block-title">Osobni podaci</h2>
 				<dl class="pf-detail-list">
 					<div class="pf-detail">
@@ -526,7 +532,7 @@
 			</div>
 
 			{#if bioParas.length}
-				<div class="pf-bio">
+				<div class="pf-bio" use:reveal={{ delay: 100 }}>
 					<h2 class="pf-block-title">Biografija</h2>
 					<div class="pf-bio-scroll">
 						{#each bioParas as p, i (i)}
@@ -688,7 +694,12 @@
 				<ul class="pf-related-grid">
 					{#each coachCards as c, i (c.slug)}
 						<li>
-							<ArcherCardComp archer={c} tone={i % 2 === 0 ? 'blue-dress' : 'navy'} fullSize={true} />
+							<ArcherCardComp
+								archer={c}
+								tone={i % 2 === 0 ? 'blue-dress' : 'navy'}
+								fullSize={true}
+								scale={ARCHER_CARD_SCALE[c.slug] ?? 1}
+							/>
 						</li>
 					{/each}
 				</ul>
@@ -731,6 +742,7 @@
 									archer={s}
 									tone={i % 2 === 0 ? 'blue-dress' : 'navy'}
 									fullSize={true}
+									scale={ARCHER_CARD_SCALE[s.slug] ?? 1}
 								/>
 							</li>
 						{/each}
@@ -743,7 +755,7 @@
 
 	<!-- ── 7. RELATED ARTICLES ──────────────────────────────────────────────────── -->
 	{#if articles.length}
-		<div class="pf-news">
+		<div class="pf-news" use:reveal>
 			<NewsRoster {articles} />
 		</div>
 	{/if}

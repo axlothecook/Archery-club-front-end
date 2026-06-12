@@ -12,10 +12,17 @@
 	const SHOW_AFTER_MS = 180;
 	let visible = $state(false);
 
+	// Routes that mount their OWN full-screen PageLoader (the #34302d 0→100% counter).
+	// We suppress the site-wide crossed-arrows veil for those so the user doesn't see
+	// the blue arrows flash before the page's own loader takes over. Matched by prefix.
+	const SELF_LOADING = ['/momcad/'];
+	const isSelfLoading = (path: string) =>
+		SELF_LOADING.some((p) => path.startsWith(p) && path !== '/momcad'); // /momcad/<slug>
+
 	$effect(() => {
 		// `navigating.to` is set while a navigation is pending, null when settled.
-		const isNavigating = !!navigating.to;
-		if (!isNavigating) {
+		const to = navigating.to;
+		if (!to || isSelfLoading(to.url.pathname)) {
 			visible = false;
 			return;
 		}

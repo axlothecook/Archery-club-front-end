@@ -7,7 +7,7 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
 	import ArcheryArrowIcon from '$lib/components/icons/ArcheryArrowIcon.svelte';
-	import { BOW_LABEL, BOW_ORDER } from '$lib/archer';
+	import { BOW_LABEL, BOW_ORDER, ARCHER_CARD_SCALE } from '$lib/archer';
 	import type { ArticleCard } from 'archery-contracts';
 
 	let { data } = $props();
@@ -55,32 +55,8 @@
 		}
 	};
 
-	// Per-archer photo scale — each source photo frames differently, so we tune the
-	// figure size individually. 1 = default; >1 enlarges, <1 shrinks. Anyone not
-	// listed renders at 1.
-	const PHOTO_SCALE: Record<string, number> = {
-		'amanda-mlinaric': 1.32,
-		'leo-sulik': 1.2,
-		'zoran-velagic': 1.32,
-		'mija-mance': 1.35,
-		'tomislav-mlinaric': 1.32,
-		'mila-vrbesic': 1.2,
-		'nikola-portner-pavicevic': 1.05,
-		'ela-drozdek': 1.12,
-		'alen-remar': 1.0,
-		'mia-medimurec': 0.85,
-		'filip-bistricic': 0.85,
-		'nicole-bratonja': 0.97,
-		'aurelia-mlinaric': 0.85,
-		'jakov-crnicki': 0.85,
-		'bojan-rodik': 0.85,
-		'luka-ciglaric': 0.97,
-		'tena-mikolaj': 0.85,
-		'leda-crncec': 0.97,
-		'karmen-ahmetovic': 1.15,
-		'rafael-barulek': 1.15,
-		'cvijetoslav-zorman': 1.05
-	};
+	// Per-archer photo scale now lives in $lib/archer (ARCHER_CARD_SCALE) so the SAME
+	// scale is shared with the archer profile's coaches / "Trenira" card rows.
 
 	// Visible archers for the active filter, preserving roster order.
 	const shown = $derived.by(() => {
@@ -140,7 +116,7 @@
 							archer={a}
 							tone={i % 2 === 0 ? 'blue-dress' : 'navy'}
 							fullSize={true}
-							scale={PHOTO_SCALE[a.slug] ?? 1}
+							scale={ARCHER_CARD_SCALE[a.slug] ?? 1}
 						/>
 					</li>
 				{/each}
