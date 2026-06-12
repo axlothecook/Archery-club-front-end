@@ -81,6 +81,7 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
 
 ### Day 5 — Fri 12.6 · Homepage + schedule + legal
 - [ ] Homepage `/`: hero (`/hero`) + sections; **remove temp `.dev-filler`**; leave Three.js div OUT (post-24.6).
+  - [ ] **Reveal-on-scroll animation** — reuse the `use:reveal` IntersectionObserver action built on the schedule page (`src/routes/raspored/+page.svelte`): block fade-up (`.reveal-block`) + staggered card reveal (`.reveal-item` with an inline `transition-delay`), one-shot, respects `prefers-reduced-motion`. Apply it to the homepage's sections/cards. (Consider extracting `reveal` into `src/lib/` if 2+ pages use it — per the DRY rule.)
 - [ ] `raspored` (schedule, RM-card style; intro-video PLACEHOLDER — scope PSG-style video tool with user).
 - [ ] Legal page stubs (footer `#` links).
 - [ ] Full site click-through + responsive sweep.
