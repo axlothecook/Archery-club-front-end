@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { error } from '@sveltejs/kit';
 	import type { ClubHistoryPeriodResolved, ClubHistoryParagraph } from 'archery-contracts';
 	import { splitParagraphs } from '$lib/text';
@@ -114,9 +114,17 @@
 		return { destroy: () => io.disconnect() };
 	}
 
-	// Close → just navigate; the View Transition slides the chapter DOWN off the list.
+	// If the user opened this chapter FROM the list, closing should history.back() so
+	// the list returns to the exact scroll position they left it at. Otherwise (deep
+	// link / refresh) navigate fresh. Either way the root View Transition still plays.
+	let cameFromList = $state(false);
+	afterNavigate(({ from }) => {
+		cameFromList = from?.url.pathname === '/klub/povijest';
+	});
+	// Close → return to the list; the View Transition slides the chapter DOWN off it.
 	function close() {
-		goto('/klub/povijest');
+		if (cameFromList) history.back();
+		else goto('/klub/povijest');
 	}
 </script>
 

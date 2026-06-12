@@ -43,6 +43,18 @@
 
 	let active = $state<FilterKey>('all');
 
+	// ── Filter-state restore ─────────────────────────────────────────────────────
+	// Preserve the active bow filter when leaving the roster (e.g. opening an archer)
+	// so BACK-navigation re-renders the SAME filtered grid. SvelteKit's native scroll
+	// restoration then lands the user exactly where they were; without this the filter
+	// would reset to 'all', changing the grid height so the saved offset mislands.
+	export const snapshot = {
+		capture: () => active,
+		restore: (snap: FilterKey) => {
+			active = snap;
+		}
+	};
+
 	// Per-archer photo scale — each source photo frames differently, so we tune the
 	// figure size individually. 1 = default; >1 enlarges, <1 shrinks. Anyone not
 	// listed renders at 1.

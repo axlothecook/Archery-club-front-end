@@ -32,6 +32,11 @@
 	// merged = section links sit INSIDE the pill (scrolled on a section page).
 	const merged = $derived(onSectionPage && scrolled);
 
+	// The Raspored page opens with a full-screen video hero that the navbar floats
+	// over: at the TOP there, the pill goes transparent with black text/icons so it
+	// reads on the bright video. Once scrolled, it reverts to the normal dark pill.
+	const transparentTop = $derived(path === '/raspored' && !scrolled);
+
 	// The current section link gets the gold underline — in the blue strip AND, once
 	// merged, in the pill (so the active page stays marked after scrolling).
 	const isActive = (href: string) => {
@@ -106,7 +111,13 @@
 	});
 </script>
 
-<div class="navbar" class:scrolled class:section={onSectionPage} bind:this={navEl}>
+<div
+	class="navbar"
+	class:scrolled
+	class:section={onSectionPage}
+	class:transparent={transparentTop}
+	bind:this={navEl}
+>
 	<!-- ── The morphing top pill ─────────────────────────────────────────────── -->
 	<header class="pill-wrap">
 		<div class="pill">
@@ -121,7 +132,12 @@
 					<MenuIcon size={22} />
 				</button>
 				{#each TOP_BAR_LINKS.left as link (link.href)}
-					<a class="nav-link" data-flip-shift href={link.href}>{link.label}</a>
+					<a
+						class="nav-link"
+						class:active={isActive(link.href)}
+						data-flip-shift
+						href={link.href}>{link.label}</a
+					>
 				{/each}
 				{#if merged}
 					{#each SECTION_NAV_LINKS.left as link (link.href)}
@@ -151,7 +167,12 @@
 					{/each}
 				{/if}
 				{#each TOP_BAR_LINKS.right as link (link.href)}
-					<a class="nav-link" data-flip-shift href={link.href}>{link.label}</a>
+					<a
+						class="nav-link"
+						class:active={isActive(link.href)}
+						data-flip-shift
+						href={link.href}>{link.label}</a
+					>
 				{/each}
 			</div>
 		</div>
@@ -226,6 +247,20 @@
 			box-shadow 0.4s ease,
 			border-color 0.4s ease;
 	}
+	// Raspored hero exception: transparent pill, black text/icons over the video.
+	// `color` cascades to .menu-button / .nav-link (color: inherit) and MenuIcon
+	// (currentColor), so they all turn black with no per-element overrides.
+	.navbar.transparent .pill,
+	.navbar.transparent.scrolled .pill {
+		// Nothing but the black text over the video: no fill, glass, blur, or shadow.
+		background-color: transparent !important;
+		box-shadow: none !important;
+		border-color: transparent !important;
+		backdrop-filter: none !important;
+		-webkit-backdrop-filter: none !important;
+		transition: none;
+		color: #000;
+	}
 	.navbar.scrolled .pill {
 		padding: 0.4rem 2rem;
 		border-radius: 999px;
@@ -292,6 +327,11 @@
 	// merged bar without a stray underline among the pill links.
 	.section-link.active {
 		color: var(--color-accent);
+	}
+	// The active TOP-BAR link (Vijesti / Momčad / Raspored) is marked the same way:
+	// gold text for the page the user is currently on.
+	.nav-link.active {
+		color: $gold;
 	}
 
 	// The two clusters each take an EQUAL half of the pill (flex: 1), so the logo
