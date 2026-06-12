@@ -58,7 +58,12 @@
 				{#each groups as g (g.title)}
 					<li class="honour">
 						<div class="honour-media">
-							<ImageWithLoader src={g.image.url} alt={g.image.alt} />
+							<!-- Guard: an achievement may have no image (e.g. a title with no medal
+							     and no custom photo → stock icon resolves to null). Render the row
+							     without an image rather than crashing the whole page. -->
+							{#if g.image}
+								<ImageWithLoader src={g.image.url} alt={g.image.alt} />
+							{/if}
 						</div>
 						<div class="honour-head">
 							<h2 class="honour-heading" data-medal={g.medal ?? 'none'}>
