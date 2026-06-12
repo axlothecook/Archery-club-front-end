@@ -14,10 +14,19 @@
 
 	// Routes that mount their OWN full-screen PageLoader (the #34302d 0→100% counter).
 	// We suppress the site-wide crossed-arrows veil for those so the user doesn't see
-	// the blue arrows flash before the page's own loader takes over. Matched by prefix.
+	// the blue arrows flash before the page's own loader takes over. Matching rules:
+	//   - The root '/' is matched EXACTLY (it's a prefix of every path, so it must never
+	//     be a startsWith() match). Add '/' here when the homepage gets its own PageLoader.
+	//   - A pattern ending in '/' (e.g. '/momcad/') is a PREFIX match → covers its
+	//     sub-routes (the bare '/momcad' roster page is NOT matched, keeps the veil).
+	//   - Any other pattern is matched exactly.
 	const SELF_LOADING = ['/momcad/'];
 	const isSelfLoading = (path: string) =>
-		SELF_LOADING.some((p) => path.startsWith(p) && path !== '/momcad'); // /momcad/<slug>
+		SELF_LOADING.some((p) => {
+			if (p === '/') return path === '/';
+			if (p.endsWith('/')) return path.startsWith(p);
+			return path === p;
+		});
 
 	$effect(() => {
 		// `navigating.to` is set while a navigation is pending, null when settled.
