@@ -14,7 +14,8 @@ export type AchievementGroup = {
 	type: 'title' | 'record' | 'other';
 	medal: 'gold' | 'silver' | 'bronze' | null;
 	scope: 'individual' | 'team' | 'club';
-	image: ImageRef;
+	// May be null: a title with no medal + no custom photo has no stock icon.
+	image: ImageRef | null;
 };
 
 // The full /achievements/summary payload. We only render `groups` on this page
