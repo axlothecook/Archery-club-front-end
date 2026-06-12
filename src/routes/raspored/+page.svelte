@@ -339,7 +339,6 @@
 		<source src="{PLACEHOLDER_HERO_VIDEO}.mp4" type="video/mp4" />
 		<source src="{PLACEHOLDER_HERO_VIDEO}.webm" type="video/webm" />
 	</video>
-	<div class="schedule-hero-overlay"></div>
 
 	<div class="schedule-hero-inner">
 		<img class="schedule-hero-logo" src={CLUB_LOGO_URL} alt="Varaždinski streličarski klub" />
@@ -741,11 +740,6 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-	}
-	.schedule-hero-overlay {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.55) 100%);
 	}
 
 	// Text block — bottom-left (PSG): logo, two-tier title, subtitle.
