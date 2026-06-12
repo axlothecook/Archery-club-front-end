@@ -11,6 +11,7 @@
 	import MonthViewIcon from '$lib/components/icons/MonthViewIcon.svelte';
 	import YearViewIcon from '$lib/components/icons/YearViewIcon.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
+	import HeroGlitchWords from '$lib/components/HeroGlitchWords.svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import type { Component } from 'svelte';
 	import { fade, scale, fly } from 'svelte/transition';
@@ -20,11 +21,11 @@
 	// data.events  — ClubEventResolved[] (ordered by start date)
 	// data.levels  — EventLevelResolved[] legend (color + name)
 
-	// ⚠️ PLACEHOLDER hero video — PSG's public CDN clip, a stand-in until we
-	// produce our own intro. NOT our asset: replace before launch, and note it is
-	// NOT covered by the Supabase→R2 migration sweep (different origin).
-	const PLACEHOLDER_HERO_VIDEO =
-		'https://media.psg.fr/video/upload/PSG_HEADER_01_compressed_yvpwlq';
+	// Hero videos — our own clips in static/ (served from root). PSG-style TWO
+	// STACKED bands: video-1 on top (50%), video-2 on bottom (50%).
+	// TODO (Day-6 R2): move these to Cloudflare R2 with the other static assets.
+	const HERO_VIDEO_TOP = '/video-2.mp4';
+	const HERO_VIDEO_BOTTOM = '/video-1.mp4';
 
 	// Club crest — same source NavBar/Footer use (a Supabase URL already on the
 	// Day-6 R2 migration sweep list, so no new debt).
@@ -327,18 +328,23 @@
 </script>
 
 <section class="schedule-hero">
-	<video
-		class="schedule-hero-video"
-		autoplay
-		muted
-		loop
-		playsinline
-		preload="auto"
-		aria-hidden="true"
-	>
-		<source src="{PLACEHOLDER_HERO_VIDEO}.mp4" type="video/mp4" />
-		<source src="{PLACEHOLDER_HERO_VIDEO}.webm" type="video/webm" />
-	</video>
+	<!-- PSG-style two stacked bands: top 50% + bottom 50%, each full-width. -->
+	<div class="schedule-hero-stack">
+		<div class="schedule-hero-half">
+			<video class="schedule-hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src={HERO_VIDEO_TOP} type="video/mp4" />
+			</video>
+		</div>
+		<div class="schedule-hero-half">
+			<video class="schedule-hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+				<source src={HERO_VIDEO_BOTTOM} type="video/mp4" />
+			</video>
+		</div>
+	</div>
+
+	<!-- Giant scrolling VSK (top) + RASPORED (bottom) words with the PSG datamosh
+	     glitch, rendered in one WebGL canvas over both bands (both glitch IN SYNC). -->
+	<HeroGlitchWords navH={64} />
 
 	<div class="schedule-hero-inner">
 		<img class="schedule-hero-logo" src={CLUB_LOGO_URL} alt="Varaždinski streličarski klub" />
@@ -734,6 +740,26 @@
 		// Gradient fallback shown until/if the video can't load.
 		background: linear-gradient(135deg, $navy 0%, #07142e 100%);
 	}
+	// Two stacked bands (PSG): the stack fills the hero; each half is 50% tall and
+	// full-width, with its video covering it.
+	.schedule-hero-stack {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	// Split: top band a bit TALLER than the bottom (split line lowered).
+	.schedule-hero-half {
+		position: relative;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.schedule-hero-half:first-child {
+		flex: 1 1 50%;
+	}
+	.schedule-hero-half:last-child {
+		flex: 1 1 50%;
+	}
 	.schedule-hero-video {
 		position: absolute;
 		inset: 0;
@@ -741,6 +767,8 @@
 		height: 100%;
 		object-fit: cover;
 	}
+	// Giant scrolling VSK / RASPORED words + the PSG datamosh glitch now render in
+	// one WebGL canvas (HeroGlitchWords.svelte) stacked over the two video bands.
 
 	// Text block — bottom-left (PSG): logo, two-tier title, subtitle.
 	.schedule-hero-inner {
@@ -750,6 +778,7 @@
 		max-width: 1610px;
 		padding: 0 clamp(1.5rem, 4vw, 4.5rem) clamp(2.5rem, 7vh, 6rem);
 		color: #fff;
+		z-index: 3; // above the WebGL glitch words (z-index 2)
 	}
 	.schedule-hero-logo {
 		display: block;
@@ -790,6 +819,7 @@
 		bottom: clamp(2.5rem, 7vh, 6rem);
 		width: 44px;
 		height: 44px;
+		z-index: 3; // above the WebGL glitch words (z-index 2)
 		display: grid;
 		place-items: center;
 		background: transparent;
