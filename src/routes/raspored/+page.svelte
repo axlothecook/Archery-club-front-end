@@ -717,13 +717,20 @@
 	// ── Hero (full-screen placeholder PSG video, PSG-mirrored layout) ─────────────
 	.schedule-hero {
 		position: relative;
+		z-index: 1;
 		// Full-width via the (gutter-less) .app-main wrapper — NOT 100vw, which
 		// includes the vertical scrollbar's width and caused horizontal overflow.
 		width: 100%;
 		height: 100svh;
-		// Pull the hero UP to y=0, cancelling the layout's .nav-offset spacer, so the
-		// video fills the whole viewport with the fixed transparent navbar over it.
-		margin-top: calc(-1 * var(--nav-h, 64px));
+		// Pull the hero UP past the layout's .nav-offset spacer so the video fills the
+		// whole viewport with the fixed transparent navbar floating over it. We OVER-
+		// pull (nav-h + a margin) and grow the height to match, because the spacer
+		// ANIMATES its height on load (`transition: height 0.4s`) — pulling exactly
+		// -nav-h leaves a navy `.app-main` strip during that animation. The extra is
+		// hidden under the navbar; overflow:hidden clips the rest.
+		$pull: calc(var(--nav-h, 64px) + 4rem);
+		margin-top: calc(-1 * #{$pull});
+		height: calc(100svh + 4rem);
 		overflow: hidden;
 		// Gradient fallback shown until/if the video can't load.
 		background: linear-gradient(135deg, $navy 0%, #07142e 100%);
