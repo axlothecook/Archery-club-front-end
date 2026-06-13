@@ -1,5 +1,5 @@
 // Shared bow data — used by BOTH the individual archer page (/momcad/[slug]) and the
-// homepage "Lukovi najboljih strelicara" section. One source of truth (DRY).
+// homepage "Lukovi najboljih streličara" section. One source of truth (DRY).
 //
 //  • BOW_INFO  — per bow TYPE: the type title (heading), the specific demo MODEL name, and
 //                that model's description (from the manufacturer's official copy, in
@@ -57,7 +57,10 @@ const RECURVE_MODEL: BowModel = {
 		author: 'MrEliptik',
 		url: 'https://sketchfab.com/3d-models/recurve-bow-800fb9f4eb224cedb1c8e0b9847bd00c',
 		license: 'CC BY 4.0'
-	}
+	},
+	// Quarter-turn about Y so it presents its flat side-profile to the camera and spins
+	// about its vertical handle axis like the compound (which needs no fix).
+	fixRotation: [0, Math.PI / 2, 0]
 };
 
 export const BOW_MODEL: Record<BowType, BowModel> = {
@@ -79,9 +82,9 @@ export const BOW_MODEL: Record<BowType, BowModel> = {
 			url: 'https://sketchfab.com/3d-models/recurve-bow-6cfcb941316b4ac5a5ba11952c205950',
 			license: 'CC BY 4.0'
 		},
-		// This model ships lying HORIZONTAL — quarter-turn about Z to stand it upright like
-		// the other bows.
-		fixRotation: [0, 0, Math.PI / 2]
+		// Ships lying HORIZONTAL — quarter-turn about Z stands it upright, plus a quarter-turn
+		// about Y so its face points at the camera and it spins like the compound/recurve.
+		fixRotation: [0, Math.PI / 2, Math.PI / 2]
 	}
 };
 
