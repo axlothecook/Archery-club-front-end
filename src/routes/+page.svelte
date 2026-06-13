@@ -968,7 +968,7 @@
 		position: relative;
 		padding: 0 0 0.5rem;
 		font: inherit;
-		font-size: clamp(1.05rem, 2vw, 1.5rem);
+		font-size: clamp(0.9rem, 1.6vw, 1.2rem);
 		font-weight: 800;
 		letter-spacing: 0.02em;
 		text-transform: uppercase;
@@ -982,11 +982,13 @@
 	.home-bow-tab.active {
 		color: var(--color-ink);
 	}
-	/* ONE underline that SLIDES between tabs (left/width set inline from the active tab). */
+	/* ONE underline that SLIDES between tabs. --ul-left/--ul-width come from the active
+	   tab's offsetLeft/offsetWidth, which are already measured relative to this padded
+	   nav (its offsetParent), so no padding is added here. */
 	.home-bow-underline {
 		position: absolute;
 		bottom: -1px;
-		left: calc(clamp(1.5rem, 4vw, 4.5rem) + var(--ul-left, 0px));
+		left: var(--ul-left, 0px);
 		width: var(--ul-width, 0px);
 		height: 2px;
 		background: var(--color-accent);
