@@ -193,8 +193,7 @@
 		{ file: 'alen-12.jpg', pos: 'center 35%' },
 		{ file: 'alen-13.jpg', pos: 'center 35%' },
 		{ file: 'amanda-17.jpg', pos: 'center 35%' },
-		{ file: 'amanda-21.jpg', pos: 'center 35%' },
-		{ file: 'together-6.jpg', pos: 'center 35%' } // un-rotated + restored to original focal point (2026-06-13)
+		{ file: 'amanda-21.jpg', pos: 'center 35%' }
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
@@ -217,7 +216,6 @@
 		'alen-13',
 		'amanda-17',
 		'amanda-21',
-		'together-6',
 		'alen-6'
 	];
 
