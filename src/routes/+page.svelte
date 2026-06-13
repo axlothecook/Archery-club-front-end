@@ -30,6 +30,23 @@
 	// Homepage events teaser: the next few upcoming competitions (soonest first).
 	const upcomingTeaser = $derived(data.upcoming.slice(0, 8));
 
+	// ── Bows: one panel, click-through tabs (like the archer page's stats/results tabs) ──
+	// The user clicks a bow-type tab; the single panel below shows that bow. A sliding
+	// underline glides to the active tab.
+	let activeBow = $state<(typeof BOW_HOME_ORDER)[number]>(BOW_HOME_ORDER[0]);
+	let bowTabsEl = $state<HTMLElement>();
+	let bowUlLeft = $state(0);
+	let bowUlWidth = $state(0);
+	const activeBowInfo = $derived(BOW_INFO[activeBow]);
+	const activeBowModel = $derived(BOW_MODEL[activeBow]);
+	$effect(() => {
+		void activeBow; // re-measure when the active bow tab changes
+		const el = bowTabsEl?.querySelector<HTMLElement>('.home-bow-tab.active');
+		if (!el) return;
+		bowUlLeft = el.offsetLeft;
+		bowUlWidth = el.offsetWidth;
+	});
+
 	// Events carousel: side arrows drive a scroll-snap track (4 cards per view); the
 	// native scrollbar is hidden. Arrows hide at the start/end. (Same pattern as the
 	// schedule page's "this month" carousel.)
@@ -452,41 +469,57 @@
 		</section>
 	{/if}
 
-	<!-- Section 3.5: Bows the club's best archers use — reuses the archer page's BowViewer
-	     (live 3D model) per bow type. The DESCRIPTION is the shared BOW_INFO body (same as
-	     the archer page); only the intro sentence differs (a demo: the best club archer of
-	     that type "uses" a specific real model). Models alternate left/right. -->
+	<!-- Section 3.5: Bows the club's best archers use — ONE panel with click-through tabs
+	     (Klasični / Složeni / Goli), like the archer page's stats/results tabs. The selected
+	     bow shows its live 3D model (BowViewer) + a demo intro + the shared model description.
+	-->
 	<section class="home-bows" use:reveal>
 		<header class="home-sec-head">
 			<h2 class="home-sec-title home-bows-title">Lukovi najboljih streličara</h2>
 		</header>
-		<div class="home-bows-list">
-			{#each BOW_HOME_ORDER as bow, i}
-				{@const info = BOW_INFO[bow]}
-				{@const model = BOW_MODEL[bow]}
-				<div class="home-bow" class:reverse={i % 2 === 1} use:reveal>
-					<div class="home-bow-media">
-						<BowViewer
-							url={model.url}
-							alt={info.title}
-							fixRotation={model.fixRotation}
-							yOffset={model.yOffset}
-							spinDir={model.spinDir}
-						/>
-					</div>
-					<div class="home-bow-text">
-						<h3 class="home-bow-name">{info.title}</h3>
-						<p class="home-bow-body">{BOW_DEMO[bow].intro} {info.body}</p>
-						<!-- Required model-licence attribution (CC). -->
-						<p class="home-bow-credit">
-							3D model: <a href={model.credit.url} target="_blank" rel="noopener"
-								>{info.title} by {model.credit.author}</a
-							>
-							({model.credit.license})
-						</p>
-					</div>
-				</div>
+
+		<!-- Tabs: one per bow type, with a sliding gold underline. -->
+		<nav class="home-bow-tabs" bind:this={bowTabsEl} aria-label="Tip luka">
+			{#each BOW_HOME_ORDER as bow}
+				<button
+					class="home-bow-tab"
+					class:active={activeBow === bow}
+					type="button"
+					onclick={() => (activeBow = bow)}
+				>
+					{BOW_INFO[bow].title}
+				</button>
 			{/each}
+			<span
+				class="home-bow-underline"
+				style="--ul-left:{bowUlLeft}px; --ul-width:{bowUlWidth}px;"
+				aria-hidden="true"
+			></span>
+		</nav>
+
+		<!-- Single panel for the active bow. -->
+		<div class="home-bow">
+			<div class="home-bow-media">
+				{#key activeBow}
+					<BowViewer
+						url={activeBowModel.url}
+						alt={activeBowInfo.title}
+						fixRotation={activeBowModel.fixRotation}
+						yOffset={activeBowModel.yOffset}
+						spinDir={activeBowModel.spinDir}
+					/>
+				{/key}
+			</div>
+			<div class="home-bow-text">
+				<p class="home-bow-body">{BOW_DEMO[activeBow].intro} {activeBowInfo.body}</p>
+				<!-- Required model-licence attribution (CC). -->
+				<p class="home-bow-credit">
+					3D model: <a href={activeBowModel.credit.url} target="_blank" rel="noopener"
+						>{activeBowInfo.title} by {activeBowModel.credit.author}</a
+					>
+					({activeBowModel.credit.license})
+				</p>
+			</div>
 		</div>
 	</section>
 
@@ -916,38 +949,64 @@
 		}
 	}
 
-	/* ── Section 3.5: Bows the club's best archers use ───────────────────────────── */
-	/* Title styled like the achievements honorary title (gold-less): matches the other
-	   section titles' light treatment but sized like "Nadolazeće". */
+	/* ── Section 3.5: Bows the club's best archers use (tabbed, single panel) ─────── */
 	.home-bows-title {
 		font-size: clamp(1.4rem, 3vw, 2.4rem);
 	}
-	.home-bows-list {
+	/* Tabs (Klasični / Složeni / Goli) with a sliding gold underline — same pattern as
+	   the archer page's stats/results tabs. */
+	.home-bow-tabs {
+		position: relative; /* anchor for the sliding underline */
+		display: flex;
+		gap: clamp(1.25rem, 3vw, 2.5rem);
+		max-width: 1720px;
+		margin: 0 auto clamp(1.5rem, 4vh, 2.5rem);
+		padding: 0 clamp(1.5rem, 4vw, 4.5rem);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	}
+	.home-bow-tab {
+		position: relative;
+		padding: 0 0 0.5rem;
+		font: inherit;
+		font-size: clamp(1.05rem, 2vw, 1.5rem);
+		font-weight: 800;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.5);
+		background: none;
+		border: 0;
+		cursor: pointer;
+		transition: color 0.18s ease;
+	}
+	.home-bow-tab:hover,
+	.home-bow-tab.active {
+		color: var(--color-ink);
+	}
+	/* ONE underline that SLIDES between tabs (left/width set inline from the active tab). */
+	.home-bow-underline {
+		position: absolute;
+		bottom: -1px;
+		left: calc(clamp(1.5rem, 4vw, 4.5rem) + var(--ul-left, 0px));
+		width: var(--ul-width, 0px);
+		height: 2px;
+		background: var(--color-accent);
+		transition:
+			left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+	/* The single active-bow panel: slim/tall 3D viewer on the left, text on the right. */
+	.home-bow {
 		max-width: 1720px;
 		margin: 0 auto;
 		padding: 0 clamp(1.5rem, 4vw, 4.5rem);
-		display: flex;
-		flex-direction: column;
-		gap: clamp(3rem, 7vh, 6rem);
-	}
-	/* One bow row: 3D model on one side, text on the other. Alternates via .reverse.
-	   The model column is NARROWER than the text column (a tall, slim viewer suits the
-	   upright bow), so the text gets the extra width. */
-	.home-bow {
 		display: grid;
 		grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
 		align-items: center;
 		gap: clamp(1.5rem, 4vw, 4rem);
 	}
-	.home-bow.reverse {
-		direction: rtl; /* swap columns (media↔text) */
-	}
-	.home-bow.reverse > * {
-		direction: ltr; /* keep content LTR inside the swapped columns */
-	}
 	.home-bow-media {
 		width: 100%;
-		height: clamp(360px, 56vh, 600px); /* taller, slimmer viewer */
+		height: clamp(360px, 56vh, 600px);
 		border-radius: 12px;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.03);
@@ -955,14 +1014,6 @@
 	.home-bow-media :global(canvas) {
 		width: 100% !important;
 		height: 100% !important;
-	}
-	.home-bow-name {
-		margin: 0 0 0.75rem;
-		font-size: clamp(1.4rem, 2.6vw, 2.1rem);
-		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 0.01em;
-		color: var(--color-accent);
 	}
 	.home-bow-body {
 		margin: 0;
@@ -980,10 +1031,8 @@
 		text-decoration: underline;
 	}
 	@media (max-width: 720px) {
-		.home-bow,
-		.home-bow.reverse {
+		.home-bow {
 			grid-template-columns: 1fr; /* stack: model over text */
-			direction: ltr;
 		}
 		.home-bow-media {
 			height: clamp(240px, 38vh, 360px);
