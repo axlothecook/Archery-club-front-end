@@ -14,6 +14,13 @@ type RevealOptions = {
 	delay?: number;
 	/** Re-hide + replay each time it leaves/re-enters. Default false (reveal once). */
 	repeat?: boolean;
+	/**
+	 * IntersectionObserver rootMargin. A negative BOTTOM margin (e.g.
+	 * '0px 0px -25% 0px') delays the trigger until the element has scrolled
+	 * meaningfully INTO view — use it on TALL sections so they don't fire while
+	 * only a sliver is peeking above the fold. Default '0px'.
+	 */
+	rootMargin?: string;
 };
 
 export function reveal(node: HTMLElement, options: RevealOptions = {}) {
@@ -46,7 +53,7 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 				}
 			}
 		},
-		{ threshold: opts.threshold ?? 0.15 }
+		{ threshold: opts.threshold ?? 0.15, rootMargin: opts.rootMargin ?? '0px' }
 	);
 	io.observe(node);
 

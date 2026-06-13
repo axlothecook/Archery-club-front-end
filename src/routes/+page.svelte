@@ -349,7 +349,7 @@
 <div class="home-sections">
 	<!-- Section 1: Latest news — 3D coverflow on a black band (navy fades in at top/bottom). -->
 	{#if data.news.length > 0}
-		<section class="home-news" use:reveal>
+		<section class="home-news" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
 			<!-- "VIJESTI / Sve vijesti ›" — title, slash, then the all-link inline (left). -->
 			<header class="home-sec-head">
 				<h2 class="home-sec-title">Vijesti</h2>
@@ -367,7 +367,7 @@
 
 	<!-- Section 2: Upcoming events teaser (horizontal scroll of RM-style EventCards). -->
 	{#if upcomingTeaser.length > 0}
-		<section class="home-events" use:reveal>
+		<section class="home-events" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
 			<header class="home-sec-head">
 				<h2 class="home-sec-title home-events-title">Nadolazeće</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
