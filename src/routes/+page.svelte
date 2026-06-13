@@ -458,7 +458,7 @@
 	     that type "uses" a specific real model). Models alternate left/right. -->
 	<section class="home-bows" use:reveal>
 		<header class="home-sec-head">
-			<h2 class="home-sec-title home-bows-title">Lukovi najboljih strelicara</h2>
+			<h2 class="home-sec-title home-bows-title">Lukovi najboljih streličara</h2>
 		</header>
 		<div class="home-bows-list">
 			{#each BOW_HOME_ORDER as bow, i}
