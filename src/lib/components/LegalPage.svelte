@@ -1,9 +1,14 @@
 <script lang="ts">
-	// Simple placeholder layout for the footer legal pages (Pravni uvjeti, Pravila
-	// privatnosti, Kolačići). Real legal copy isn't written yet — rather than invent it
-	// (or leave a dead '#' link), each page renders a titled "in preparation" notice. Swap
-	// the placeholder for the real text when it's ready.
-	let { title, intro }: { title: string; intro?: string } = $props();
+	// Shared layout for the footer legal pages (Pravni uvjeti, Pravila privatnosti,
+	// Kolačići). One title + intro + a list of {heading, body[]} sections rendered as
+	// simple prose. The copy is GENERIC boilerplate (a personal-project template, not
+	// lawyer-reviewed); a notice at the bottom says so. Karta stranice uses its own page.
+	type Section = { heading: string; body: string[] };
+	let {
+		title,
+		intro,
+		sections = []
+	}: { title: string; intro?: string; sections?: Section[] } = $props();
 </script>
 
 <svelte:head>
@@ -19,9 +24,19 @@
 	</header>
 
 	<div class="legal-body">
-		<p class="legal-note">
-			Ova stranica je u pripremi. Sadržaj će biti objavljen uskoro. Za sva pitanja u
-			međuvremenu javite nam se putem <a href="/kontakt">kontakt stranice</a>.
+		{#each sections as section (section.heading)}
+			<section class="legal-section">
+				<h2>{section.heading}</h2>
+				{#each section.body as para (para)}
+					<p>{para}</p>
+				{/each}
+			</section>
+		{/each}
+
+		<p class="legal-disclaimer">
+			Napomena: ovo je osobni projekt, a ne službena stranica kluba. Gornji tekst je
+			općenit predložak i nije pravno provjeren. Za stvarna pravna pitanja obratite se
+			klubu putem <a href="/kontakt">kontakt stranice</a>.
 		</p>
 	</div>
 </div>
@@ -53,11 +68,27 @@
 		color: map.get(lib.$colors, 'jet-grey');
 	}
 	.legal-body {
-		font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+		font-size: clamp(0.95rem, 1.3vw, 1.08rem);
 		line-height: 1.7;
 	}
-	.legal-note {
-		margin: 0;
+	.legal-section {
+		margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+		h2 {
+			margin: 0 0 0.6rem;
+			font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+			font-weight: 700;
+			color: var(--color-ink);
+		}
+		p {
+			margin: 0 0 0.75rem;
+		}
+	}
+	.legal-disclaimer {
+		margin: clamp(2rem, 5vh, 3.5rem) 0 0;
+		padding-top: 1.5rem;
+		border-top: 1px solid rgba(127, 127, 127, 0.25);
+		font-size: 0.9rem;
+		color: map.get(lib.$colors, 'jet-grey');
 		a {
 			color: map.get(lib.$colors, 'blue-dress');
 			text-decoration: underline;
