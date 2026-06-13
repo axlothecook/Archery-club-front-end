@@ -4,6 +4,22 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<style>
+			/* Pre-paint cover: while the homepage intro is armed (data-prepaint, set
+			   synchronously below BEFORE first paint), paint a full-screen #1e1f1c layer. This
+			   guarantees the dark loader colour is on screen from the very first frame — no
+			   flash of the hero before the PageLoader component mounts/hydrates. The page
+			   removes data-prepaint in onMount (the PageLoader's own #1e1f1c overlay is up by
+			   then), so this backstop hands off seamlessly and is gone before the reveal. */
+			html[data-prepaint]::before {
+				content: '';
+				position: fixed;
+				inset: 0;
+				z-index: 3500; /* above the PageLoader so there is never a gap */
+				background: #1e1f1c;
+				pointer-events: none;
+			}
+		</style>
 		<script>
 			// Pre-paint navbar shape: SvelteKit restores scroll MANUALLY via JS a frame or
 			// two after load, so window.scrollY is 0 here. The restored position is saved
@@ -22,10 +38,15 @@
 				if (y > 10) document.documentElement.setAttribute('data-scrolled', '');
 				else document.documentElement.removeAttribute('data-scrolled');
 				// Homepage intro: park the navbar links ABOVE the screen pre-paint (so they
-				// don't flash over the loader before sliding down). Only on a fresh load at
-				// the TOP of '/'; the homepage removes the attr on reveal + on navigation away.
-				if (location.pathname === '/' && y <= 10)
+				// don't flash over the loader before sliding down), AND paint the #1e1f1c
+				// pre-paint backstop (data-prepaint) so the dark loader colour is on screen
+				// from the first frame (no hero flash before the PageLoader hydrates). Only on
+				// a fresh load at the TOP of '/'. The homepage removes data-nav-intro on reveal
+				// and data-prepaint in onMount (once the PageLoader overlay is up).
+				if (location.pathname === '/' && y <= 10) {
 					document.documentElement.setAttribute('data-nav-intro', '');
+					document.documentElement.setAttribute('data-prepaint', '');
+				}
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

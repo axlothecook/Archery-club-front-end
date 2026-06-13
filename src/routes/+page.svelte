@@ -19,6 +19,7 @@
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
 	import CopyrightIcon from '$lib/components/icons/CopyrightIcon.svelte';
 	import { reveal } from '$lib/actions/reveal';
+	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 
@@ -264,6 +265,18 @@
 
 	// Gap between the loader fading out and the VSK wordmark + tagline animating in.
 	const INTRO_DELAY = 900;
+
+	// Lift the pre-paint #1e1f1c backstop (set in app.html) once the PageLoader's own
+	// overlay has painted, so the handoff is seamless (both are #1e1f1c) with no flash.
+	onMount(() => {
+		if (!freshLoad) {
+			document.documentElement.removeAttribute('data-prepaint');
+			return;
+		}
+		requestAnimationFrame(() =>
+			requestAnimationFrame(() => document.documentElement.removeAttribute('data-prepaint'))
+		);
+	});
 
 	function startIntro() {
 		// next frame so the curtain paints at its covering position first, then transitions
