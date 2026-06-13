@@ -904,8 +904,8 @@
 	// the veil on the sides and shows clear through the cut-out window. Orient A puts the
 	// (wider) veil area on the left; B mirrors it. --gap = cut-out width.
 	$teal: #2596be;
-	// TEST: backdrop fade — blue A (top) → blue B (middle of the cover). Start with the
-	// first two library blues; swap these two to test other pairs from the swatch table.
+	// Cover backdrop fade: blue A (top) → blue B (bottom of the cover). Locked colour
+	// scheme — fun-blue easing down into deep-sapphire.
 	$blue-a: map.get(lib.$colors, 'fun-blue'); // #2352A7
 	$blue-b: map.get(lib.$colors, 'deep-sapphire'); // #102E66
 	$backdrop: $blue-a; // base behind the name-fade (its lower stop) — kept = blue A
