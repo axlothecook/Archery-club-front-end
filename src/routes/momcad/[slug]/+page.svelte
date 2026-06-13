@@ -23,7 +23,7 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import { BOW_LABEL, ARCHER_CARD_SCALE } from '$lib/archer';
-	import { BOW_INFO, BOW_MODEL, type BowType } from '$lib/bow';
+	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
 	import { afterNavigate } from '$app/navigation';
@@ -257,29 +257,26 @@
 	// a count. Empty for archers (e.g. coaches) with none → the section is hidden.
 	const honours = $derived(a.achievements ?? []);
 
-	// ── Bow data (5th div) — title + description per bow type (the bow itself renders as a
-	//    live 3D model via BowViewer; copy is fact-based, no stored photo). The bow title,
-	//    description and 3D model now live in $lib/bow.ts (shared with the homepage).
+	// ── Bow data (5th div) — the bow renders as a live 3D model via BowViewer; the model
+	//    description body lives in $lib/bow.ts (shared with the homepage). Only the INTRO
+	//    sentence is per-archer here.
 	const primaryBow = $derived((a.bowType[0] ?? 'recurve') as BowType);
+	const secondBow = $derived((a.bowType[1] ?? null) as BowType | null);
 	const bowInfo = $derived(BOW_INFO[primaryBow] ?? BOW_INFO.recurve);
 	const bowModel = $derived(BOW_MODEL[primaryBow] ?? BOW_MODEL.recurve);
 
-	// Per-archer intro sentence prepended to the bow description (this is the ONLY part
-	// that differs from the homepage's bow section — the description body is shared).
-	//  - accusative (lower-cased title) for the present-tense "koristi <luk>".
-	//  - genitive ("iz <luka>") for the past-tense "pucao iz <luka>".
-	const BOW_GENITIVE: Record<BowType, string> = {
-		recurve: 'klasičnog luka',
-		compound: 'složenog luka',
-		barebow: 'golog luka'
-	};
-	const bowLabelLc = $derived(bowInfo.title.charAt(0).toLowerCase() + bowInfo.title.slice(1));
+	// Per-archer intro sentence prepended to the shared model description.
+	//  - 1 bow type:  "<Ime Prezime> puca sa <model> lukom."
+	//  - 2 bow types: "<Ime Prezime> primarno puca sa <model> modelom <primary type, gen.>,
+	//                   te također puca u kategoriji <other type, gen.>."
+	//  - a coach with no current bow (e.g. Zorman) shot in the PAST → past tense.
+	const fullName = $derived(`${a.firstName} ${a.lastName}`);
 	const bowIntro = $derived(
-		// A coach with no current bow (e.g. Zorman) shot in the PAST → past tense; every
-		// active archer uses their bow in the present tense.
 		a.roles.includes('coach') && a.bowType.length === 0
-			? `${a.lastName} je tijekom svoje streličarske karijere pucao iz ${BOW_GENITIVE[primaryBow] ?? BOW_GENITIVE.recurve}.`
-			: `${a.firstName} koristi ${bowLabelLc}.`
+			? `${a.lastName} je tijekom svoje streličarske karijere pucao iz ${BOW_CATEGORY_GENITIVE[primaryBow]}.`
+			: secondBow
+				? `${fullName} primarno puca sa ${bowInfo.model} modelom ${BOW_CATEGORY_GENITIVE[primaryBow]}, te također puca u kategoriji ${BOW_CATEGORY_GENITIVE[secondBow]}.`
+				: `${fullName} puca sa ${bowInfo.model} lukom.`
 	);
 
 	// ── Coaches / students (from the profile contract) ────────────────────────────

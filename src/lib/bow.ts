@@ -1,29 +1,42 @@
 // Shared bow data — used by BOTH the individual archer page (/momcad/[slug]) and the
 // homepage "Lukovi najboljih strelicara" section. One source of truth (DRY).
 //
-//  • BOW_INFO  — title + factual description per bow type (World Archery equipment
-//                definitions). The description is the SAME on both pages.
-//  • BOW_MODEL — the interactive 3D model (glTF in static/models) per bow type, with the
-//                required CC licence attribution shown under the viewer.
-//  • BOW_DEMO  — homepage-only: a specific real competition bow per type, shown as a DEMO
-//                (the club's best archer of that type "uses" it). This drives only the
-//                INTRO sentence on the homepage; the description body stays BOW_INFO.
+//  • BOW_INFO  — per bow TYPE: the type title (heading), the specific demo MODEL name, and
+//                that model's description (from the manufacturer's official copy, in
+//                Croatian). The description is the SAME on both pages; only the INTRO
+//                sentence above it differs (homepage demo vs per-archer on the archer page).
+//  • BOW_MODEL — the interactive 3D model (glTF in static/models) per type + CC attribution.
+//  • BOW_DEMO  — homepage-only INTRO sentence per type (a demo: a named club archer "uses"
+//                the model). The archer page builds its own intro per-archer instead.
 
 export type BowType = 'recurve' | 'compound' | 'barebow';
 
-export const BOW_INFO: Record<BowType, { title: string; body: string }> = {
+// title = bow-type name (heading) · model = the specific demo bow model · body = that
+// model's description (translated from the manufacturer's official text).
+export const BOW_INFO: Record<BowType, { title: string; model: string; body: string }> = {
 	compound: {
 		title: 'Složeni luk',
-		body: 'Složeni luk koristi sustav ekscentričnih koloturnika (kamova) i kabela na krajevima krakova, što ga čini mehanički najučinkovitijim i najpreciznijim tipom luka. Zahvaljujući tom sustavu, na punom zatezanju dolazi do popuštanja sile pa streličar drži znatno manju težinu i može dulje i mirnije ciljati. Nišani se kroz nišan s povećalom (od dva do osam puta) i libelom, a okida posebnim mehaničkim okidačem za čist i ujednačen ispust tetive.'
+		model: 'Mathews TITLE 38',
+		body: 'TITLE 38 jedan je od najboljih ciljnih lukova ikad napravljenih za natjecateljskog streličara. Njegova Limb Shift tehnologija prvi je takav sustav podešavanja koji omogućuje mikro-podešavanje kraka bez rastavljanja luka. Bridge-Lock karbonske ciljne šipke daju čvršću vezu s lukom uz do 36% manji otpor vjetru, dok BOND rukohvat s teksturiranom gumenom površinom pruža vrhunsku anatomsku udobnost. Razmak osovina iznosi 38″, a brzina doseže do 330 fps.'
 	},
 	recurve: {
 		title: 'Klasični luk',
-		body: 'Klasični (olimpijski) luk prepoznatljiv je po krakovima koji se na vrhovima savijaju unatrag, od streličara, po čemu je i dobio ime. To je luk kojim se nastupa na Olimpijskim igrama. Opremljen je nišanom bez povećala te stabilizatorima, dugim i kratkim šipkama i prigušivačima, koji uravnotežuju luk i smanjuju vibracije. Streličar zateže tetivu prstima do lica, koristi klikericu za kontrolu dužine zatezanja i ispušta tetivu otvaranjem prstiju.'
+		model: 'WIAWIS ATF-DX',
+		body: 'ATF-DX donosi iste prigušivače kao i ručka META-DX, čime se učinkovito smanjuje titranje nastalo udarom u trenutku ispucavanja i nepotrebno gibanje luka, što pomaže boljem grupiranju strijela. Anatomski oblikovan rukohvat daje ugodan osjećaj u ruci i povećava stabilnost. Pločice rešta podesive su u 4 razine prema strijelama i podešavanju luka.'
 	},
 	barebow: {
 		title: 'Goli luk',
-		body: 'Goli luk je osnovni oblik klasičnog luka izrađen od istih suvremenih materijala, ali bez pomagala za ciljanje i stabilizaciju. Nema nišan, stabilizatore ni klikericu. Streličar cilja gledajući niz strijelu, a udaljenost često prilagođava položajem prstiju na tetivi (tzv. hodanje po tetivi). Takav nastup traži iznimnu dosljednost i kontrolu, posebno u ponavljanju jednake dužine zatezanja jer nema mehaničkih pomagala.'
+		model: 'Gillo GX2 27″',
+		body: 'Gillo GX2 ručka izrađena je od visokokvalitetnog aluminija 7075 s nehrđajućim okovom. Plutajući ležajevi krakova omogućuju podešavanje jakosti do 30%, a integrirani prigušivači smanjuju titranje. Uz napredan tanki 3D rukohvat i malu masu (oko 1210 g), nudi vrhunske značajke po pristupačnoj cijeni i pogodna je i početnicima i iskusnim streličarima.'
 	}
+};
+
+// Bow-type label used in the archer-page intro for a SECOND bow type ("...te također puca
+// u kategoriji golog luka"). Genitive case to follow "u kategoriji".
+export const BOW_CATEGORY_GENITIVE: Record<BowType, string> = {
+	recurve: 'klasičnog luka',
+	compound: 'složenog luka',
+	barebow: 'golog luka'
 };
 
 // 3D bow model per type (glTF in static/models). `credit` is the required CC attribution
