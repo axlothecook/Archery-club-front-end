@@ -17,6 +17,7 @@
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
+	import CopyrightIcon from '$lib/components/icons/CopyrightIcon.svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { fly } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
@@ -183,16 +184,18 @@
 	// other shots woven in (no clumped runs of one person).
 	const POOL = [
 		// 2026-06-13: swapped together-2 ↔ amanda-17, then dropped the first 6 — these 6 remain.
-		{ file: 'amanda-21.jpg', pos: 'center 35%' }, // 1
-		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 2
-		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 3
-		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 4
-		{ file: 'amanda-17.jpg', pos: 'center 35%' }, // 5
-		{ file: 'alen-12.jpg', pos: 'center 35%' } // 6
+		// `credit` = the photo's source, shown bottom-left with a © mark.
+		{ file: 'amanda-21.jpg', pos: 'center 35%', credit: 'World Archery' }, // 1
+		{ file: 'alen-3.jpg', pos: 'center 35%', credit: 'World Archery' }, // 2
+		{ file: 'leo-3.jpg', pos: 'center 35%', credit: 'Freyja Benedikts' }, // 3
+		{ file: 'alen-6.jpg', pos: 'center 35%', credit: 'World Archery' }, // 4
+		{ file: 'amanda-17.jpg', pos: 'center 35%', credit: 'Roman Sputo' }, // 5
+		{ file: 'alen-12.jpg', pos: 'center 35%', credit: 'World Archery' } // 6
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
 		pos: x.pos,
+		credit: x.credit,
 		rotate: 'rotate' in x ? (x as { rotate: number }).rotate : 0
 	}));
 
@@ -306,13 +309,13 @@
 		{/each}
 	</div>
 
-	<!-- Current image label (number + name), bottom-left. -->
-	<div class="hero-caption">
-		<span class="num">{String(active + 1).padStart(2, '0')}</span>
-		<span class="sep">/</span>
-		<span class="total">{String(IMAGES.length).padStart(2, '0')}</span>
-		<span class="name">{IMAGES[active].name}</span>
-	</div>
+	<!-- Photo-source credit for the current image, bottom-left (© + source). -->
+	{#if IMAGES[active].credit}
+		<div class="hero-credit">
+			<CopyrightIcon size={13} />
+			<span class="hero-credit-name">{IMAGES[active].credit}</span>
+		</div>
+	{/if}
 
 	<!-- Big centred wordmark (numbered.com style) — letters rise/fade in on reveal. -->
 	<h1 class="hero-wordmark" class:in={introIn} aria-label="Varaždinski streličarski klub">
@@ -517,34 +520,26 @@
 		appearance: none;
 	}
 
-	.hero-caption {
+	/* Photo-source credit, bottom-left: © mark + source name. A bit smaller than the old
+	   image-name caption (which sat at 1rem). */
+	.hero-credit {
 		position: absolute;
 		left: clamp(1rem, 3vw, 2.5rem);
 		bottom: clamp(1.25rem, 4vh, 2.5rem);
 		z-index: 3;
 		display: flex;
-		align-items: baseline;
-		gap: 0.4rem;
+		align-items: center;
+		gap: 0.35rem;
 		color: #fff;
 		text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
-		font: 600 1rem/1 system-ui, sans-serif;
-		pointer-events: none;
-	}
-	.hero-caption .num {
-		font-size: 1.6rem;
-		color: #ffd24a;
-		font-variant-numeric: tabular-nums;
-	}
-	.hero-caption .sep,
-	.hero-caption .total {
-		opacity: 0.7;
-		font-variant-numeric: tabular-nums;
-	}
-	.hero-caption .name {
-		margin-left: 0.6rem;
-		font-weight: 400;
+		font: 500 0.85rem/1 system-ui, sans-serif;
 		letter-spacing: 0.02em;
 		opacity: 0.9;
+		pointer-events: none;
+	}
+	.hero-credit :global(svg) {
+		flex: none;
+		opacity: 0.85;
 	}
 
 	/* ── Big centred wordmark (numbered.com style) ──────────────────────────────── */
