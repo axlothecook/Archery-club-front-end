@@ -18,6 +18,8 @@
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
 	import CopyrightIcon from '$lib/components/icons/CopyrightIcon.svelte';
+	import BowViewer from '$lib/components/bow/BowViewer.svelte';
+	import { BOW_INFO, BOW_MODEL, BOW_DEMO, BOW_HOME_ORDER } from '$lib/bow';
 	import { reveal } from '$lib/actions/reveal';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -450,6 +452,38 @@
 		</section>
 	{/if}
 
+	<!-- Section 3.5: Bows the club's best archers use — reuses the archer page's BowViewer
+	     (live 3D model) per bow type. The DESCRIPTION is the shared BOW_INFO body (same as
+	     the archer page); only the intro sentence differs (a demo: the best club archer of
+	     that type "uses" a specific real model). Models alternate left/right. -->
+	<section class="home-bows" use:reveal>
+		<header class="home-sec-head">
+			<h2 class="home-sec-title home-bows-title">Lukovi najboljih strelicara</h2>
+		</header>
+		<div class="home-bows-list">
+			{#each BOW_HOME_ORDER as bow, i}
+				{@const info = BOW_INFO[bow]}
+				{@const model = BOW_MODEL[bow]}
+				<div class="home-bow" class:reverse={i % 2 === 1} use:reveal>
+					<div class="home-bow-media">
+						<BowViewer url={model.url} alt={info.title} fixRotation={model.fixRotation} />
+					</div>
+					<div class="home-bow-text">
+						<h3 class="home-bow-name">{info.title}</h3>
+						<p class="home-bow-body">{BOW_DEMO[bow].intro} {info.body}</p>
+						<!-- Required model-licence attribution (CC). -->
+						<p class="home-bow-credit">
+							3D model: <a href={model.credit.url} target="_blank" rel="noopener"
+								>{info.title} by {model.credit.author}</a
+							>
+							({model.credit.license})
+						</p>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</section>
+
 	<!-- Section 4: Join / contact invite — full-bleed looping video with a dark fade,
 	     centered text on top, "Registriraj se" button → /kontakt (Učlanjenje). -->
 	<section class="home-join" use:reveal>
@@ -662,7 +696,8 @@
 	/* Equal vertical rhythm: each section's TOP gap = the hero→Vijesti gap, so the spacing
 	   between News / Events / Achievements is uniform. (Join↔Explore gap left as-is.) */
 	.home-events,
-	.home-ach {
+	.home-ach,
+	.home-bows {
 		padding-top: clamp(8rem, 18vh, 14rem);
 		padding-bottom: 0;
 	}
@@ -683,8 +718,9 @@
 			),
 			#000;
 	}
-	/* Achievements keeps a bottom gap so the Join video isn't flush against it. */
-	.home-ach {
+	/* Bows is the last section before the Join video — it carries the bottom gap so the
+	   video isn't flush against it (matches the inter-section rhythm above). */
+	.home-bows {
 		padding-bottom: clamp(8rem, 18vh, 14rem);
 	}
 	/* Shared section header: "TITLE / LINK ›" — all inline, left-aligned (reference style). */
@@ -871,6 +907,78 @@
 		}
 		.home-ach-media {
 			height: 55%;
+		}
+	}
+
+	/* ── Section 3.5: Bows the club's best archers use ───────────────────────────── */
+	/* Title styled like the achievements honorary title (gold-less): matches the other
+	   section titles' light treatment but sized like "Nadolazeće". */
+	.home-bows-title {
+		font-size: clamp(1.4rem, 3vw, 2.4rem);
+	}
+	.home-bows-list {
+		max-width: 1720px;
+		margin: 0 auto;
+		padding: 0 clamp(1.5rem, 4vw, 4.5rem);
+		display: flex;
+		flex-direction: column;
+		gap: clamp(3rem, 7vh, 6rem);
+	}
+	/* One bow row: 3D model on one side, text on the other. Alternates via .reverse. */
+	.home-bow {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-items: center;
+		gap: clamp(1.5rem, 4vw, 4rem);
+	}
+	.home-bow.reverse {
+		direction: rtl; /* swap columns (media↔text) */
+	}
+	.home-bow.reverse > * {
+		direction: ltr; /* keep content LTR inside the swapped columns */
+	}
+	.home-bow-media {
+		width: 100%;
+		height: clamp(280px, 42vh, 460px);
+		border-radius: 12px;
+		overflow: hidden;
+		background: rgba(255, 255, 255, 0.03);
+	}
+	.home-bow-media :global(canvas) {
+		width: 100% !important;
+		height: 100% !important;
+	}
+	.home-bow-name {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.01em;
+		color: var(--color-accent);
+	}
+	.home-bow-body {
+		margin: 0;
+		font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+		line-height: 1.6;
+		color: var(--color-ink);
+	}
+	.home-bow-credit {
+		margin: 1rem 0 0;
+		font-size: 0.78rem;
+		color: rgba(255, 255, 255, 0.5);
+	}
+	.home-bow-credit a {
+		color: rgba(255, 255, 255, 0.7);
+		text-decoration: underline;
+	}
+	@media (max-width: 720px) {
+		.home-bow,
+		.home-bow.reverse {
+			grid-template-columns: 1fr; /* stack: model over text */
+			direction: ltr;
+		}
+		.home-bow-media {
+			height: clamp(240px, 38vh, 360px);
 		}
 	}
 
