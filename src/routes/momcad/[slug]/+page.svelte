@@ -633,7 +633,13 @@
 			<h2 class="pf-block-title">Luk ovog streličara</h2>
 			<div class="pf-bow">
 				<div class="pf-bow-media">
-					<BowViewer url={bowModel.url} alt={bowInfo.title} fixRotation={bowModel.fixRotation} />
+					<BowViewer
+						url={bowModel.url}
+						alt={bowInfo.title}
+						fixRotation={bowModel.fixRotation}
+						yOffset={bowModel.yOffset}
+						spinDir={bowModel.spinDir}
+					/>
 				</div>
 				<div class="pf-bow-text">
 					<p>{bowIntro} {bowInfo.body}</p>
