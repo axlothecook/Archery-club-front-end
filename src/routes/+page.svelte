@@ -182,19 +182,13 @@
 	// Reordered (user, 2026-06-13): together-2 first, then alternate Alen/Amanda with the
 	// other shots woven in (no clumped runs of one person).
 	const POOL = [
-		// Order (2026-06-13): the previously-hidden 6 come FIRST, then the previously-shown 6.
-		{ file: 'amanda-17.jpg', pos: 'center 35%' }, // 1
-		{ file: 'alen-11.jpg', pos: 'center 35%' }, // 2
-		{ file: 'target.jpg', pos: 'center 50%' }, // 3
-		{ file: 'together-1.jpg', pos: 'center 40%' }, // 4
-		{ file: 'alen-13.jpg', pos: 'center 35%' }, // 5
-		{ file: 'amanda-8.jpg', pos: 'center 45%' }, // 6
-		{ file: 'amanda-21.jpg', pos: 'center 35%' }, // 7
-		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 8
-		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 9
-		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 10
-		{ file: 'together-2.jpg', pos: 'center 40%' }, // 11
-		{ file: 'alen-12.jpg', pos: 'center 35%' } // 12
+		// 2026-06-13: swapped together-2 ↔ amanda-17, then dropped the first 6 — these 6 remain.
+		{ file: 'amanda-21.jpg', pos: 'center 35%' }, // 1
+		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 2
+		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 3
+		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 4
+		{ file: 'amanda-17.jpg', pos: 'center 35%' }, // 5
+		{ file: 'alen-12.jpg', pos: 'center 35%' } // 6
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
@@ -206,18 +200,12 @@
 	// new-batch survivors + alen-6 joined the round-1 eight → 17 total. With the leftover
 	// "rest" now dropped from POOL, POTENTIAL == POOL.
 	const POTENTIAL: string[] = [
-		'together-2',
-		'alen-3',
-		'amanda-8',
-		'leo-3',
-		'target',
-		'together-1',
-		'alen-11',
-		'alen-12',
-		'alen-13',
-		'amanda-17',
 		'amanda-21',
-		'alen-6'
+		'alen-3',
+		'leo-3',
+		'alen-6',
+		'amanda-17',
+		'alen-12'
 	];
 
 	// HIDDEN = images parked OUT of the shown set but kept IN the pool (not displayed,
