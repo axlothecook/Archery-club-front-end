@@ -7,7 +7,9 @@
 	import InstagramIcon from './icons/InstagramIcon.svelte';
 	import YouTubeIcon from './icons/YouTubeIcon.svelte';
 	import ArrowUpIcon from './icons/ArrowUpIcon.svelte';
-	import CopyrightIcon from './icons/CopyrightIcon.svelte';
+	// NOTE: CopyrightIcon is intentionally NOT imported here right now — the official
+	// "Copyright …" bottom line is held back until/unless this becomes the official VSK
+	// site. The icon component is kept in ./icons/ to restore that line later.
 
 	const LOGO_URL =
 		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
@@ -117,10 +119,9 @@
 		<div class="footer-bottom">
 			<p class="copyright">
 				<span class="copyright-line">
-					<CopyrightIcon size={15} />
-					Copyright Varaždinski Streličarski Klub
+					Personal project website
 				</span>
-				<span class="copyright-sub">Službena stranica Varaždinskog Streličarskog Kluba</span>
+				<span class="copyright-sub">author's version of an official website for VSK Club</span>
 			</p>
 			<div class="legal">
 				{#each FOOTER_LEGAL as l, i (l.label)}

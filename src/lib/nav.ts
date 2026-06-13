@@ -97,9 +97,12 @@ export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
 	},
 	{
 		heading: 'Usluge',
+		// The three public inquiry forms on /kontakt, deep-linked via ?vrsta= so each
+		// footer link opens the kontakt page on the matching form (the page reads the param).
 		links: [
-			{ label: 'Kontakt', href: '/kontakt' },
-			{ label: 'Učlanjenje', href: '/uclanjenje' }
+			{ label: 'Učlanjenje', href: '/kontakt?vrsta=uclanjenje' },
+			{ label: 'Sponzorstvo', href: '/kontakt?vrsta=sponzorstvo' },
+			{ label: 'Donacija', href: '/kontakt?vrsta=donacija' }
 		]
 	}
 ];
