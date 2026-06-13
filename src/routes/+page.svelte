@@ -924,10 +924,12 @@
 		flex-direction: column;
 		gap: clamp(3rem, 7vh, 6rem);
 	}
-	/* One bow row: 3D model on one side, text on the other. Alternates via .reverse. */
+	/* One bow row: 3D model on one side, text on the other. Alternates via .reverse.
+	   The model column is NARROWER than the text column (a tall, slim viewer suits the
+	   upright bow), so the text gets the extra width. */
 	.home-bow {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
 		align-items: center;
 		gap: clamp(1.5rem, 4vw, 4rem);
 	}
@@ -939,7 +941,7 @@
 	}
 	.home-bow-media {
 		width: 100%;
-		height: clamp(280px, 42vh, 460px);
+		height: clamp(360px, 56vh, 600px); /* taller, slimmer viewer */
 		border-radius: 12px;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.03);
