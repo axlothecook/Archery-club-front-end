@@ -64,20 +64,23 @@
 	// rotates it about that vertical handle axis (see useTask), so it spins in place.
 	function fitModel(model: Group) {
 		hideArrow(model);
-		// Orientation fix (per-model): some models ship lying horizontal; rotate them
-		// upright BEFORE measuring so the centre/scale are computed in the final pose.
+		// 1. Orientation fix (per-model): some models ship lying horizontal / facing a
+		//    different way; rotate them into the shared pose FIRST.
 		if (fixRotation) {
 			model.rotation.set(fixRotation[0], fixRotation[1], fixRotation[2]);
-			model.updateWorldMatrix(true, true);
 		}
-		const box = visibleBounds(model); // bow only — the hidden arrow is excluded
-		const size = box.getSize(new Vector3());
-		const center = box.getCenter(new Vector3());
-		const maxDim = Math.max(size.x, size.y, size.z) || 1;
-		const scale = FIT_SIZE / maxDim;
-		model.scale.setScalar(scale);
-		// Offset so the model's centre sits at the spinner's origin.
-		model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+		// 2. Scale to a consistent on-screen size (measure in the rotated pose at scale 1).
+		model.updateWorldMatrix(true, true);
+		const size0 = visibleBounds(model).getSize(new Vector3());
+		const maxDim = Math.max(size0.x, size0.y, size0.z) || 1;
+		model.scale.setScalar(FIT_SIZE / maxDim);
+		// 3. Re-measure the centre in the FINAL pose (after rotation AND scale), then offset
+		//    by it so the geometric centre sits exactly on the spinner's origin. Measuring
+		//    post-transform (not multiplying a scale-1 centre) guarantees the model spins IN
+		//    PLACE about its own centre — otherwise it orbits the origin as the spinner turns.
+		model.updateWorldMatrix(true, true);
+		const center = visibleBounds(model).getCenter(new Vector3());
+		model.position.set(-center.x, -center.y, -center.z);
 	}
 
 	useTask((delta) => {
