@@ -21,38 +21,57 @@
 	import NavBar from '$lib/components/NavBar.svelte';
 	import HalfScreenMenu from '$lib/components/HalfScreenMenu.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import RouteLoader from '$lib/components/RouteLoader.svelte';
 	import { onNavigate } from '$app/navigation';
 
 	let { children } = $props();
 
-	// History list ↔ chapter slide, via the View Transitions API (Chromium today;
-	// unsupported browsers just navigate plainly — progressive enhancement).
-	//   OPEN  (list → /klub/povijest/<slug>) → chapter slides UP from the bottom.
-	//   CLOSE (chapter → list)               → chapter slides DOWN, revealing list.
-	// We tag <html> with a direction class so the CSS knows which way to animate,
-	// and ONLY enable the slide for these specific povijest navigations.
-	const isList = (p: string) => p.replace(/\/$/, '') === '/klub/povijest';
-	const isChapter = (p: string) => /^\/klub\/povijest\/[^/]+$/.test(p.replace(/\/$/, ''));
+	// ── Page transitions / loader ──────────────────────────────────────────────────
+	// THE universal transition: a full-screen panel in the loader colour (#1e1f1c) wipes
+	// across on EVERY in-app navigation — it slides in to cover the screen, the page
+	// swaps underneath, then it slides straight off to reveal it (a continuous in-then-out
+	// sweep, no hold). Replaces the old crossed-arrows RouteLoader. Direction is purely
+	// forward/back:
+	//   • FORWARD (clicking a link, or the browser forward button) → sweeps RIGHT→LEFT.
+	//   • BACK    (browser back button / popstate going backwards)  → sweeps LEFT→RIGHT.
+
+	const SWIPE_MS = 1100; // total duration of the single pass (off-screen → across → off)
+
+	type Wipe = 'lr' | 'rl';
+	// Going BACK (popstate with a negative delta) = returning to a previous page → L→R.
+	// Everything else (link click, goto, forward button) = going to a new page → R→L.
+	function wipeFor(navigation: { type: string; delta?: number | null }): Wipe {
+		const isBack = navigation.type === 'popstate' && (navigation.delta ?? 0) < 0;
+		return isBack ? 'lr' : 'rl';
+	}
+
+	// The wipe overlay: a single continuous pass. `wipeDir` sets which way it travels;
+	// `wiping` mounts the panel + runs the keyframe animation. The page swaps at the
+	// MIDPOINT (when the panel fully covers the screen).
+	let wipeDir = $state<Wipe | null>(null);
+	let wiping = $state(false);
+	const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	onNavigate((navigation) => {
-		if (!document.startViewTransition || !navigation.to) return;
-		const from = navigation.from?.url.pathname ?? '';
-		const to = navigation.to.url.pathname;
+		if (!navigation.to) return;
+		// Skip if there's no origin page (hard load / first paint) — the destination's
+		// own loader (homepage %-counter, etc.) or plain render handles those.
+		if (!navigation.from) return;
 
-		let dir: 'open' | 'close' | null = null;
-		if (isList(from) && isChapter(to)) dir = 'open';
-		else if (isChapter(from) && isList(to)) dir = 'close';
-		if (!dir) return; // not a povijest list↔chapter nav → no slide
+		const dir = wipeFor(navigation);
 
-		const cls = `vt-${dir}`;
-		document.documentElement.classList.add(cls);
-		return new Promise((resolve) => {
-			const transition = document.startViewTransition(async () => {
+		return new Promise<void>((resolve) => {
+			(async () => {
+				// Start the single-pass sweep from off-screen.
+				wipeDir = dir;
+				wiping = true;
+				// Swap the page at the midpoint — the instant the panel fully covers.
+				await wait(SWIPE_MS / 2);
 				resolve();
-				await navigation.complete;
-			});
-			transition.finished.finally(() => document.documentElement.classList.remove(cls));
+				// Let the rest of the pass carry the panel off the far edge, then unmount.
+				await wait(SWIPE_MS / 2);
+				wiping = false;
+				wipeDir = null;
+			})();
 		});
 	});
 </script>
@@ -64,7 +83,6 @@
 <div class="app-shell">
 	<NavBar />
 	<HalfScreenMenu />
-	<RouteLoader />
 	<!-- Content layer sits ABOVE the sticky footer (z-index) with a solid bg, so
 	     scrolling up "uncovers" the footer that's pinned beneath it. -->
 	<div class="content-layer">
@@ -75,6 +93,17 @@
 		</main>
 		<Footer />
 	</div>
+
+	<!-- Page-transition wipe: a full-screen #1e1f1c panel that sweeps across in ONE pass
+	     (off-screen → covers → off the far edge); the page swaps at the midpoint. -->
+	{#if wiping}
+		<div
+			class="page-wipe"
+			class:dir-lr={wipeDir === 'lr'}
+			class:dir-rl={wipeDir === 'rl'}
+			aria-hidden="true"
+		></div>
+	{/if}
 </div>
 
 <style>
@@ -100,5 +129,60 @@
 		z-index: 1;
 		background-color: var(--color-bg);
 		flex: 1 0 auto;
+	}
+
+	/* ── Page-transition wipe panel ─────────────────────────────────────────────
+	   A full-screen #1e1f1c panel (the homepage loader colour) above everything
+	   (incl. the NavBar). It sweeps across in ONE continuous pass: off-screen on the
+	   entering edge → fully covering at the midpoint → off the far edge. The dir-*
+	   class picks which way it travels. Duration = SWIPE_MS in the script. */
+	.page-wipe {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		background: #1e1f1c;
+		pointer-events: none;
+		will-change: transform;
+	}
+	/* R→L pass (forward): in from the RIGHT, across, out the LEFT. */
+	.page-wipe.dir-rl {
+		animation: wipe-rl 1.1s linear both;
+	}
+	/* L→R pass (back): in from the LEFT, across, out the RIGHT. */
+	.page-wipe.dir-lr {
+		animation: wipe-lr 1.1s linear both;
+	}
+	@keyframes wipe-rl {
+		from {
+			transform: translateX(100%);
+		}
+		to {
+			transform: translateX(-100%);
+		}
+	}
+	@keyframes wipe-lr {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(100%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		/* Skip the sweep — a quick fade so motion-sensitive users aren't swept across. */
+		.page-wipe.dir-rl,
+		.page-wipe.dir-lr {
+			animation: wipe-fade 0.4s ease both;
+		}
+		@keyframes wipe-fade {
+			0%,
+			100% {
+				opacity: 0;
+			}
+			50% {
+				opacity: 1;
+			}
+		}
 	}
 </style>
