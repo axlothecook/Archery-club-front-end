@@ -6,7 +6,11 @@
 	import { onMount } from 'svelte';
 	import BowModel from './BowModel.svelte';
 
-	let { url, alt = '' }: { url: string; alt?: string } = $props();
+	let {
+		url,
+		alt = '',
+		fixRotation
+	}: { url: string; alt?: string; fixRotation?: [number, number, number] } = $props();
 
 	let mounted = $state(false);
 	let active = $state(false); // becomes true once ~30% in view (stays true after)
@@ -35,7 +39,7 @@
 <div class="bow-viewer" bind:this={host} role="img" aria-label={alt}>
 	{#if mounted}
 		<Canvas>
-			<BowModel {url} {active} />
+			<BowModel {url} {active} {fixRotation} />
 		</Canvas>
 	{/if}
 </div>

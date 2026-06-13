@@ -11,7 +11,11 @@
 	import { GLTF, OrbitControls } from '@threlte/extras';
 	import { Box3, Vector3, Mesh, type Group, type Object3D } from 'three';
 
-	let { url, active = false }: { url: string; active?: boolean } = $props();
+	let {
+		url,
+		active = false,
+		fixRotation
+	}: { url: string; active?: boolean; fixRotation?: [number, number, number] } = $props();
 
 	// Spin model: angular velocity (rad/s) decays from FAST → SLOW_CONSTANT.
 	const FAST = 6.0; // initial spin speed (rad/s) right after it enters view
@@ -60,6 +64,12 @@
 	// rotates it about that vertical handle axis (see useTask), so it spins in place.
 	function fitModel(model: Group) {
 		hideArrow(model);
+		// Orientation fix (per-model): some models ship lying horizontal; rotate them
+		// upright BEFORE measuring so the centre/scale are computed in the final pose.
+		if (fixRotation) {
+			model.rotation.set(fixRotation[0], fixRotation[1], fixRotation[2]);
+			model.updateWorldMatrix(true, true);
+		}
 		const box = visibleBounds(model); // bow only — the hidden arrow is excluded
 		const size = box.getSize(new Vector3());
 		const center = box.getCenter(new Vector3());

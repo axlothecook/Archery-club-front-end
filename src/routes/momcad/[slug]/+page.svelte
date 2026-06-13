@@ -23,6 +23,7 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import { BOW_LABEL, ARCHER_CARD_SCALE } from '$lib/archer';
+	import { BOW_INFO, BOW_MODEL, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
 	import { afterNavigate } from '$app/navigation';
@@ -256,32 +257,18 @@
 	// a count. Empty for archers (e.g. coaches) with none → the section is hidden.
 	const honours = $derived(a.achievements ?? []);
 
-	// ── Bow data (5th div) — title + description per bow type (the bow itself renders
-	//    as a live 3D model via BowViewer; copy is fact-based, no stored photo).
-	const primaryBow = $derived(a.bowType[0] ?? 'recurve');
-	// The bow image is rendered as a live 3D model (BowViewer), NOT a stored photo —
-	// so this map only carries the heading title + description copy. Descriptions are
-	// based on World Archery's official equipment definitions.
-	const BOW_INFO: Record<string, { title: string; body: string }> = {
-		compound: {
-			title: 'Složeni luk',
-			body: 'Složeni luk koristi sustav ekscentričnih koloturnika (kamova) i kabela na krajevima krakova, što ga čini mehanički najučinkovitijim i najpreciznijim tipom luka. Zahvaljujući tom sustavu, na punom zatezanju dolazi do popuštanja sile pa streličar drži znatno manju težinu i može dulje i mirnije ciljati. Nišani se kroz nišan s povećalom (od dva do osam puta) i libelom, a okida posebnim mehaničkim okidačem za čist i ujednačen ispust tetive.'
-		},
-		recurve: {
-			title: 'Klasični luk',
-			body: 'Klasični (olimpijski) luk prepoznatljiv je po krakovima koji se na vrhovima savijaju unatrag, od streličara, po čemu je i dobio ime. To je luk kojim se nastupa na Olimpijskim igrama. Opremljen je nišanom bez povećala te stabilizatorima, dugim i kratkim šipkama i prigušivačima, koji uravnotežuju luk i smanjuju vibracije. Streličar zateže tetivu prstima do lica, koristi klikericu za kontrolu dužine zatezanja i ispušta tetivu otvaranjem prstiju.'
-		},
-		barebow: {
-			title: 'Goli luk',
-			body: 'Goli luk je osnovni oblik klasičnog luka izrađen od istih suvremenih materijala, ali bez pomagala za ciljanje i stabilizaciju. Nema nišan, stabilizatore ni klikericu. Streličar cilja gledajući niz strijelu, a udaljenost često prilagođava položajem prstiju na tetivi (tzv. hodanje po tetivi). Takav nastup traži iznimnu dosljednost i kontrolu, posebno u ponavljanju jednake dužine zatezanja jer nema mehaničkih pomagala.'
-		}
-	};
+	// ── Bow data (5th div) — title + description per bow type (the bow itself renders as a
+	//    live 3D model via BowViewer; copy is fact-based, no stored photo). The bow title,
+	//    description and 3D model now live in $lib/bow.ts (shared with the homepage).
+	const primaryBow = $derived((a.bowType[0] ?? 'recurve') as BowType);
 	const bowInfo = $derived(BOW_INFO[primaryBow] ?? BOW_INFO.recurve);
+	const bowModel = $derived(BOW_MODEL[primaryBow] ?? BOW_MODEL.recurve);
 
-	// Per-archer intro sentence prepended to the bow description.
+	// Per-archer intro sentence prepended to the bow description (this is the ONLY part
+	// that differs from the homepage's bow section — the description body is shared).
 	//  - accusative (lower-cased title) for the present-tense "koristi <luk>".
 	//  - genitive ("iz <luka>") for the past-tense "pucao iz <luka>".
-	const BOW_GENITIVE: Record<string, string> = {
+	const BOW_GENITIVE: Record<BowType, string> = {
 		recurve: 'klasičnog luka',
 		compound: 'složenog luka',
 		barebow: 'golog luka'
@@ -294,31 +281,6 @@
 			? `${a.lastName} je tijekom svoje streličarske karijere pucao iz ${BOW_GENITIVE[primaryBow] ?? BOW_GENITIVE.recurve}.`
 			: `${a.firstName} koristi ${bowLabelLc}.`
 	);
-
-	// 3D bow model per bow type (glTF in static/models). Recurve + barebow reuse the
-	// recurve model. `credit` is the required licence attribution shown under the viewer.
-	type BowModel = { url: string; credit: { author: string; url: string; license: string } };
-	const RECURVE_MODEL: BowModel = {
-		url: '/models/recurve.glb',
-		credit: {
-			author: 'MrEliptik',
-			url: 'https://sketchfab.com/3d-models/recurve-bow-800fb9f4eb224cedb1c8e0b9847bd00c',
-			license: 'CC BY 4.0'
-		}
-	};
-	const BOW_MODEL: Record<string, BowModel> = {
-		compound: {
-			url: '/models/compound.glb',
-			credit: {
-				author: 'Wade_Kenny',
-				url: 'https://sketchfab.com/3d-models/compound-bow-c559a06ab84644abb47637cde93471bd',
-				license: 'CC BY-NC 4.0'
-			}
-		},
-		recurve: RECURVE_MODEL,
-		barebow: RECURVE_MODEL
-	};
-	const bowModel = $derived(BOW_MODEL[primaryBow] ?? RECURVE_MODEL);
 
 	// ── Coaches / students (from the profile contract) ────────────────────────────
 	// `a.coaches` / `a.students` are lightweight refs (slug + name); resolve each to
@@ -674,7 +636,7 @@
 			<h2 class="pf-block-title">Luk ovog streličara</h2>
 			<div class="pf-bow">
 				<div class="pf-bow-media">
-					<BowViewer url={bowModel.url} alt={bowInfo.title} />
+					<BowViewer url={bowModel.url} alt={bowInfo.title} fixRotation={bowModel.fixRotation} />
 				</div>
 				<div class="pf-bow-text">
 					<p>{bowIntro} {bowInfo.body}</p>
