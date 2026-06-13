@@ -21,19 +21,22 @@
 	import ArcherCardComp from '$lib/components/ArcherCard.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
-	import PageLoader from '$lib/components/PageLoader.svelte';
 	import { BOW_LABEL, ARCHER_CARD_SCALE } from '$lib/archer';
 	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
 	import { afterNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
-	// Flips true when the PageLoader finishes (page becomes visible). Gates the cover's
-	// echo slide-in so the user actually SEES it play, instead of it running hidden
-	// behind the loader.
+	// Gates the cover's echo slide-in. The page is now revealed by the global #1e1f1c
+	// wipe panel (the universal loader), not a per-page loader — so we flip `revealed`
+	// on mount (next tick) and the echo plays as the wipe slides off to show the page.
 	let revealed = $state(false);
+	onMount(() => {
+		requestAnimationFrame(() => (revealed = true));
+	});
 
 	// The "‹ Momčad" back-link should return the user to the roster EXACTLY where they
 	// left it (scroll position preserved). If they arrived here from the roster, a
@@ -326,10 +329,6 @@
 	<title>{a.firstName} {a.lastName} | Momčad — VSK</title>
 </svelte:head>
 
-<!-- Page loader: holds a #34302d 0→100% screen until the cover photo has loaded, then
-     fades the page in over 0.7s. Every archer has a cover photo in practice
-     (profilePhoto → cardPhoto fallback); the optional chain keeps it type-safe. -->
-<PageLoader assets={coverPhoto?.url ? [coverPhoto.url] : []} onreveal={() => (revealed = true)} />
 
 <div class="profile">
 	{#if cover?.design === 'filter'}

@@ -67,78 +67,8 @@ a {
 	width: 0;
 }
 
-// ---------------------------------------------------------------------------
-// History list <-> chapter slide (View Transitions API).
-// The root layout tags <html> with `vt-open` (list -> chapter) or `vt-close`
-// (chapter -> list); these rules animate the right "snapshot" so the chapter
-// slides UP over the list on open and DOWN off it on close. Other navigations
-// have no class -> default crossfade is suppressed below.
-// ---------------------------------------------------------------------------
-
-// Don't run the default cross-fade for our tagged navigations; we drive it.
-html.vt-open::view-transition-old(root),
-html.vt-close::view-transition-new(root) {
-	animation: none; // the underneath page stays still
-}
-
-// OPEN: the chapter (new) slides up from the bottom, on top of the list.
-html.vt-open::view-transition-new(root) {
-	z-index: 2;
-	animation: vt-slide-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-html.vt-open::view-transition-old(root) {
-	z-index: 1;
-}
-
-// CLOSE: the chapter (old) slides down off the top of the list.
-html.vt-close::view-transition-old(root) {
-	z-index: 2;
-	animation: vt-slide-down 0.55s cubic-bezier(0.5, 0, 0.75, 0) both;
-}
-html.vt-close::view-transition-new(root) {
-	z-index: 1;
-}
-
-@keyframes vt-slide-up {
-	from {
-		transform: translateY(100%);
-	}
-	to {
-		transform: translateY(0);
-	}
-}
-@keyframes vt-slide-down {
-	from {
-		transform: translateY(0);
-	}
-	to {
-		transform: translateY(100%);
-	}
-}
-
-// The unified NavBar has its OWN view-transition snapshot (named below), so it is
-// excluded from the sliding `root` snapshot. Pin it dead-still (no cross-fade)
-// during BOTH directions — it must never move while the page slides.
-html.vt-open::view-transition-group(navbar),
-html.vt-close::view-transition-group(navbar) {
-	animation: none;
-}
-html.vt-open::view-transition-old(navbar),
-html.vt-open::view-transition-new(navbar),
-html.vt-close::view-transition-old(navbar),
-html.vt-close::view-transition-new(navbar) {
-	animation: none;
-	mix-blend-mode: normal;
-}
-
-// Assign the view-transition-name to the NavBar ONLY while a history slide is
-// active (the html.vt-* class is present only during the transition). Applying the
-// name permanently would break the pill's backdrop-filter glass at rest, so it's
-// scoped here.
-html.vt-open .navbar,
-html.vt-close .navbar {
-	view-transition-name: navbar;
-}
+// Page transitions are handled by the #34302d wipe panel in +layout.svelte (the
+// universal loader), so no View-Transitions root rules live here anymore.
 
 // ── Scroll reveal (use:reveal action) ──────────────────────────────────────────
 // Elements with the `reveal` class start faded + slightly down; when the action
