@@ -31,7 +31,14 @@
 		{ id: 'sponsor', label: 'Sponzorstvo' },
 		{ id: 'donation', label: 'Donacija' }
 	];
-	let activeTab = $state<Tab>('membership');
+	// Initial tab from the URL (?vrsta=uclanjenje|sponzorstvo|donacija) so footer links can
+	// deep-link straight to one form; defaults to membership.
+	const VRSTA_TAB: Record<string, Tab> = {
+		uclanjenje: 'membership',
+		sponzorstvo: 'sponsor',
+		donacija: 'donation'
+	};
+	let activeTab = $state<Tab>(VRSTA_TAB[page.url.searchParams.get('vrsta') ?? ''] ?? 'membership');
 
 	// ── Shared submit state (reset when switching tabs) ─────────────────────────────
 	let submitting = $state(false);

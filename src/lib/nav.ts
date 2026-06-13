@@ -97,19 +97,24 @@ export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
 	},
 	{
 		heading: 'Usluge',
+		// The three public inquiry forms on /kontakt, deep-linked via ?vrsta= so each
+		// footer link opens the kontakt page on the matching form (the page reads the param).
 		links: [
-			{ label: 'Kontakt', href: '/kontakt' },
-			{ label: 'Učlanjenje', href: '/uclanjenje' }
+			{ label: 'Učlanjenje', href: '/kontakt?vrsta=uclanjenje' },
+			{ label: 'Sponzorstvo', href: '/kontakt?vrsta=sponzorstvo' },
+			{ label: 'Donacija', href: '/kontakt?vrsta=donacija' }
 		]
 	}
 ];
 
-// Bottom-bar legal links — placeholders until the legal pages are built.
+// Bottom-bar legal links. Each has a real route now: the first three are placeholder
+// pages ("u pripremi") until the real legal copy is written; Karta stranice is a live
+// sitemap.
 export const FOOTER_LEGAL: NavLink[] = [
-	{ label: 'Pravni uvjeti', href: '#' },
-	{ label: 'Pravila privatnosti', href: '#' },
-	{ label: 'Kolačići', href: '#' },
-	{ label: 'Karta stranice', href: '#' }
+	{ label: 'Pravni uvjeti', href: '/pravni-uvjeti' },
+	{ label: 'Pravila privatnosti', href: '/privatnost' },
+	{ label: 'Kolačići', href: '/kolacici' },
+	{ label: 'Karta stranice', href: '/karta-stranice' }
 ];
 
 // Locale switcher. `country` = ISO country code for the flag-icons class (fi-<country>).
