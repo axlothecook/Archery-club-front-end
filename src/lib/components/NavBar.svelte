@@ -44,7 +44,12 @@
 	// The Raspored page opens with a full-screen video hero that the navbar floats
 	// over: at the TOP there, the pill goes transparent with black text/icons so it
 	// reads on the bright video. Once scrolled, it reverts to the normal dark pill.
-	const transparentTop = $derived(path === '/raspored' && !scrolled);
+	// '/' (homepage) + '/raspored' get the transparent-over-hero navbar (permanent).
+	// NB: `path` has its trailing slash stripped, so the homepage '/' becomes '' — match
+	// that, not '/'. '/hero-candidates' is a TEMPORARY review page (delete with that route).
+	const transparentTop = $derived(
+		(path === '' || path === '/raspored' || path === '/hero-candidates') && !scrolled
+	);
 
 	// The current section link gets the gold underline — in the blue strip AND, once
 	// merged, in the pill (so the active page stays marked after scrolling).
@@ -266,7 +271,15 @@
 			border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
 			background-color 0.4s ease,
 			box-shadow 0.4s ease,
-			border-color 0.4s ease;
+			border-color 0.4s ease,
+			transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	// Homepage intro: the links/pill start ABOVE the screen and slide down into place.
+	// The homepage sets <html data-nav-intro> on load (pill parked up) and removes it on
+	// reveal (pill transitions down). Homepage-only — no other page sets this attr.
+	:global(html[data-nav-intro]) .pill {
+		transform: translateY(-150%);
+		transition: none; // no slide WHILE parked; the slide plays when the attr is removed
 	}
 	// Raspored hero exception: clear pill, black text/icons over the video.
 	// NB: the modifier is `nav-clear`, NOT `transparent` — the sass library defines a
@@ -282,7 +295,9 @@
 		border-color: transparent !important;
 		backdrop-filter: none !important;
 		-webkit-backdrop-filter: none !important;
-		transition: none;
+		// Keep the transform transition so the homepage intro slide-down still plays
+		// (only the colour/glass morph is suppressed here, not the transform).
+		transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 		// White unselected links/icons (the active link keeps its gold via .active).
 		color: #fff;
 	}

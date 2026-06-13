@@ -21,6 +21,11 @@
 				}
 				if (y > 10) document.documentElement.setAttribute('data-scrolled', '');
 				else document.documentElement.removeAttribute('data-scrolled');
+				// Homepage intro: park the navbar links ABOVE the screen pre-paint (so they
+				// don't flash over the loader before sliding down). Only on a fresh load at
+				// the TOP of '/'; the homepage removes the attr on reveal + on navigation away.
+				if (location.pathname === '/' && y <= 10)
+					document.documentElement.setAttribute('data-nav-intro', '');
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

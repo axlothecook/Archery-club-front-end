@@ -20,7 +20,7 @@
 	//   - A pattern ending in '/' (e.g. '/momcad/') is a PREFIX match → covers its
 	//     sub-routes (the bare '/momcad' roster page is NOT matched, keeps the veil).
 	//   - Any other pattern is matched exactly.
-	const SELF_LOADING = ['/momcad/'];
+	const SELF_LOADING = ['/momcad/', '/'];
 	const isSelfLoading = (path: string) =>
 		SELF_LOADING.some((p) => {
 			if (p === '/') return path === '/';
