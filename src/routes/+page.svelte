@@ -309,9 +309,10 @@
 		{/each}
 	</div>
 
-	<!-- Photo-source credit for the current image, bottom-left (© + source). -->
+	<!-- Photo-source credit for the current image, bottom-left (© + source). Fades in with
+	     the intro (alongside the tagline), so it's visible after the curtain reveal. -->
 	{#if IMAGES[active].credit}
-		<div class="hero-credit">
+		<div class="hero-credit" class:in={introIn}>
 			<CopyrightIcon size={13} />
 			<span class="hero-credit-name">{IMAGES[active].credit}</span>
 		</div>
@@ -521,7 +522,8 @@
 	}
 
 	/* Photo-source credit, bottom-left: © mark + source name. A bit smaller than the old
-	   image-name caption (which sat at 1rem). */
+	   image-name caption (which sat at 1rem). Fades in with the intro (like the tagline)
+	   so it shows up after the curtain reveal. */
 	.hero-credit {
 		position: absolute;
 		left: clamp(1rem, 3vw, 2.5rem);
@@ -534,8 +536,16 @@
 		text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
 		font: 500 0.85rem/1 system-ui, sans-serif;
 		letter-spacing: 0.02em;
-		opacity: 0.9;
+		opacity: 0;
+		transform: translateY(0.6em);
+		transition:
+			opacity 0.7s ease 0.5s,
+			transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
 		pointer-events: none;
+	}
+	.hero-credit.in {
+		opacity: 0.9;
+		transform: translateY(0);
 	}
 	.hero-credit :global(svg) {
 		flex: none;
@@ -619,7 +629,8 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.wm-letter,
-		.hero-tagline {
+		.hero-tagline,
+		.hero-credit {
 			transition-duration: 0.01ms;
 		}
 		.hero-curtain {
