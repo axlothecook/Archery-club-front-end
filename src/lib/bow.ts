@@ -49,6 +49,11 @@ export type BowModel = {
 	// models ship vertical (no fix needed); some (e.g. the Sengchor barebow) ship lying
 	// horizontal and need a quarter-turn about Z to stand up.
 	fixRotation?: [number, number, number];
+	// Optional vertical nudge (world units) applied AFTER centering, to fine-tune where the
+	// model sits in the viewer box. Negative = lower it. Default 0 (centred).
+	yOffset?: number;
+	// Auto-spin direction: 1 = default, -1 = reversed (clockwise). Default 1.
+	spinDir?: number;
 };
 
 const RECURVE_MODEL: BowModel = {
@@ -60,7 +65,9 @@ const RECURVE_MODEL: BowModel = {
 	},
 	// Quarter-turn about Y so it presents its flat side-profile to the camera and spins
 	// about its vertical handle axis like the compound (which needs no fix).
-	fixRotation: [0, Math.PI / 2, 0]
+	fixRotation: [0, Math.PI / 2, 0],
+	// Spin clockwise (opposite the compound).
+	spinDir: -1
 };
 
 export const BOW_MODEL: Record<BowType, BowModel> = {
@@ -84,7 +91,11 @@ export const BOW_MODEL: Record<BowType, BowModel> = {
 		},
 		// Ships lying HORIZONTAL — quarter-turn about Z stands it upright, plus a quarter-turn
 		// about Y so its face points at the camera and it spins like the compound/recurve.
-		fixRotation: [0, Math.PI / 2, Math.PI / 2]
+		fixRotation: [0, Math.PI / 2, Math.PI / 2],
+		// Sits a touch high in the box — nudge it down.
+		yOffset: -0.6,
+		// Spin clockwise (opposite the compound).
+		spinDir: -1
 	}
 };
 

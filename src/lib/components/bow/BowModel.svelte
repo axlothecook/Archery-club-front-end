@@ -14,8 +14,17 @@
 	let {
 		url,
 		active = false,
-		fixRotation
-	}: { url: string; active?: boolean; fixRotation?: [number, number, number] } = $props();
+		fixRotation,
+		yOffset = 0,
+		spinDir = 1
+	}: {
+		url: string;
+		active?: boolean;
+		fixRotation?: [number, number, number];
+		yOffset?: number;
+		/** Auto-spin direction: 1 = default, -1 = reversed (clockwise). */
+		spinDir?: number;
+	} = $props();
 
 	// Spin model: angular velocity (rad/s) decays from FAST → SLOW_CONSTANT.
 	const FAST = 6.0; // initial spin speed (rad/s) right after it enters view
@@ -88,7 +97,7 @@
 		elapsed += delta;
 		// speed = SLOW + (FAST - SLOW) * e^(-DECAY * t)  → starts at FAST, eases to SLOW.
 		const speed = SLOW + (FAST - SLOW) * Math.exp(-DECAY * elapsed);
-		spinner.rotation.y += speed * delta;
+		spinner.rotation.y += speed * delta * spinDir;
 	});
 </script>
 
@@ -116,7 +125,9 @@
 <T.DirectionalLight position={[-5, 2, -4]} intensity={1.4} />
 <T.DirectionalLight position={[0, -3, 6]} intensity={1.0} />
 
-<!-- The spinner group we rotate; the centred + scaled model lives inside it. -->
-<T.Group bind:ref={spinner}>
+<!-- The spinner group we rotate; the centred + scaled model lives inside it. `yOffset`
+     shifts the whole spinner vertically (model stays centred on its own spin axis, so it
+     still rotates in place — just sits higher/lower in the frame). -->
+<T.Group bind:ref={spinner} position={[0, yOffset, 0]}>
 	<GLTF {url} onload={({ scene }) => fitModel(scene)} />
 </T.Group>

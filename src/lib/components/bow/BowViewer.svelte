@@ -9,8 +9,16 @@
 	let {
 		url,
 		alt = '',
-		fixRotation
-	}: { url: string; alt?: string; fixRotation?: [number, number, number] } = $props();
+		fixRotation,
+		yOffset = 0,
+		spinDir = 1
+	}: {
+		url: string;
+		alt?: string;
+		fixRotation?: [number, number, number];
+		yOffset?: number;
+		spinDir?: number;
+	} = $props();
 
 	let mounted = $state(false);
 	let active = $state(false); // becomes true once ~30% in view (stays true after)
@@ -39,7 +47,7 @@
 <div class="bow-viewer" bind:this={host} role="img" aria-label={alt}>
 	{#if mounted}
 		<Canvas>
-			<BowModel {url} {active} {fixRotation} />
+			<BowModel {url} {active} {fixRotation} {yOffset} {spinDir} />
 		</Canvas>
 	{/if}
 </div>

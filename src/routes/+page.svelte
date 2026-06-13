@@ -466,7 +466,13 @@
 				{@const model = BOW_MODEL[bow]}
 				<div class="home-bow" class:reverse={i % 2 === 1} use:reveal>
 					<div class="home-bow-media">
-						<BowViewer url={model.url} alt={info.title} fixRotation={model.fixRotation} />
+						<BowViewer
+							url={model.url}
+							alt={info.title}
+							fixRotation={model.fixRotation}
+							yOffset={model.yOffset}
+							spinDir={model.spinDir}
+						/>
 					</div>
 					<div class="home-bow-text">
 						<h3 class="home-bow-name">{info.title}</h3>
