@@ -181,20 +181,20 @@
 	// Reordered (user, 2026-06-13): together-2 first, then alternate Alen/Amanda with the
 	// other shots woven in (no clumped runs of one person).
 	const POOL = [
-		{ file: 'together-2.jpg', pos: 'center 40%' }, // 1
+		{ file: 'target.jpg', pos: 'center 50%' }, // 1 (swapped with together-2, 2026-06-13)
 		{ file: 'amanda-8.jpg', pos: 'center 45%' }, // 2
 		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 3
 		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 4 (re-added 2026-06-13)
 		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 5
 		{ file: 'together-1.jpg', pos: 'center 40%' }, // 6
-		{ file: 'target.jpg', pos: 'center 50%' }, // 7
+		{ file: 'together-2.jpg', pos: 'center 40%' }, // 7 (swapped with target, 2026-06-13)
 		// New batch (2026-06-13) — focal points default to 'center 35%', tune visually later.
 		{ file: 'alen-11.jpg', pos: 'center 35%' },
 		{ file: 'alen-12.jpg', pos: 'center 35%' },
 		{ file: 'alen-13.jpg', pos: 'center 35%' },
 		{ file: 'amanda-17.jpg', pos: 'center 35%' },
 		{ file: 'amanda-21.jpg', pos: 'center 35%' },
-		{ file: 'together-6.jpg', pos: 'center 68%' } // back to original orientation (un-rotated 2026-06-13)
+		{ file: 'together-6.jpg', pos: 'center 35%' } // un-rotated + restored to original focal point (2026-06-13)
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
