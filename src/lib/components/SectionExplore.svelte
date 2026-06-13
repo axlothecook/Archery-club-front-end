@@ -140,7 +140,7 @@
 		padding: 0 $sp;
 		text-align: center;
 		color: $white;
-		font-size: 1.25rem;
+		font-size: clamp(1.5rem, 2.6vw, 2.1rem); /* larger card labels */
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
