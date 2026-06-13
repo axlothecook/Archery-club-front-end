@@ -1,15 +1,13 @@
 <script lang="ts">
-	// 🚧 TEMPORARY front-page preview, numbered.com "MediasMouse" architecture:
-	// ALL candidate images are stacked FULL-SCREEN (each covers the entire viewport,
-	// object-fit:cover); only ONE shows at a time. The screen is split into invisible
-	// vertical hover ZONES — moving the cursor left↔right swaps which full-screen image
-	// shows (crossfade). Previews every candidate at true hero size on '/'. NOT the final
-	// hero. Replace this whole file with the real homepage once the picks are made.
+	// Homepage. Hero (numbered.com "MediasMouse" style): the cover images are stacked
+	// FULL-SCREEN (each covers the viewport, object-fit:cover) and only ONE shows at a
+	// time; invisible vertical hover ZONES swap which image shows (crossfade) as the cursor
+	// moves left↔right. Below the hero: News (3D coverflow), Events, Achievements, Bows,
+	// Join CTA, and the Explore block.
 	//
 	// CROP: object-fit:cover always crops to fill (screen ~2.16:1; photos are 1.5:1 or
 	// portrait). Per-image `pos` (object-position) keeps the SUBJECT in frame instead of a
-	// blind center crop (MDN focal-point art-direction). Portraits (amanda-1/4/5/6) crop
-	// hardest on a wide screen — if focal-point isn't enough we'll art-direct real crops.
+	// blind center crop (MDN focal-point art-direction).
 
 	import NewsCoverflow from '$lib/components/NewsCoverflow.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
