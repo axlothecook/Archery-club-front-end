@@ -17,6 +17,7 @@
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
+	import { reveal } from '$lib/actions/reveal';
 	import { fly } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 
@@ -349,7 +350,7 @@
 <div class="home-sections">
 	<!-- Section 1: Latest news — 3D coverflow on a black band (navy fades in at top/bottom). -->
 	{#if data.news.length > 0}
-		<section class="home-news">
+		<section class="home-news" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
 			<!-- "VIJESTI / Sve vijesti ›" — title, slash, then the all-link inline (left). -->
 			<header class="home-sec-head">
 				<h2 class="home-sec-title">Vijesti</h2>
@@ -367,7 +368,7 @@
 
 	<!-- Section 2: Upcoming events teaser (horizontal scroll of RM-style EventCards). -->
 	{#if upcomingTeaser.length > 0}
-		<section class="home-events">
+		<section class="home-events" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
 			<header class="home-sec-head">
 				<h2 class="home-sec-title home-events-title">Nadolazeće</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
@@ -407,7 +408,7 @@
 	     slides exit left + enter from right; auto-advances every 5s, no visible timer). -->
 	{#if data.achievements.length > 0}
 		{@const ach = data.achievements[achIndex]}
-		<section class="home-ach">
+		<section class="home-ach" use:reveal>
 			<header class="home-sec-head">
 				<h2 class="home-sec-title home-ach-honour-title">Ponos hrvatskog streličarstva</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
@@ -446,7 +447,7 @@
 
 	<!-- Section 4: Join / contact invite — full-bleed looping video with a dark fade,
 	     centered text on top, "Registriraj se" button → /kontakt (Učlanjenje). -->
-	<section class="home-join">
+	<section class="home-join" use:reveal>
 		<!-- Two clips, crossfading A→B→A→B for a seamless loop. Only `joinActive` is shown. -->
 		{#each JOIN_CLIPS as clip, i}
 			<video
@@ -480,7 +481,9 @@
 
 	<!-- Section 5: Explore the club — the shared golden "MOŽDA ĆE VAM SE SVIDJETI" block
 	     with 4 cover-photo nav cards (Povijest / Identitet / Postignuća / Sponzori). -->
-	<SectionExplore />
+	<div use:reveal>
+		<SectionExplore />
+	</div>
 </div>
 
 <style>
