@@ -181,19 +181,19 @@
 	// Reordered (user, 2026-06-13): together-2 first, then alternate Alen/Amanda with the
 	// other shots woven in (no clumped runs of one person).
 	const POOL = [
-		{ file: 'amanda-21.jpg', pos: 'center 35%' }, // 1 (moved from last to first, 2026-06-13)
-		{ file: 'target.jpg', pos: 'center 50%' }, // 2 (swapped with together-2, 2026-06-13)
-		{ file: 'amanda-8.jpg', pos: 'center 45%' }, // 3
-		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 4
-		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 5 (re-added 2026-06-13)
-		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 6
-		{ file: 'together-1.jpg', pos: 'center 40%' }, // 7
-		{ file: 'together-2.jpg', pos: 'center 40%' }, // 8 (swapped with target, 2026-06-13)
-		// New batch (2026-06-13) — focal points default to 'center 35%', tune visually later.
-		{ file: 'alen-11.jpg', pos: 'center 35%' },
-		{ file: 'alen-12.jpg', pos: 'center 35%' },
-		{ file: 'alen-13.jpg', pos: 'center 35%' },
-		{ file: 'amanda-17.jpg', pos: 'center 35%' }
+		// Order (2026-06-13): the previously-hidden 6 come FIRST, then the previously-shown 6.
+		{ file: 'amanda-17.jpg', pos: 'center 35%' }, // 1
+		{ file: 'alen-11.jpg', pos: 'center 35%' }, // 2
+		{ file: 'target.jpg', pos: 'center 50%' }, // 3
+		{ file: 'together-1.jpg', pos: 'center 40%' }, // 4
+		{ file: 'alen-13.jpg', pos: 'center 35%' }, // 5
+		{ file: 'amanda-8.jpg', pos: 'center 45%' }, // 6
+		{ file: 'amanda-21.jpg', pos: 'center 35%' }, // 7
+		{ file: 'alen-3.jpg', pos: 'center 35%' }, // 8
+		{ file: 'leo-3.jpg', pos: 'center 35%' }, // 9
+		{ file: 'alen-6.jpg', pos: 'center 35%' }, // 10
+		{ file: 'together-2.jpg', pos: 'center 40%' }, // 11
+		{ file: 'alen-12.jpg', pos: 'center 35%' } // 12
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
@@ -220,8 +220,9 @@
 	];
 
 	// HIDDEN = images parked OUT of the shown set but kept IN the pool (not displayed,
-	// not removed). 2026-06-13: amanda-17, alen-11, target moved here.
-	const HIDDEN: string[] = ['amanda-17', 'alen-11', 'target', 'together-1', 'alen-13', 'amanda-8'];
+	// not removed). 2026-06-13: emptied — all 12 now show (previously-hidden 6 first, then
+	// the previously-shown 6, per the POOL order above).
+	const HIDDEN: string[] = [];
 
 	// Display mode: 'all' = every POOL image NOT hidden · 'rest' = POOL minus POTENTIAL
 	// (also minus hidden) · string[] = exactly those filenames, in order.
