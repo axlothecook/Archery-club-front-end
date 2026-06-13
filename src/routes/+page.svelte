@@ -194,7 +194,7 @@
 		{ file: 'alen-13.jpg', pos: 'center 35%' },
 		{ file: 'amanda-17.jpg', pos: 'center 35%' },
 		{ file: 'amanda-21.jpg', pos: 'center 35%' },
-		{ file: 'together-6.jpg', pos: 'center 68%', rotate: 90 } // rotated 90° (2026-06-13)
+		{ file: 'together-6.jpg', pos: 'center 68%' } // back to original orientation (un-rotated 2026-06-13)
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
@@ -223,7 +223,7 @@
 
 	// HIDDEN = images parked OUT of the shown set but kept IN the pool (not displayed,
 	// not removed). 2026-06-13: amanda-17, alen-11, target moved here.
-	const HIDDEN: string[] = ['amanda-17', 'alen-11', 'target', 'together-1'];
+	const HIDDEN: string[] = ['amanda-17', 'alen-11', 'target', 'together-1', 'alen-13'];
 
 	// Display mode: 'all' = every POOL image NOT hidden · 'rest' = POOL minus POTENTIAL
 	// (also minus hidden) · string[] = exactly those filenames, in order.
