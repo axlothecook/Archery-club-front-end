@@ -107,12 +107,14 @@ export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
 	}
 ];
 
-// Bottom-bar legal links — placeholders until the legal pages are built.
+// Bottom-bar legal links. Each has a real route now: the first three are placeholder
+// pages ("u pripremi") until the real legal copy is written; Karta stranice is a live
+// sitemap.
 export const FOOTER_LEGAL: NavLink[] = [
-	{ label: 'Pravni uvjeti', href: '#' },
-	{ label: 'Pravila privatnosti', href: '#' },
-	{ label: 'Kolačići', href: '#' },
-	{ label: 'Karta stranice', href: '#' }
+	{ label: 'Pravni uvjeti', href: '/pravni-uvjeti' },
+	{ label: 'Pravila privatnosti', href: '/privatnost' },
+	{ label: 'Kolačići', href: '/kolacici' },
+	{ label: 'Karta stranice', href: '/karta-stranice' }
 ];
 
 // Locale switcher. `country` = ISO country code for the flag-icons class (fi-<country>).
