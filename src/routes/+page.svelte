@@ -511,14 +511,22 @@
 				{/key}
 			</div>
 			<div class="home-bow-text">
-				<p class="home-bow-body">{BOW_DEMO[activeBow].intro} {activeBowInfo.body}</p>
-				<!-- Required model-licence attribution (CC). -->
-				<p class="home-bow-credit">
-					3D model: <a href={activeBowModel.credit.url} target="_blank" rel="noopener"
-						>{activeBowInfo.title} by {activeBowModel.credit.author}</a
+				<!-- Re-keyed on the active bow so the text animates in (slide + fade) on switch. -->
+				{#key activeBow}
+					<div
+						class="home-bow-text-inner"
+						in:fly={{ x: 40, duration: 450, easing: cubicInOut }}
 					>
-					({activeBowModel.credit.license})
-				</p>
+						<p class="home-bow-body">{BOW_DEMO[activeBow].intro} {activeBowInfo.body}</p>
+						<!-- Required model-licence attribution (CC). -->
+						<p class="home-bow-credit">
+							3D model: <a href={activeBowModel.credit.url} target="_blank" rel="noopener"
+								>{activeBowInfo.title} by {activeBowModel.credit.author}</a
+							>
+							({activeBowModel.credit.license})
+						</p>
+					</div>
+				{/key}
 			</div>
 		</div>
 	</section>
