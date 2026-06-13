@@ -55,14 +55,15 @@
 		const startFade = () => {
 			if (faded) return;
 			faded = true;
-			// Let 100% sit for a beat, then fade out 0.7s, then remove from DOM. Signal
-			// `onreveal` as the fade STARTS so the page can begin its intro animations
-			// right as it becomes visible (e.g. the cover's echo slide-in).
+			// Let 100% sit for a beat (HOLD), then fade out 0.7s, then remove from DOM. Signal
+			// `onreveal` as the fade STARTS so the page can begin its intro animations right
+			// as it becomes visible (e.g. the cover's echo slide-in).
+			const HOLD = 820; // ms the bar holds at 100% before the page drops in
 			setTimeout(() => {
 				hiding = true;
 				onreveal?.();
-			}, 120);
-			setTimeout(() => (done = true), 120 + 700);
+			}, HOLD);
+			setTimeout(() => (done = true), HOLD + 700);
 		};
 
 		// rAF loop: ease the displayed pct toward the real target so it climbs smoothly.

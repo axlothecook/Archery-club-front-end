@@ -22,6 +22,7 @@
 	import HalfScreenMenu from '$lib/components/HalfScreenMenu.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { onNavigate } from '$app/navigation';
+	import { tick } from 'svelte';
 
 	let { children } = $props();
 
@@ -34,7 +35,7 @@
 	//   • FORWARD (clicking a link, or the browser forward button) → sweeps RIGHT→LEFT.
 	//   • BACK    (browser back button / popstate going backwards)  → sweeps LEFT→RIGHT.
 
-	const SWIPE_MS = 1100; // total duration of the single pass (off-screen → across → off)
+	const SWIPE_MS = 1500; // total duration of the single pass (off-screen → across → off)
 
 	type Wipe = 'lr' | 'rl';
 	// Going BACK (popstate with a negative delta) = returning to a previous page → L→R.
@@ -44,11 +45,16 @@
 		return isBack ? 'lr' : 'rl';
 	}
 
-	// The wipe overlay: a single continuous pass. `wipeDir` sets which way it travels;
-	// `wiping` mounts the panel + runs the keyframe animation. The page swaps at the
-	// MIDPOINT (when the panel fully covers the screen).
+	// The wipe overlay runs in two phases so the OLD page is never briefly uncovered:
+	//   cover  — panel slides from off-screen to fully covering the screen.
+	//   (then) — swap the page + AWAIT navigation.complete, so the NEW page has rendered
+	//            behind the covering panel before we uncover (no flash of the old page).
+	//   reveal — panel slides off the far edge.
+	// `wipeDir` sets travel direction; `wipePhase` drives the CSS. The two eased halves
+	// (slow-in on cover, slow-out on reveal) read as one slow-fast-slow sweep.
 	let wipeDir = $state<Wipe | null>(null);
-	let wiping = $state(false);
+	let wipePhase = $state<'enter' | 'cover' | 'reveal' | null>(null);
+	let wipeEl = $state<HTMLDivElement>();
 	const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	onNavigate((navigation) => {
@@ -61,15 +67,24 @@
 
 		return new Promise<void>((resolve) => {
 			(async () => {
-				// Start the single-pass sweep from off-screen.
+				// 0. ENTER: mount the panel off-screen on the entering edge. Wait for Svelte to
+				//    render it, then FORCE a reflow at that position so the COVER transition
+				//    actually animates FROM off-screen (without the reflow the two style
+				//    changes batch into one frame and the panel just snaps to covering).
 				wipeDir = dir;
-				wiping = true;
-				// Swap the page at the midpoint — the instant the panel fully covers.
+				wipePhase = 'enter';
+				await tick();
+				void wipeEl?.offsetWidth; // force reflow — commit the off-screen start position
+				// 1. COVER: transition it in until it fully covers the screen.
+				wipePhase = 'cover';
 				await wait(SWIPE_MS / 2);
+				// 2. Swap the page (now hidden behind the panel) and WAIT for it to render.
 				resolve();
-				// Let the rest of the pass carry the panel off the far edge, then unmount.
+				await navigation.complete;
+				// 3. REVEAL: slide the panel off the far edge to show the ready new page.
+				wipePhase = 'reveal';
 				await wait(SWIPE_MS / 2);
-				wiping = false;
+				wipePhase = null;
 				wipeDir = null;
 			})();
 		});
@@ -94,13 +109,16 @@
 		<Footer />
 	</div>
 
-	<!-- Page-transition wipe: a full-screen #1e1f1c panel that sweeps across in ONE pass
-	     (off-screen → covers → off the far edge); the page swaps at the midpoint. -->
-	{#if wiping}
+	<!-- Page-transition wipe: a full-screen #1e1f1c panel. COVER slides it in to fully
+	     cover; the page then swaps + renders behind it; REVEAL slides it off. Two eased
+	     halves read as one slow-fast-slow sweep, and the old page is never uncovered. -->
+	{#if wipePhase}
 		<div
 			class="page-wipe"
 			class:dir-lr={wipeDir === 'lr'}
 			class:dir-rl={wipeDir === 'rl'}
+			data-phase={wipePhase}
+			bind:this={wipeEl}
 			aria-hidden="true"
 		></div>
 	{/if}
@@ -144,45 +162,49 @@
 		pointer-events: none;
 		will-change: transform;
 	}
-	/* R→L pass (forward): in from the RIGHT, across, out the LEFT. */
-	.page-wipe.dir-rl {
-		animation: wipe-rl 1.1s linear both;
+	/* Two-phase transform (each half = SWIPE_MS/2 = 0.75s). COVER eases IN (slow start,
+	   accelerating into full cover); REVEAL eases OUT (decelerating to a slow exit) — so the
+	   combined motion reads as one slow-fast-slow sweep, with a render gap in the middle. */
+	.page-wipe[data-phase='cover'] {
+		transition: transform 0.75s cubic-bezier(0.6, 0, 1, 1); /* ease-in */
 	}
-	/* L→R pass (back): in from the LEFT, across, out the RIGHT. */
-	.page-wipe.dir-lr {
-		animation: wipe-lr 1.1s linear both;
+	.page-wipe[data-phase='reveal'] {
+		transition: transform 0.75s cubic-bezier(0, 0, 0.4, 1); /* ease-out */
 	}
-	@keyframes wipe-rl {
-		from {
-			transform: translateX(100%);
-		}
-		to {
-			transform: translateX(-100%);
-		}
+	/* enter = instant off-screen start position (no transition), then cover transitions in. */
+	.page-wipe[data-phase='enter'] {
+		transition: none;
 	}
-	@keyframes wipe-lr {
-		from {
-			transform: translateX(-100%);
-		}
-		to {
-			transform: translateX(100%);
-		}
+	/* dir-rl (forward, travels LEFT): enter from the RIGHT, cover at 0, out the LEFT. */
+	.page-wipe.dir-rl[data-phase='enter'] {
+		transform: translateX(100%);
+	}
+	.page-wipe.dir-rl[data-phase='cover'] {
+		transform: translateX(0);
+	}
+	.page-wipe.dir-rl[data-phase='reveal'] {
+		transform: translateX(-100%);
+	}
+	/* dir-lr (back, travels RIGHT): enter from the LEFT, cover at 0, out the RIGHT. */
+	.page-wipe.dir-lr[data-phase='enter'] {
+		transform: translateX(-100%);
+	}
+	.page-wipe.dir-lr[data-phase='cover'] {
+		transform: translateX(0);
+	}
+	.page-wipe.dir-lr[data-phase='reveal'] {
+		transform: translateX(100%);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		/* Skip the sweep — a quick fade so motion-sensitive users aren't swept across. */
-		.page-wipe.dir-rl,
-		.page-wipe.dir-lr {
-			animation: wipe-fade 0.4s ease both;
+		/* No sweep — just hold the cover briefly (a quick fade) so motion-sensitive users
+		   aren't swept across; the cover→reveal still hides the swap. */
+		.page-wipe {
+			transition: opacity 0.25s ease !important;
+			transform: none !important;
 		}
-		@keyframes wipe-fade {
-			0%,
-			100% {
-				opacity: 0;
-			}
-			50% {
-				opacity: 1;
-			}
+		.page-wipe[data-phase='reveal'] {
+			opacity: 0;
 		}
 	}
 </style>
