@@ -27,22 +27,37 @@ export const ARCHER_CARD_SCALE: Record<string, number> = {
 	'amanda-mlinaric': 1.32,
 	'leo-sulik': 1.2,
 	'zoran-velagic': 1.32,
-	'mija-mance': 1.35,
+	'mija-mance': 1.22,
 	'tomislav-mlinaric': 1.32,
 	'mila-vrbesic': 1.2,
 	'nikola-portner-pavicevic': 1.05,
 	'ela-drozdek': 1.12,
 	'alen-remar': 1.0,
-	'mia-medimurec': 0.85,
-	'filip-bistricic': 0.85,
+	'mia-medimurec': 1.0,
+	'filip-bistricic': 1.0,
 	'nicole-bratonja': 0.97,
 	'aurelia-mlinaric': 0.85,
-	'jakov-crnicki': 0.85,
-	'bojan-rodik': 0.85,
+	'jakov-crnicki': 1.0,
+	'bojan-rodik': 1.0,
 	'luka-ciglaric': 0.97,
-	'tena-mikolaj': 0.85,
+	'tena-mikolaj': 1.0,
 	'leda-crncec': 0.97,
 	'karmen-ahmetovic': 1.15,
 	'rafael-barulek': 1.15,
 	'cvijetoslav-zorman': 1.05
 };
+
+// Archers whose hover BOW image emerges on the LEFT (default is RIGHT). The first-name
+// watermark then sits on the OPPOSITE wall automatically. Shared so the Momčad roster and
+// the archer page's coach/Trenira cards keep each archer on the SAME side.
+export const BOW_LEFT = new Set<string>([
+	'amanda-mlinaric',
+	'mia-medimurec',
+	'tena-mikolaj',
+	'luka-ciglaric',
+	'bojan-rodik',
+	'rafael-barulek',
+	'mija-mance',
+	'nicole-bratonja',
+	'tomislav-mlinaric'
+]);

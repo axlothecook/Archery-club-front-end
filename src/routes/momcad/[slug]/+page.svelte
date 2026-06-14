@@ -18,14 +18,13 @@
 	import EuropeRecordIcon from '$lib/components/icons/EuropeRecordIcon.svelte';
 	import CroatiaRecordIcon from '$lib/components/icons/CroatiaRecordIcon.svelte';
 	import VzRecordIcon from '$lib/components/icons/VzRecordIcon.svelte';
-	import ArcherCardComp from '$lib/components/ArcherCard.svelte';
+	import RosterCard from '$lib/components/RosterCard.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
-	import { BOW_LABEL, ARCHER_CARD_SCALE } from '$lib/archer';
+	import { BOW_LABEL, ARCHER_CARD_SCALE, BOW_LEFT } from '$lib/archer';
 	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
-	import { afterNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -38,21 +37,6 @@
 		requestAnimationFrame(() => (revealed = true));
 	});
 
-	// The "‹ Momčad" back-link should return the user to the roster EXACTLY where they
-	// left it (scroll position preserved). If they arrived here from the roster, a
-	// real history.back() reuses SvelteKit's saved scroll; otherwise (deep-link/refresh)
-	// we navigate to /momcad fresh. `cameFromRoster` is set in afterNavigate.
-	let cameFromRoster = $state(false);
-	afterNavigate(({ from }) => {
-		cameFromRoster = from?.url.pathname === '/momcad';
-	});
-	function handleBack(e: MouseEvent) {
-		if (cameFromRoster) {
-			e.preventDefault();
-			history.back();
-		}
-		// else: let the <a href="/momcad"> navigate normally (fresh load to top)
-	}
 	const a = $derived(data.archer as ArcherProfile);
 	const roster = $derived((data.roster ?? []) as ArcherCard[]);
 	const articles = $derived((data.articles ?? []) as ArticleCard[]);
@@ -341,10 +325,6 @@
 			data-revealed={revealed}
 			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}"
 		>
-			<a class="pf-back" href="/momcad" onclick={handleBack}>
-				<ChevronIcon direction="left" size={16} /> Momčad
-			</a>
-
 			{#if coverPhoto}
 				<!-- Photo behind everything; a grey veil dims it; then a clear copy of the
 				     photo clipped to the cut-out strip shows un-veiled (the window). -->
@@ -412,10 +392,6 @@
 	{:else}
 		<!-- ── 1a. COVER hero (Barça-style): two-tone band + photo + surname behind ─── -->
 		<header class="pf-cover" data-bow={primaryBow}>
-			<a class="pf-back" href="/momcad" onclick={handleBack}>
-				<ChevronIcon direction="left" size={16} /> Momčad
-			</a>
-
 			<div class="pf-surname" aria-hidden="true">
 				{#each middleWords as w (w)}
 					<span class="pf-surname-mid">{w}</span>
@@ -657,15 +633,13 @@
 		{#if coachCards.length}
 			<section class="pf-block" use:reveal>
 				<h2 class="pf-block-title">{coachesTitle}</h2>
-				<ul class="pf-related-grid">
+				<ul class="pf-related-grid pf-roster-grid">
 					{#each coachCards as c, i (c.slug)}
-						<li>
-							<ArcherCardComp
-								archer={c}
-								tone={i % 2 === 0 ? 'blue-dress' : 'navy'}
-								fullSize={true}
-								scale={ARCHER_CARD_SCALE[c.slug] ?? 1}
-							/>
+						<li
+							class:alt={i % 2 === 1}
+							style="--fig-scale:{ARCHER_CARD_SCALE[c.slug] ?? 1.4};"
+						>
+							<RosterCard archer={c} tall={true} bowLeft={BOW_LEFT.has(c.slug)} />
 						</li>
 					{/each}
 				</ul>
@@ -701,15 +675,14 @@
 					{/if}
 				</div>
 				<div class="pf-row-viewport">
-					<ul class="pf-row-track" style="--page:{traineePage}">
+					<ul class="pf-row-track pf-roster-grid" style="--page:{traineePage}">
 						{#each studentCards as s, i (s.slug)}
-							<li class="pf-row-cell">
-								<ArcherCardComp
-									archer={s}
-									tone={i % 2 === 0 ? 'blue-dress' : 'navy'}
-									fullSize={true}
-									scale={ARCHER_CARD_SCALE[s.slug] ?? 1}
-								/>
+							<li
+								class="pf-row-cell"
+								class:alt={i % 2 === 1}
+								style="--fig-scale:{ARCHER_CARD_SCALE[s.slug] ?? 1.4};"
+							>
+								<RosterCard archer={s} tall={true} bowLeft={BOW_LEFT.has(s.slug)} />
 							</li>
 						{/each}
 					</ul>
@@ -770,24 +743,6 @@
 			height: 22%;
 			background: linear-gradient(to bottom, transparent 0%, $sheet-bg 100%);
 			pointer-events: none;
-		}
-	}
-	.pf-back {
-		position: absolute;
-		top: ($sp * 2);
-		left: ($sp * 2.5);
-		z-index: 4;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		color: rgba(255, 255, 255, 0.85);
-		font-size: 0.85rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		text-decoration: none;
-		&:hover {
-			color: $gold;
 		}
 	}
 	// Surname behind the photo — very large, hugs the bottom, with a soft top→bottom FADE
@@ -1565,6 +1520,23 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: ($sp * 1.5);
+	}
+
+	// New "call-ups" RosterCard style for the coach + Trenira rows: cards butt together
+	// (no gap) in a cornflower / primary checkerboard, matching the Momčad roster grid.
+	$rc-cornflower: map.get(lib.$colors, 'cornflower');
+	$rc-primary: map.get(lib.$colors, 'primary');
+	.pf-roster-grid {
+		gap: 0;
+		// extra top room so the hover-grown cards rise without clipping awkwardly
+		padding-top: 2rem;
+		> li {
+			position: relative;
+			--card-bg: #{$rc-cornflower};
+			&.alt {
+				--card-bg: #{$rc-primary};
+			}
+		}
 	}
 
 	// ══ "Trenira" paged row (4-across, arrow scrolls to the next page) ══════════
