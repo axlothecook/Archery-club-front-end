@@ -440,15 +440,85 @@
 	}
 
 	// ── Mobile ────────────────────────────────────────────────────────────────
+	// Keep the TOP-BAR links (Vijesti / Momčad / Raspored) visible on phones — only the
+	// extra SECTION links (Postignuća/Sponzori/Identitet/Povijest) collapse into Meni.
+	// Everything shrinks + tightens so the row fits a narrow screen.
 	@media (max-width: 640px) {
+		.section-link {
+			display: none; // the docked section links would overcrowd the phone pill
+		}
+		// Keep the desktop layout: clusters each take an equal half (logo dead-centre,
+		// links hugging it from both sides). The document is now clamped to the viewport
+		// (html/body overflow-x: hidden), so this no longer overflows. min-width:0 lets
+		// the halves shrink so the links stay on screen.
+		.cluster {
+			flex: 1 1 0;
+			gap: 1.1rem; // more air between the links within each half
+			min-width: 0;
+		}
+		// Fill the full nav height (var --nav-h, ~64px) with the black pill so NO navy
+		// page background peeks out between the short pill and the content below. Extra
+		// vertical padding makes the black bar cover that gap; links sit centred in it.
+		// `gap` here sets the space the LOGO gets from its flanking links.
+		.pill {
+			gap: 1.1rem;
+			padding: 1rem 0.6rem;
+			align-items: center;
+		}
+		.navbar.scrolled .pill {
+			padding: 1rem 0.9rem;
+		}
+		.navbar.scrolled.section .pill {
+			gap: 1.1rem;
+		}
+		// Bigger + bolder link / Meni text (was 0.7rem/500).
 		.nav-link {
+			font-size: 0.82rem;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+		}
+		.menu-button {
+			gap: 0.3rem;
+			font-size: 0.82rem;
+			font-weight: 700;
+		}
+		.logo img {
+			height: 2.25rem; // a touch bigger; still clears the 65px bar
+		}
+		// Pill-wrap side padding must collapse on phones — the desktop 14rem/5rem
+		// insets would push the pill far narrower than the screen and overflow.
+		.navbar.scrolled .pill-wrap,
+		.navbar.scrolled.section .pill-wrap {
+			padding: 1rem 0.5rem 0;
+		}
+	}
+
+	// Narrow phones (≤400px): hide the "Meni" word (keep the icon) so the links keep
+	// their bigger size without crowding.
+	@media (max-width: 400px) {
+		.menu-button span {
 			display: none;
 		}
-		.navbar.scrolled .pill-wrap {
-			padding: 0.75rem 1rem 0;
+		.nav-link {
+			font-size: 0.76rem;
+		}
+		.cluster {
+			gap: 0.85rem;
 		}
 		.pill {
-			padding: 0.5rem 1rem;
+			gap: 0.85rem;
+			padding: 1rem 0.4rem;
+		}
+	}
+
+	// Smallest phones (≤340px): last-resort squeeze so nothing overflows.
+	@media (max-width: 340px) {
+		.nav-link {
+			font-size: 0.68rem;
+			letter-spacing: 0.01em;
+		}
+		.logo img {
+			height: 1.7rem;
 		}
 	}
 </style>

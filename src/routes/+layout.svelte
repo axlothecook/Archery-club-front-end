@@ -125,10 +125,29 @@
 </div>
 
 <style>
+	/* Global guard against horizontal overflow. If ANY element (a wide hero, a
+	   100vw block, an over-wide grid) sticks out past the viewport, the document
+	   becomes wider than the screen on phones: the page scrolls sideways AND the
+	   fixed navbar (left:0;right:0) paints across the full document width, so it
+	   looks "monitor-sized" instead of phone-sized. Clamping the body kills that.
+	   On BODY (not html) so `position: sticky` descendants — e.g. the momčad filter
+	   rail — keep working (html stays the scroll container). */
+	:global(html),
+	:global(body) {
+		overflow-x: hidden;
+		max-width: 100%;
+	}
+
 	.app-shell {
 		display: flex;
 		flex-direction: column;
+		/* 100dvh (dynamic viewport height), not 100vh: on mobile, 100vh is sized to
+		   the LARGE viewport (URL bar hidden), so while the bar is visible the shell
+		   is taller than the screen → phantom scroll / footer pushed below the fold.
+		   dvh tracks the actual visible height as the toolbar expands/collapses.
+		   Fallback to 100vh first for the ~5% of browsers without dvh support. */
 		min-height: 100vh;
+		min-height: 100dvh;
 	}
 	.content-layer {
 		flex: 1 0 auto;

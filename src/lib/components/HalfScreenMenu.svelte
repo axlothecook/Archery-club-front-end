@@ -388,11 +388,29 @@
 		}
 	}
 
-	// On small screens the panel covers (almost) the full width.
+	// On tablets the panel covers most of the width.
 	@media (max-width: 820px) {
 		.gucci-menu {
 			width: 88vw;
 			max-width: none;
+		}
+	}
+
+	// On phones the panel goes (nearly) full-width. CRITICAL: clear the desktop
+	// `min-width: 360px` — otherwise on a ~320–390px screen that floor overrides
+	// the 88vw target, so the panel overflows / crowds out the tap-to-close
+	// backdrop. Tighten the side padding so link text isn't cramped at 320px.
+	@media (max-width: 560px) {
+		.gucci-menu {
+			width: 100vw;
+			min-width: 0;
+			padding: 1.25rem 1.5rem 1.75rem;
+		}
+		.menu-link {
+			font-size: 1.35rem;
+		}
+		.menu-sub-title {
+			font-size: 1.6rem;
 		}
 	}
 </style>

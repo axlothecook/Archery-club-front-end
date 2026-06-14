@@ -12,9 +12,9 @@ export type NavLink = {
 // Top bar primary links (besides the menu button, the centred logo, and the
 // locale switcher, which the TopBar component renders directly).
 export const TOP_BAR_LINKS = {
-	left: [{ label: 'Vijesti', href: '/najnovije' }] satisfies NavLink[],
+	left: [{ label: 'Momčad', href: '/momcad' }] satisfies NavLink[],
 	right: [
-		{ label: 'Momčad', href: '/momcad' },
+		{ label: 'Vijesti', href: '/najnovije' },
 		{ label: 'Raspored', href: '/raspored' }
 	] satisfies NavLink[]
 };
