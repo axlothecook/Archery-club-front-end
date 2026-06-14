@@ -10,6 +10,8 @@
 	// blind center crop (MDN focal-point art-direction).
 
 	import NewsCoverflow from '$lib/components/NewsCoverflow.svelte';
+	import NewsHero from '$lib/components/NewsHero.svelte';
+	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
@@ -27,6 +29,11 @@
 
 	// Homepage events teaser: the next few upcoming competitions (soonest first).
 	const upcomingTeaser = $derived(data.upcoming.slice(0, 8));
+
+	// PHONE news (PSG style): the first article is the big hero square, the next 6 are
+	// ArticleCards in a 2-up grid. Desktop keeps the 3D coverflow instead.
+	const phoneNewsHero = $derived(data.news[0]);
+	const phoneNewsCards = $derived(data.news.slice(1, 7));
 
 	// ── Bows: one panel, click-through tabs (like the archer page's stats/results tabs) ──
 	// The user clicks a bow-type tab; the single panel below shows that bow. A sliding
@@ -381,9 +388,23 @@
 					Sve vijesti <RightArrowIcon size={11} />
 				</a>
 			</header>
-			<!-- Full-bleed 3D coverflow (edge to edge). -->
+			<!-- DESKTOP: full-bleed 3D coverflow (edge to edge). -->
 			<div class="home-news-coverflow">
 				<NewsCoverflow slides={data.news} />
+			</div>
+
+			<!-- PHONE (PSG style): one big hero square + a 2-up grid of ArticleCards. -->
+			<div class="home-news-phone">
+				{#if phoneNewsHero}
+					<NewsHero article={phoneNewsHero} />
+				{/if}
+				{#if phoneNewsCards.length}
+					<ul class="home-news-phone-grid">
+						{#each phoneNewsCards as a (a.slug)}
+							<li><ArticleCard article={a} /></li>
+						{/each}
+					</ul>
+				{/if}
 			</div>
 		</section>
 	{/if}
@@ -1160,6 +1181,44 @@
 	   the band run full-bleed and give it breathing room from the "Vijesti" header above. */
 	.home-news-coverflow {
 		margin-top: 0;
+	}
+	/* The phone PSG news block is hidden on desktop (coverflow shows instead). */
+	.home-news-phone {
+		display: none;
+	}
+
+	/* Phone: swap the 3D coverflow for the PSG hero + 2-up ArticleCard grid. */
+	@media (max-width: 720px) {
+		.home-news-coverflow {
+			display: none;
+		}
+		.home-news-phone {
+			display: block;
+			padding: 0 1.25rem;
+			margin-top: 1.5rem;
+		}
+		/* The desktop top padding (clamp 20–32rem) leaves a huge black void above the
+		   heading on a phone — trim it right down here. */
+		.home-news {
+			padding-top: 3rem;
+			padding-bottom: 3rem;
+		}
+		.home-news-phone-grid {
+			list-style: none;
+			margin: 1.5rem 0 0;
+			padding: 0;
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1.5rem 1.25rem;
+		}
+		/* The news band is BLACK, so the ArticleCards' default navy title / grey date are
+		   unreadable here — lighten them to white on this page only. */
+		.home-news-phone :global(.article-card-title) {
+			color: #fff;
+		}
+		.home-news-phone :global(.article-card-date) {
+			color: rgba(255, 255, 255, 0.7);
+		}
 	}
 
 </style>

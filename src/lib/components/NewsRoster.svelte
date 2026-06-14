@@ -7,6 +7,7 @@
 	import type { ArticleCard as ArticleCardData } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
+	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import { formatDateHr } from '$lib/date';
 
 	let { articles, heading = 'NAJNOVIJE VIJESTI' }: { articles: ArticleCardData[]; heading?: string } =
@@ -14,6 +15,9 @@
 
 	const COUNT = 8;
 	const shown = $derived(articles.slice(0, COUNT));
+	// Phone shows fewer, in a PSG-style 2-up grid of ArticleCards (no overlay cards).
+	const PHONE_COUNT = 6;
+	const phoneShown = $derived(articles.slice(0, PHONE_COUNT));
 
 	// Limit the hover excerpt to 120 characters (cut on a word boundary); if the text
 	// was longer, append an ellipsis to signal the sentence continues.
@@ -31,6 +35,14 @@
 {#if shown.length}
 	<section class="news-roster" aria-label={heading}>
 		<h2 class="nr-heading"><strong>Najnovije</strong> <span>vijesti</span></h2>
+
+		<!-- PHONE: PSG-style 2-up grid of ArticleCards (poster + category/title/date below).
+		     Hidden on desktop, where the overlay-card grid below is shown instead. -->
+		<ul class="nr-grid-phone">
+			{#each phoneShown as a (a.slug)}
+				<li><ArticleCard article={a} /></li>
+			{/each}
+		</ul>
 
 		<ul class="nr-grid">
 			{#each shown as a (a.slug)}
@@ -115,6 +127,10 @@
 		// Stretch 4 cards to fill the row, matching the content/header width above.
 		grid-template-columns: repeat(4, 1fr);
 		gap: ($sp * 0.75);
+	}
+	// The phone PSG grid is hidden on desktop (overlay-card grid is shown instead).
+	.nr-grid-phone {
+		display: none;
 	}
 
 	// Card = image with a WHITE text panel overlaid at the bottom. Square corners.
@@ -287,9 +303,25 @@
 			height: 300px;
 		}
 	}
-	@media (max-width: 620px) {
+	// ── Phone: swap the overlay-card grid for the PSG ArticleCard grid (2-up) ────────
+	@media (max-width: 720px) {
+		.news-roster {
+			padding: 0 ($sp * 1.25) ($sp * 5);
+		}
+		.nr-heading {
+			font-size: 1.8rem;
+			margin-bottom: ($sp * 1.75);
+		}
 		.nr-grid {
-			grid-template-columns: 1fr;
+			display: none; // hide the desktop overlay cards on phone
+		}
+		.nr-grid-phone {
+			display: grid;
+			list-style: none;
+			margin: 0 auto;
+			padding: 0;
+			grid-template-columns: repeat(2, 1fr);
+			gap: ($sp * 1.5) ($sp * 1.25);
 		}
 	}
 </style>
