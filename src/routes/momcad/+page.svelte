@@ -24,9 +24,65 @@
 		'tomislav-mlinaric': 1.55,
 		'cvijetoslav-zorman': 1.65,
 		'rafael-barulek': 1.55,
-		'mija-mance': 1.55,
+		'mija-mance': 1.4,
 		'leda-crncec': 1.55,
 		'nikola-portner-pavicevic': 1.55
+	};
+
+	// Per-archer PHONE photo scale (PSG card, contained image). Default 1 = the whole
+	// photo shown as-is. These archers read a bit small in the contained box, so scale
+	// their figure up (the box keeps overflow hidden, so a scaled figure stays clipped
+	// to the card). Phone-only — independent of the desktop --fig-scale above.
+	const PHONE_SCALE: Record<string, number> = {
+		'amanda-mlinaric': 1.35,
+		'alen-remar': 1.1,
+		'leo-sulik': 1.35,
+		'zoran-velagic': 1.35,
+		'ela-drozdek': 1.35,
+		'mija-mance': 1.5,
+		'mila-vrbesic': 1.35,
+		'nikola-portner-pavicevic': 1.15,
+		'nicole-bratonja': 1.2,
+		'tomislav-mlinaric': 1.35,
+		'karmen-ahmetovic': 1.35,
+		'rafael-barulek': 1.35,
+		'cvijetoslav-zorman': 1.35,
+		'leda-crncec': 1.1,
+		'bojan-rodik': 1.2
+	};
+
+	// Per-archer PHONE bow-watermark tuning (the faint bow behind the contained photo).
+	// x = horizontal shift (negative = LEFT), scale = size. Only listed archers differ.
+	const PHONE_BOW_X: Record<string, string> = {
+		'amanda-mlinaric': '-18%',
+		'alen-remar': '28%',
+		'leo-sulik': '28%',
+		'zoran-velagic': '22%',
+		'ela-drozdek': '28%',
+		'mila-vrbesic': '14%',
+		'jakov-crnicki': '28%',
+		'leda-crncec': '28%',
+		'karmen-ahmetovic': '28%',
+		'filip-bistricic': '28%',
+		// Un-flipped bows (NO_FLIP set) face the other way → shift LEFT.
+		'nicole-bratonja': '-28%',
+		'bojan-rodik': '-22%',
+		'luka-ciglaric': '-28%',
+		'tena-mikolaj': '-22%',
+		'mija-mance': '-22%',
+		// Compound tweaks: these three shift LEFT.
+		'mia-medimurec': '-22%',
+		'tomislav-mlinaric': '-22%',
+		'rafael-barulek': '-22%',
+		// Nikola + Aurelia: flipped (FLIP set below) and shifted RIGHT.
+		'nikola-portner-pavicevic': '22%',
+		'aurelia-mlinaric': '22%'
+	};
+	const PHONE_BOW_Y: Record<string, string> = {
+		'amanda-mlinaric': '-8%'
+	};
+	const PHONE_BOW_SCALE: Record<string, number> = {
+		'amanda-mlinaric': 2.1
 	};
 
 	// Per-archer vertical photo nudge (negative = pull the figure UP). Anyone not listed
@@ -52,12 +108,24 @@
 	// Hero arrow field: a grid of archery arrows that pulse in a diagonal WAVE (blue →
 	// gold). Each arrow's animation-delay is its (row + col) so the colour sweep
 	// travels across the grid like a wave. Arrows point to the TOP-LEFT.
-	const ARROW_COLS = 14;
+	// Column count is RESPONSIVE: 14 on desktop, fewer on phones so the field doesn't
+	// read as a cluttered wall of tiny arrows. Always 3 rows. `arrowCols` tracks a
+	// media query so the count (and the matching CSS grid-template) stay in sync.
 	const ARROW_ROWS = 3;
-	const arrows = Array.from({ length: ARROW_COLS * ARROW_ROWS }, (_, i) => ({
-		row: Math.floor(i / ARROW_COLS),
-		col: i % ARROW_COLS
-	}));
+	let arrowCols = $state(14);
+	$effect(() => {
+		const phone = window.matchMedia('(max-width: 720px)');
+		const set = () => (arrowCols = phone.matches ? 7 : 14);
+		set();
+		phone.addEventListener('change', set);
+		return () => phone.removeEventListener('change', set);
+	});
+	const arrows = $derived(
+		Array.from({ length: arrowCols * ARROW_ROWS }, (_, i) => ({
+			row: Math.floor(i / arrowCols),
+			col: i % arrowCols
+		}))
+	);
 
 	// Filter options. 'all' first, then each bow that actually has archers, then the
 	// coaches (anyone with the 'coach' role).
@@ -147,16 +215,26 @@
 				<ul class="tm-grid">
 					{#each shown as a, i (a.slug)}
 						<li
-							style="--i:{i};{FIG_SCALE[a.slug] ? `--fig-scale:${FIG_SCALE[a.slug]};` : ''}{FIG_OFFSET[
+							style="--i:{i};{FIG_SCALE[a.slug] ? `--fig-scale:${FIG_SCALE[a.slug]};` : ''}{PHONE_SCALE[
 								a.slug
 							]
+								? `--phone-scale:${PHONE_SCALE[a.slug]};`
+								: ''}{PHONE_BOW_X[a.slug] ? `--phone-bow-x:${PHONE_BOW_X[a.slug]};` : ''}{PHONE_BOW_Y[a.slug]
+								? `--phone-bow-y:${PHONE_BOW_Y[a.slug]};`
+								: ''}{PHONE_BOW_SCALE[a.slug]
+								? `--phone-bow-scale:${PHONE_BOW_SCALE[a.slug]};`
+								: ''}{FIG_OFFSET[a.slug]
 								? `--photo-nudge:${FIG_OFFSET[a.slug]};`
 								: ''}{BOW_NUDGE[a.slug] ? `--bow-nudge:${BOW_NUDGE[a.slug]};` : ''}"
 							animate:flip={{ duration: 380, easing: cubicOut }}
 							in:fly={{ x: 80, duration: 320, delay: 140, easing: cubicOut }}
 							out:fly={{ x: -80, duration: 200, easing: cubicOut }}
 						>
-							<RosterCard archer={a} bowLeft={BOW_LEFT.has(a.slug)} />
+							<RosterCard
+									archer={a}
+									bowLeft={BOW_LEFT.has(a.slug)}
+									flushLetters={a.slug === 'filip-bistricic'}
+								/>
 						</li>
 					{/each}
 				</ul>
@@ -383,19 +461,120 @@
 		opacity: 0.85;
 	}
 
-	@media (max-width: 700px) {
-		.tm-hero {
-			height: 14rem;
+	// ── Responsive ────────────────────────────────────────────────────────────────
+	// Tablet: 3-up grid; the vertical rail stays but the header gets a touch tighter.
+	@media (max-width: 1024px) {
+		.tm-grid {
+			grid-template-columns: repeat(3, 1fr);
+			padding-top: 8rem;
 		}
+		.tm-head-title {
+			font-size: 3rem;
+		}
+	}
+
+	// Phone: stack the body — the filter rail becomes a HORIZONTAL scrollable bar ABOVE
+	// the grid (no more left rail / vertical line), and the grid drops to 2-up. The big
+	// hover-grow headroom isn't needed (touch has no hover), so the grid sits tighter.
+	@media (max-width: 720px) {
+		// Shorter cover band on phone (was 14rem). Since the arrow grid fills the hero
+		// (inset:0, grid-auto-rows:1fr), a shorter hero also tightens the gap between the
+		// 3 arrow rows.
+		.tm-hero {
+			height: 9rem;
+		}
+		// 7 columns on phone (matches `arrowCols` in the script) → 21 arrows in 3 rows,
+		// each bigger and less cluttered than the 14-col desktop wall. Trim the side
+		// padding so the field fills the band edge-to-edge.
 		.tm-arrows {
-			grid-template-columns: repeat(8, 1fr);
+			grid-template-columns: repeat(7, 1fr);
+			padding: ($sp * 1) ($sp * 0.75);
+		}
+		.tm-arrow :global(svg) {
+			width: 1.4rem;
+			height: 1.4rem;
+		}
+		.tm-head {
+			width: 92%;
+			// Pull the title up tight under the (now shorter) cover band — trim the
+			// desktop top padding ($sp*2) right down on phone.
+			padding-top: ($sp * 0.5);
+		}
+		.tm-head-title {
+			font-size: 2.4rem;
 		}
 		.tm-content {
 			width: 92%;
+			// More breathing room between the title block (Momčad / 2025/26) and the
+			// filter bar below it.
+			margin-top: ($sp * 2.25);
 		}
-		// Phone: 2-up.
+		.tm-body {
+			grid-template-columns: 1fr; // single column: rail on top, grid below
+			row-gap: ($sp * 1.5);
+			margin-top: 0; // drop the desktop pull-up so the gap above the bar holds
+		}
+		.tm-filters {
+			position: static; // not sticky on phone
+			margin-top: 0;
+			flex-direction: row;
+			flex-wrap: nowrap; // keep all 5 filters on ONE row
+			justify-content: space-between;
+			align-self: stretch;
+			gap: ($sp * 0.6);
+			border-left: none; // drop the vertical line
+			padding-left: 0;
+			// Horizontal underline beneath the filters instead of the side line.
+			border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+			padding-bottom: ($sp * 0.75);
+		}
+		.tm-filter {
+			padding: ($sp * 0.3) 0;
+			// Sized so all 5 labels still fit ONE row on a narrow phone (~412px).
+			font-size: 0.84rem;
+			letter-spacing: -0.01em;
+			// Move the active highlight to a bottom bar (horizontal) for the row layout.
+			&::before {
+				left: 0;
+				right: 0;
+				top: auto;
+				bottom: calc(-1 * #{$sp * 0.75} - 1px);
+				width: auto;
+				height: 3px;
+				transform: scaleX(0);
+				transform-origin: left;
+			}
+			&.active::before {
+				transform: scaleX(1);
+			}
+		}
+		// PSG-style phone roster: 2 per row with a GAP between cards (the desktop
+		// checkerboard butts cards edge-to-edge with gap:0; here each card is a standalone
+		// box + text below, so they need breathing room).
 		.tm-grid {
 			grid-template-columns: repeat(2, 1fr);
+			gap: ($sp * 1.5) ($sp * 1.25);
+			padding-top: 0; // no hover-grow headroom needed on touch
+			// Clip the filter-change fly-in/out: cards translate ±80px horizontally during the
+			// transition, and with no clip they render OVER the filter rail / adjacent content
+			// instead of sliding in from behind the grid edge. (Safe on phone — no hover-grow
+			// that needs to poke above the grid, unlike desktop.)
+			overflow: hidden;
+		}
+		// 2-up DIAGONAL checkerboard: each row starts with the previous row's RIGHT colour.
+		// Row1: cornflower · red, Row2: red · cornflower, Row3: cornflower · red …
+		// Over 2 cols that's a 4-cell cycle: cells 1,4 = cornflower; 2,3 = red.
+		// Reset the desktop 8n pattern first, then apply the 4-cell one.
+		.tm-grid > li,
+		.tm-grid > li:nth-child(8n + 1),
+		.tm-grid > li:nth-child(8n + 3),
+		.tm-grid > li:nth-child(8n + 6),
+		.tm-grid > li:nth-child(8n + 8) {
+			--card-bg: #{$sapphire}; // red default
+		}
+		.tm-grid > li:nth-child(4n + 1),
+		.tm-grid > li:nth-child(4n + 4) {
+			--card-bg: #{$sunflower}; // cornflower
 		}
 	}
 </style>

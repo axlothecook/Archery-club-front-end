@@ -23,9 +23,17 @@
 		/** TALL variant (used on the archer page's coach/Trenira rows): the card is taller at
 		 *  rest and does NOT grow on hover — every other hover animation (image slide+scale,
 		 *  watermark reveal, bow slide, bow-type) still plays. */
-		tall = false
-	}: { archer: ArcherCard; photoOverride?: string; bowLeft?: boolean; tall?: boolean } =
-		$props();
+		tall = false,
+		/** Pin the first-name watermark letters FLUSH to the wall (instead of the default
+		 *  centred). Used for FILIP so his narrow "I" lines up with the other letters. */
+		flushLetters = false
+	}: {
+		archer: ArcherCard;
+		photoOverride?: string;
+		bowLeft?: boolean;
+		tall?: boolean;
+		flushLetters?: boolean;
+	} = $props();
 
 	const photoUrl = $derived(photoOverride || archer.cardPhoto?.url || '');
 	const bow = $derived(bowLabel(archer.bowType));
@@ -47,13 +55,67 @@
 	const bowImg = $derived(
 		archer.slug === 'amanda-mlinaric' ? AMANDA_BOW : (BOW_IMG[archer.bowType?.[0]] ?? '')
 	);
+	// PHONE bow watermark is mirrored over the Y-axis for KLASIČNI LUK (recurve) and
+	// GOLI LUK (barebow) archers, so those bows face the other way. Složeni luk (compound)
+	// is left as-is, EXCEPT specific archers in FORCE_FLIP (compound bows we still mirror).
+	// Drives the `.flip-bow` class consumed only in the phone styles.
+	const FORCE_FLIP = new Set(['nikola-portner-pavicevic', 'aurelia-mlinaric']);
+	const flipPhoneBow = $derived(
+		archer.bowType?.[0] === 'recurve' ||
+			archer.bowType?.[0] === 'barebow' ||
+			FORCE_FLIP.has(archer.slug)
+	);
+	// RECURVE (klasični luk) bows read small on phone, so enlarge them. This bow-TYPE scale
+	// multiplies the per-archer --phone-bow-scale in the phone styles (.recurve-bow class).
+	const recurveBow = $derived(archer.bowType?.[0] === 'recurve');
+	// BAREBOW (goli luk) bows get the SAME phone enlargement as recurve.
+	const barebowBow = $derived(archer.bowType?.[0] === 'barebow');
+	// COMPOUND (složeni luk) bows match Amanda's bow size + sit higher on phone. Amanda
+	// herself is EXCLUDED (she keeps her own per-archer position via the page's inline vars).
+	const compoundBow = $derived(
+		archer.bowType?.[0] === 'compound' && archer.slug !== 'amanda-mlinaric'
+	);
+	// Specific archers whose bow should NOT be mirrored (face the other way from their
+	// bow-type default). Overrides the type-driven flip.
+	const NO_FLIP = new Set([
+		'nicole-bratonja',
+		'bojan-rodik',
+		'luka-ciglaric',
+		'tena-mikolaj',
+		'mija-mance'
+	]);
+	const noFlipBow = $derived(NO_FLIP.has(archer.slug));
 </script>
 
-<a class="rc" class:bow-left={bowLeft} class:tall={tall} href="/momcad/{archer.slug}">
-	<!-- The colour card (background panel that grows on hover) -->
-	<div class="rc-card"></div>
+<a
+	class="rc"
+	class:bow-left={bowLeft}
+	class:tall={tall}
+	class:flush-letters={flushLetters}
+	href="/momcad/{archer.slug}"
+>
+	<!-- The colour card (background panel that grows on hover). It also holds the PHONE
+	     bow (a faint watermark clipped by the box's overflow:hidden on phone). The phone
+	     bow is display:none on desktop; the desktop bow below is display:none on phone. -->
+	<div class="rc-card">
+		{#if bowImg}
+			<img
+				class="rc-bowimg-phone"
+				class:flip-bow={flipPhoneBow}
+				class:recurve-bow={recurveBow}
+				class:barebow-bow={barebowBow}
+				class:compound-bow={compoundBow}
+				class:no-flip={noFlipBow}
+				src={bowImg}
+				alt=""
+				aria-hidden="true"
+			/>
+		{/if}
+	</div>
 
-	<!-- Bow image: hidden behind the archer at centre; slides right on hover. -->
+	<!-- Desktop bow image: sibling of .rc-card so the card's hover scaleY never stretches
+	     it; hidden behind the archer at centre, slides right on hover. (Phone uses the bow
+	     inside .rc-card instead.) -->
 	{#if bowImg}
 		<img class="rc-bowimg" src={bowImg} alt="" aria-hidden="true" />
 	{/if}
@@ -74,10 +136,14 @@
 		{#each firstLetters as ch, i (i)}<span class="rc-first-l">{ch}</span>{/each}
 	</span>
 
-	<!-- Text: surname always (bottom-left). On hover the bow type slides in ABOVE it. -->
+	<!-- Text: surname always (bottom-left). On hover the bow type slides in ABOVE it.
+	     On PHONE this whole block moves BELOW the image box (PSG style): first name on
+	     top, surname, then bow type — all always visible (no hover). `.rc-firstname` is
+	     desktop-hidden (the watermark covers the first name there). -->
 	<div class="rc-meta">
-		{#if bow}<span class="rc-bow">{bow}</span>{/if}
+		<span class="rc-firstname">{archer.firstName}</span>
 		<span class="rc-last">{archer.lastName}</span>
+		{#if bow}<span class="rc-bow">{bow}</span>{/if}
 	</div>
 </a>
 
@@ -87,6 +153,8 @@
 
 	$white: map.get(lib.$colors, 'white');
 	$gold: map.get(lib.$colors, 'macaroni-and-cheese'); // club gold (matches active nav tab)
+	$ink-meta: map.get(lib.$colors, 'deep-sapphire'); // phone: dark name text on white page bg
+	$gold-meta: map.get(lib.$colors, 'macaroni-and-cheese'); // phone: bow-type accent
 
 	// How far the photo extends above the card (head sticks out) + how much the card grows
 	// up + how low the photo sits at rest (so the hovered figure's feet stay on the floor).
@@ -126,6 +194,12 @@
 		z-index: 0;
 		transform-origin: bottom center;
 		transition: transform 0.35s ease;
+	}
+
+	// The phone-only bow (inside .rc-card) is hidden on desktop; the desktop bow below
+	// handles the hover slide-out.
+	.rc-bowimg-phone {
+		display: none;
 	}
 
 	// ── Bow image (behind the archer) ─────────────────────────────────────────────
@@ -224,6 +298,11 @@
 		padding: 0.9rem 1rem 0.5rem;
 		pointer-events: none;
 	}
+	// First name: only used on the PHONE variant (shown below the box). On desktop the
+	// vertical watermark (.rc-first) covers the first name, so this is hidden.
+	.rc-firstname {
+		display: none;
+	}
 	// Surname: always visible, bottom-left, bold, big.
 	.rc-last {
 		order: 2;
@@ -273,10 +352,11 @@
 		right: auto;
 		display: flex;
 		flex-direction: column;
-		// Letters are flush to the WALL the name sits against: default (left wall) → align
-		// each letter's LEFT edge; bow-left cards (name on the right wall) → align RIGHT edge.
-		// So a narrow letter (e.g. the "I" in FILIP) lines up with the others, not centred.
-		align-items: flex-start;
+		// Letters are CENTRED within the name column by default (a narrow letter like an
+		// "I" sits centred over the wider letters). The `.flush-letters` variant instead
+		// pins each letter to the wall the name sits against (used for FILIP, whose "I"
+		// should line up flush with the other letters rather than centre).
+		align-items: center;
 		justify-content: flex-start; // letters PINNED TO THE TOP (packed), not spread
 		line-height: 1;
 		gap: 0.08em; // tiny space between stacked letters
@@ -297,11 +377,19 @@
 			opacity 0.35s ease;
 		pointer-events: none;
 	}
-	// Bow on the LEFT → name flush against the RIGHT wall.
+	// Bow on the LEFT → name flush against the RIGHT wall (position only; default letters
+	// stay centred unless `.flush-letters` is set).
 	.rc.bow-left .rc-first {
 		left: auto;
 		right: $first-gap;
-		align-items: flex-end; // name on the RIGHT wall → align each letter's right edge
+	}
+	// FILIP only: pin letters flush to the wall the name sits against (left wall default,
+	// right wall on bow-left) so his narrow "I" lines up with the other letters' edges.
+	.rc.flush-letters .rc-first {
+		align-items: flex-start;
+	}
+	.rc.flush-letters.bow-left .rc-first {
+		align-items: flex-end;
 	}
 	.rc-first-l {
 		display: block;
@@ -372,7 +460,8 @@
 	// BOW_LEFT set on BOTH pages) — default RIGHT, .bow-left flips to LEFT. Slide in rem
 	// (card-relative) so it clears the figure; keep the -50% centring.
 	.rc:hover .rc-bowimg {
-		opacity: 1;
+		// Desktop hover bow: more visible than the phone watermark (0.18) but still subtle.
+		opacity: 0.35;
 		// --bow-nudge (per-archer, default 0) fine-tunes the horizontal landing.
 		transform: translateX(-50%) translateX(5.5rem) translateX(var(--bow-nudge, 0px)) scale(1);
 	}
@@ -421,6 +510,216 @@
 		.rc-bow {
 			transition: none;
 			animation: none;
+		}
+	}
+
+	// ── Phone variant (PSG-style) ───────────────────────────────────────────────
+	// Touch has NO hover, so the whole hover-reveal mechanic is dropped here. The card
+	// becomes a normal-flow block: a coloured box holding the WHOLE photo (contain), with
+	// a text block BELOW it on the white page background — first name, then surname, then
+	// bow type, all always visible. No bow image, no first-name watermark.
+	@media (max-width: 720px) {
+		.rc,
+		.rc.tall {
+			display: flex;
+			flex-direction: column;
+			height: auto; // normal flow (was the fixed hover-grow height)
+			overflow: visible;
+			clip-path: none;
+			isolation: auto;
+			position: relative; // offset parent for the absolutely-overlaid photo
+		}
+
+		// The coloured box: fixed aspect ratio so all cards line up; the photo overlays it.
+		// `position: relative` makes it the containing block for the absolutely-placed photo,
+		// so the photo fills the BOX only (not the text area below).
+		.rc-card {
+			position: relative; // back into flow (was absolute inset:0)
+			inset: auto;
+			width: 100%;
+			aspect-ratio: 3 / 4;
+			transform: none;
+			transition: none;
+			overflow: hidden; // contain the photo within the box
+		}
+
+		// Photo overlays ONLY the box: anchored to the card top, full width, with the SAME
+		// aspect-ratio as the box → its height matches the box exactly, so it never spills
+		// into the text block below. (.rc is the offset parent; the meta flows after the box.)
+		.rc-photo {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: auto;
+			aspect-ratio: 3 / 4;
+			height: auto;
+			transform: none;
+			will-change: auto;
+			z-index: 2;
+			// The desktop `rc-rise-in` slide (translateY 140%→rest) is WRONG on phone: the
+			// photo is a SIBLING of the clipping box, so it rises UP over the white text /
+			// neighbouring cards before snapping in. On phone the photo sits in the box, so
+			// swap the slide for a contained FADE-IN — nothing escapes the box. The stagger
+			// is kept via the same --i animation-delay.
+			animation-name: rc-fade-in;
+		}
+		// Fade-in only (no vertical slide) for the contained phone photo.
+		@keyframes rc-fade-in {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+		.rc-photo :global(.img-loader) {
+			position: absolute;
+			inset: 0;
+			overflow: hidden; // keep the contained image inside the box
+		}
+		.rc-photo :global(.img-loader img) {
+			width: 100%;
+			height: 100%;
+			object-fit: contain; // WHOLE photo, letterboxed by the card bg
+			object-position: center bottom;
+			// Per-archer phone scale (--phone-scale, default 1) bumps figures that read small
+			// in the contained box. The box's overflow:hidden clips any overspill.
+			transform: scale(var(--phone-scale, 1));
+			transform-origin: center bottom;
+		}
+
+		// Drop the first-name watermark (its job is taken by the text block below).
+		.rc-first {
+			display: none;
+		}
+		// Bow image: shown as a faint decorative element INSIDE the colour box, BEHIND the
+		// contained photo. Reset all the desktop hover positioning/clipping; centre it in
+		// the box, contained, and make it slightly transparent.
+		// The DESKTOP bow (sibling of .rc-card) is hidden on phone; the phone uses a SEPARATE
+		// bow rendered INSIDE .rc-card (.rc-bowimg-phone) so the box's overflow:hidden clips
+		// it. Keeping them separate means the desktop card's hover scaleY never stretches the
+		// phone bow, and the phone box always clips its enlarged/shifted bow.
+		.rc-bowimg {
+			display: none;
+		}
+		// Phone bow: lives inside the colour box (clipped by it), faint, behind the photo.
+		.rc-bowimg-phone {
+			display: block;
+			position: absolute;
+			inset: 0;
+			top: 0;
+			bottom: auto;
+			aspect-ratio: 3 / 4; // == the box
+			width: 100%;
+			height: auto;
+			object-fit: contain;
+			// Per-archer tuning: --phone-bow-x shifts left/right (negative = LEFT),
+			// --phone-bow-y shifts up/down (negative = UP), --phone-bow-scale sizes.
+			// --bow-flip (1 or -1) mirrors over the Y-axis (set by .flip-bow below);
+			// --bow-type-scale enlarges by bow TYPE (recurve), multiplied with the per-archer
+			// --phone-bow-scale so both stack.
+			--bow-flip: 1;
+			--bow-type-scale: 1;
+			--bow-sz: calc(var(--phone-bow-scale, 1) * var(--bow-type-scale));
+			transform: translate(var(--phone-bow-x, 0), var(--phone-bow-y, 0))
+				scale(calc(var(--bow-sz) * var(--bow-flip)), var(--bow-sz));
+			transform-origin: center top;
+			opacity: 0.18; // slightly transparent (applies to ALL phone bows)
+			z-index: 1; // above the box bg, the photo (z2) sits in front
+			pointer-events: none;
+		}
+		// Klasični luk (recurve) + Goli luk (barebow): mirror the bow horizontally.
+		.rc-bowimg-phone.flip-bow {
+			--bow-flip: -1;
+		}
+		// Specific archers opt OUT of the mirror (face the other way). Higher specificity
+		// than .flip-bow so it wins.
+		.rc-bowimg-phone.flip-bow.no-flip,
+		.rc-bowimg-phone.no-flip {
+			--bow-flip: 1;
+		}
+		// Recurve (klasični luk) bows read small — enlarge them on phone + pull up a bit.
+		.rc-bowimg-phone.recurve-bow {
+			--bow-type-scale: 1.7;
+			--phone-bow-y: -16%;
+		}
+		// Barebow (goli luk): same enlargement AND upward pull as recurve.
+		.rc-bowimg-phone.barebow-bow {
+			--bow-type-scale: 1.7;
+			--phone-bow-y: -16%;
+		}
+		// Compound (složeni luk): match Amanda's bow size (2.1). Pulled UP more than Amanda
+		// (-16% vs her -8%) — Amanda keeps her own -8% via the inline per-archer value on her
+		// <li>, which overrides this rule; the OTHER compound bows take this -16%.
+		.rc-bowimg-phone.compound-bow {
+			--phone-bow-scale: 2.1;
+			--phone-bow-y: -16%;
+		}
+
+		// Text block BELOW the box, on the white page bg, left-aligned (PSG layout).
+		.rc-meta {
+			position: static; // out of the absolute overlay → sits under the box
+			padding: 0.6rem 0.1rem 0;
+			gap: 0.18rem; // small breathing room between first name / surname / bow
+			pointer-events: auto;
+		}
+		.rc-firstname {
+			order: 0;
+			display: block; // shown on phone (hidden on desktop)
+			font-size: 0.66rem; // smaller, sits tight above the surname
+			font-weight: 800; // bolder
+			text-transform: uppercase;
+			letter-spacing: 0.02em;
+			line-height: 1;
+			color: $ink-meta;
+		}
+		.rc-last {
+			order: 1;
+			font-size: 1.35rem;
+			line-height: 1.05;
+			color: $ink-meta; // dark ink on the white page bg (was white-on-photo)
+			text-shadow: none;
+		}
+		.rc-bow {
+			order: 2;
+			margin-bottom: 0;
+			margin-top: 0; // sit tight under the surname
+			font-size: 0.66rem; // smaller, matches the first name
+			// Always visible on phone (no hover): reset the hover-reveal transform/opacity.
+			opacity: 1;
+			transform: none;
+			color: $gold-meta;
+			text-shadow: none;
+		}
+
+		// NOTHING happens on tap. Touch devices fire :hover on tap/focus, which on the
+		// desktop card grows the box, slides+scales the photo, and animates the bow. Pin
+		// every hover state back to the phone resting state so a tap does nothing visual.
+		.rc:hover,
+		.rc.tall:hover {
+			z-index: auto;
+		}
+		.rc:hover .rc-photo,
+		.rc.tall:hover .rc-photo {
+			transform: none;
+		}
+		.rc:hover .rc-photo :global(.img-loader img),
+		.rc.tall:hover .rc-photo :global(.img-loader img) {
+			transform: scale(var(--phone-scale, 1)); // hold the resting (per-archer) scale
+		}
+		.rc:hover .rc-card,
+		.rc.tall:hover .rc-card {
+			transform: none;
+		}
+		.rc:hover .rc-bowimg,
+		.rc.bow-left:hover .rc-bowimg {
+			// keep the faint resting bow exactly where it is (no slide / opacity bump)
+			opacity: 0.18;
+			transform: none;
+		}
+		.rc:hover .rc-bow {
+			transform: none;
 		}
 	}
 </style>
