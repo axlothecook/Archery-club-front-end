@@ -7,6 +7,8 @@
 	import InstagramIcon from './icons/InstagramIcon.svelte';
 	import YouTubeIcon from './icons/YouTubeIcon.svelte';
 	import ArrowUpIcon from './icons/ArrowUpIcon.svelte';
+	import RightArrowIcon from './icons/RightArrowIcon.svelte';
+	import { slide } from 'svelte/transition';
 	// NOTE: CopyrightIcon is intentionally NOT imported here right now — the official
 	// "Copyright …" bottom line is held back until/unless this becomes the official VSK
 	// site. The icon component is kept in ./icons/ to restore that line later.
@@ -33,6 +35,13 @@
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
+	// PHONE accordion: one footer section open at a time (default = the first, "Klub").
+	// Opening another closes the current one. Desktop renders all columns expanded.
+	let openSection = $state(FOOTER_COLUMNS[0]?.heading ?? '');
+	function toggleSection(heading: string) {
+		openSection = openSection === heading ? '' : heading;
+	}
+
 	// Map a social platform to its icon component (each renders an SVG using
 	// currentColor, so it inherits the footer ink colour).
 	const SOCIAL_ICON: Record<string, Component<{ size?: number }>> = {
@@ -48,7 +57,14 @@
 		<hr class="cap-divider" />
 		<div class="cap-row cap-big">
 			{#each bigSponsors as s (s.id)}
-				<a class="sponsor-logo" href={s.website ?? '#'} target="_blank" rel="noopener" title={s.name}>
+				<a
+					class="sponsor-logo"
+					data-sponsor={s.name.toLowerCase()}
+					href={s.website ?? '#'}
+					target="_blank"
+					rel="noopener"
+					title={s.name}
+				>
 					<img src={s.logo.url} alt={s.logo.alt} />
 				</a>
 			{/each}
@@ -90,6 +106,7 @@
 <!-- Part B + C: the footer that reveals from beneath as the page scrolls up. -->
 <footer class="site-footer">
 	<div class="footer-inner">
+		<!-- DESKTOP: multi-column link layout. -->
 		<div class="footer-columns">
 			{#each FOOTER_COLUMNS as col (col.heading)}
 				<div class="footer-col">
@@ -107,6 +124,44 @@
 			</div>
 		</div>
 
+		<!-- PHONE (PSG style): the same columns as a flush-left ACCORDION. One section open
+		     at a time (default Klub); the header shows the section name + a › arrow that
+		     rotates down when open; content slides in/out. -->
+		<div class="footer-accordion">
+			{#each FOOTER_COLUMNS as col (col.heading)}
+				{@const isOpen = openSection === col.heading}
+				<div class="facc-item" class:open={isOpen}>
+					<button
+						class="facc-head"
+						aria-expanded={isOpen}
+						onclick={() => toggleSection(col.heading)}
+					>
+						<span class="facc-title">{col.heading}</span>
+						<span class="facc-arrow"><RightArrowIcon size={16} /></span>
+					</button>
+					{#if isOpen}
+						<ul class="facc-links" transition:slide={{ duration: 280 }}>
+							{#each col.links as link (link.label + link.href)}
+								<li><a href={link.href}>{link.label}</a></li>
+							{/each}
+						</ul>
+					{/if}
+				</div>
+			{/each}
+		</div>
+
+		<!-- PHONE: the "personal project" note sits ABOVE the crest (flex order below).
+		     On desktop it's hidden here and shown inside .footer-bottom as before. -->
+		<p class="copyright copyright-phone">
+			<span class="copyright-line">Personal project website</span>
+			<span class="copyright-sub">Author's version of an official website for VSK Club</span>
+		</p>
+
+		<!-- PHONE: club crest (no text), PSG style, below the accordion. -->
+		<div class="footer-crest" aria-hidden="true">
+			<img src={LOGO_URL} alt="" />
+		</div>
+
 		<!-- Barça-style bottom bar -->
 		<div class="footer-brand">
 			<div class="brand-left">
@@ -121,7 +176,7 @@
 				<span class="copyright-line">
 					Personal project website
 				</span>
-				<span class="copyright-sub">author's version of an official website for VSK Club</span>
+				<span class="copyright-sub">Author's version of an official website for VSK Club</span>
 			</p>
 			<div class="legal">
 				{#each FOOTER_LEGAL as l, i (l.label)}
@@ -398,6 +453,13 @@
 		}
 	}
 
+	// PHONE-only footer accordion + crest + phone copyright are hidden on desktop.
+	.footer-accordion,
+	.footer-crest,
+	.copyright-phone {
+		display: none;
+	}
+
 	@media (max-width: 700px) {
 		.footer-columns {
 			gap: 2.5rem;
@@ -405,8 +467,196 @@
 		.footer-inner {
 			padding: 3rem 1.5rem 2rem;
 		}
+		// ── PSG-style accordion (phone) ────────────────────────────────────────────
+		// Hide the desktop multi-column layout + the Barça brand row; show the accordion.
+		.footer-columns,
+		.footer-brand {
+			display: none;
+		}
+		.footer-accordion {
+			display: block;
+		}
+		.facc-item {
+			border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+		}
+		// Header: section name (left) + arrow (right), vertically CENTRED so neither
+		// sits higher than the other.
+		.facc-head {
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 1rem;
+			padding: 1.1rem 0;
+			background: none;
+			border: none;
+			cursor: pointer;
+			text-align: left;
+			color: #99b3c6; // muted heading colour (matches desktop column titles)
+			font-size: 1.25rem;
+			font-weight: 700;
+		}
+		.facc-title {
+			display: block;
+			line-height: 1;
+		}
+		// Arrow: › when closed, rotates to point DOWN when the section is open.
+		.facc-arrow {
+			display: inline-flex;
+			align-items: center;
+			color: #99b3c6;
+			transition: transform 0.28s ease;
+			:global(svg) {
+				display: block;
+			}
+		}
+		.facc-item.open .facc-arrow {
+			transform: rotate(90deg); // › → ⌄ (points down)
+		}
+		// Section links — flush left, indent-free, white, stacked.
+		.facc-links {
+			list-style: none;
+			margin: 0;
+			padding: 0 0 0.9rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			li {
+				margin: 0;
+			}
+			a {
+				color: #fff;
+				text-decoration: none;
+				font-size: 1.1rem; // bigger
+				font-weight: 600; // bolder
+				&:hover {
+					text-decoration: underline;
+				}
+			}
+		}
+		// Reorder the phone footer: accordion → "personal project" note → crest → legal.
+		// (.footer-inner is a column; assign each child an order. Hidden children — the
+		// desktop columns/brand — don't matter.)
+		.footer-inner {
+			display: flex;
+			flex-direction: column;
+		}
+		.footer-accordion {
+			order: 0;
+		}
+		.copyright-phone {
+			order: 1;
+		}
+		.footer-crest {
+			order: 2;
+		}
+		.footer-bottom {
+			order: 3;
+		}
+
+		// The "personal project / Author" note: shown here (above the crest), with a gap
+		// from the sections above and from the crest below.
+		.copyright-phone {
+			display: flex;
+			flex-direction: column;
+			gap: 0.15rem;
+			margin: 3.5rem 0; // generous gap from the sections above AND the crest below
+			.copyright-line {
+				color: #fff;
+				font-weight: 700;
+				font-size: 0.95rem;
+			}
+			.copyright-sub {
+				color: rgba(255, 255, 255, 0.6);
+				font-size: 0.85rem;
+			}
+		}
+		// Hide the original copyright inside .footer-bottom on phone (moved above).
+		.footer-bottom .copyright {
+			display: none;
+		}
+
+		// Club crest below the note (no text), PSG style — generous gap above (from the
+		// note) and below (to the legal row).
+		.footer-crest {
+			display: block;
+			margin: 0 0 2.25rem; // top gap comes from .copyright-phone's bottom margin
+			img {
+				height: 84px;
+				width: auto;
+			}
+		}
+
+		// Legal links: keep them on ONE row at the bottom.
+		.legal {
+			flex-wrap: nowrap;
+			white-space: nowrap;
+			gap: 0.4rem;
+			a {
+				font-size: 0.74rem;
+			}
+			.sep {
+				margin: 0 0.1rem;
+			}
+		}
 		.brand-left span {
 			font-size: 0.95rem;
+		}
+		// Sponsor cap: tighten the gap + shrink logos so they wrap within the phone width
+		// instead of overflowing (desktop uses a wide 4.5rem gap + 80px logos).
+		.cap-row {
+			gap: 1.5rem 2rem;
+			padding: 0 1rem;
+		}
+		.sponsor-logo img {
+			height: 52px;
+		}
+		// Per-sponsor tuning on phone: Lasercopy a touch smaller, Kodra bigger.
+		.sponsor-logo[data-sponsor='lasercopy'] img {
+			height: 44px;
+		}
+		.sponsor-logo[data-sponsor='kodra'] img {
+			height: 72px;
+		}
+		// More breathing room between the two big logos (Lasercopy ↔ Kodra).
+		.cap-big {
+			gap: 2.5rem 3rem;
+		}
+		// The other three (small row) bumped up.
+		.sponsor-logo.small img {
+			height: 52px;
+		}
+		// Bottom row: stack/wrap copyright + legal links instead of forcing one no-wrap
+		// line (the desktop one-line layout overflows the viewport on phones).
+		.footer-bottom {
+			flex-wrap: wrap;
+			gap: 0.75rem 1rem;
+		}
+		.footer-bottom-spacer {
+			display: none; // the centring spacer isn't needed once the row wraps
+		}
+		// NB: match the base rule's nesting (`.footer-bottom .copyright`, specificity
+		// 0-2-0) so this override actually WINS — a bare `.copyright` (0-1-0) loses to
+		// it even inside a media query (media queries don't add specificity).
+		.footer-bottom .copyright {
+			// Base rule has `flex: 0 0 auto` (don't shrink) + `white-space: nowrap`,
+			// so the copyright + tagline stay one ~489px line that overflows a 390px
+			// phone — which widened the whole document and stretched the fixed navbar.
+			// Reset to allow shrinking + wrapping so it fits the phone width.
+			flex: 1 1 100%;
+			min-width: 0;
+			flex-wrap: wrap;
+			white-space: normal;
+		}
+		.footer-bottom .copyright .copyright-sub {
+			white-space: normal; // the tagline wraps to the next line instead of pushing wide
+			margin-left: 0;
+		}
+		.legal {
+			margin-left: 0; // don't push right; sit under the copyright
+			margin-right: 0;
+			flex-wrap: wrap;
+			white-space: normal;
 		}
 	}
 </style>
