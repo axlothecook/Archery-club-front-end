@@ -317,10 +317,10 @@
 	}
 
 	.sp-flourish {
-		// Bottom gap matches postignuca's flourish→golden-block gap (now +2rem on both:
-		// 4.5rem → 6.5rem here). Postignuca gets ~half from its content-card bottom
-		// padding; sponzori's flourish has no such wrapper, so it comes from this margin.
-		margin: ($sp * 2) 0 ($sp * 6.5);
+		// Bottom gap equalised to the individual chapter page's flourish→related gap
+		// (124px on desktop). Sponzori's flourish has no content-card padding below it,
+		// so the full gap comes from this margin.
+		margin: ($sp * 2) 0 ($sp * 7.75);
 	}
 
 	// ── Responsive ────────────────────────────────────────────────────────────
@@ -355,11 +355,10 @@
 		.sp-hero-title {
 			font-weight: 800;
 		}
-		// Same gap below the end flourish before the golden block as postignuca (whose
-		// flourish sits inside a padded content card, giving it ~112px total; sponzori's
-		// flourish has no such wrapper, so it needs the full 7rem here to match).
+		// Gap below the end flourish equalised to the chapter page (124px on phone).
+		// Sponzori's flourish has no content-card padding, so the full gap is this margin.
 		.sp-flourish {
-			margin-bottom: ($sp * 7);
+			margin-bottom: ($sp * 7.75);
 		}
 		// Smaller honorary-mention quote on phones (the 1.05rem reads oversized here).
 		.sp-honorary-quote {

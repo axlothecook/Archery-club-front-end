@@ -209,10 +209,11 @@
 		// extra top space between the tab bar and the content heading (Barça-like)
 		padding: ($sp * 4) ($sp * 2.5) ($sp * 2.5);
 	}
-	// End-of-card flourish: generous top space from the content, small bottom gap
-	// before the golden block (mirrors the chapter article + Postignuća spacing).
+	// End-of-card flourish: generous top space from the content, bottom gap before the
+	// golden block equalised with the chapter page (124px = this 5.25rem margin + the
+	// body's 40px bottom padding).
 	.identity-flourish {
-		margin: ($sp * 6) 0 ($sp * 1.5);
+		margin: ($sp * 6) 0 ($sp * 5.25);
 	}
 
 	// ── Phone ───────────────────────────────────────────────────────────────────
@@ -252,12 +253,12 @@
 		.identity-body {
 			padding: ($sp * 3) ($sp * 1.25) ($sp * 2.5);
 		}
-		// Match the flourish→golden-block gap used on Postignuća/Sponzori (~112px).
-		// The body's own 40px bottom padding adds on top, so use 4.5rem here (72+40).
+		// Gap below the end flourish equalised to the chapter page (124px on phone).
+		// The body's own 40px bottom padding adds on top, so use 5.25rem here (84+40).
 		// Cancel the body's SIDE padding (negative inline margin) so the gold lines get
 		// the full content width and match the line length on the other pages.
 		.identity-flourish {
-			margin-bottom: ($sp * 4.5);
+			margin-bottom: ($sp * 5.25);
 			margin-inline: (-$sp * 1.25);
 		}
 	}

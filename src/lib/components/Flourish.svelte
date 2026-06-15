@@ -82,13 +82,12 @@
 		transform: scaleX(1); // fan out
 	}
 
-	// PHONE: keep the gold lines clear of the screen edges (side padding shortens
-	// them so they don't run flush into the viewport sides).
+	// PHONE: line length mirrors the individual chapter page's flourish (~126px lines
+	// on a 390px screen). 1rem side padding keeps them clear of the screen edges while
+	// matching that reference length.
 	@media (max-width: 720px) {
 		.flourish {
-			// Side padding shortens the lines; reduce it 0.5rem per side to lengthen
-			// each gold line by 0.5rem (still clear of the screen edges).
-			padding: 0 calc(#{$sp} * 3 - 0.5rem);
+			padding: 0 $sp;
 		}
 	}
 </style>

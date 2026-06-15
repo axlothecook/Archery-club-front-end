@@ -57,11 +57,41 @@
 	let wipeEl = $state<HTMLDivElement>();
 	const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+	// Individual history-chapter pages (/klub/povijest/<slug>) get a SLIDE-UP View
+	// Transition (the page rises from the bottom over the povijest list) instead of
+	// the full-screen dark wipe. Detect when a chapter detail page is the origin or
+	// destination so we can branch to that animation.
+	const isChapterPath = (path: string | undefined) =>
+		!!path && /^\/klub\/povijest\/[^/]+\/?$/.test(path);
+
 	onNavigate((navigation) => {
 		if (!navigation.to) return;
 		// Skip if there's no origin page (hard load / first paint) — the destination's
 		// own loader (homepage %-counter, etc.) or plain render handles those.
 		if (!navigation.from) return;
+
+		const toChapter = isChapterPath(navigation.to.url.pathname);
+		const fromChapter = isChapterPath(navigation.from.url.pathname);
+
+		// ── Chapter open/close: slide-up View Transition (no dark wipe) ──────────────
+		// OPEN  (list → chapter): the new chapter page slides UP from the bottom, over
+		//        the list which stays put beneath it.
+		// CLOSE (chapter → list): the chapter slides back DOWN off the bottom.
+		// Falls back to an instant swap if the browser lacks the View Transitions API.
+		if (toChapter || fromChapter) {
+			if (!document.startViewTransition) return; // no API → plain swap
+			const mode = toChapter ? 'open' : 'close';
+			document.documentElement.dataset.chapterVt = mode;
+			return new Promise<void>((resolve) => {
+				const vt = document.startViewTransition(async () => {
+					resolve();
+					await navigation.complete;
+				});
+				vt.finished.finally(() => {
+					delete document.documentElement.dataset.chapterVt;
+				});
+			});
+		}
 
 		const dir = wipeFor(navigation);
 
@@ -129,12 +159,15 @@
 	   100vw block, an over-wide grid) sticks out past the viewport, the document
 	   becomes wider than the screen on phones: the page scrolls sideways AND the
 	   fixed navbar (left:0;right:0) paints across the full document width, so it
-	   looks "monitor-sized" instead of phone-sized. Clamping the body kills that.
-	   On BODY (not html) so `position: sticky` descendants — e.g. the momčad filter
-	   rail — keep working (html stays the scroll container). */
+	   looks "monitor-sized" instead of phone-sized.
+	   Use overflow-x: CLIP (not hidden): `hidden` forces the computed overflow-y to
+	   `auto`, turning html/body into a scroll container — which BREAKS `position:
+	   sticky` descendants (the chapter cover's scroll-over, the momčad filter rail).
+	   `clip` clips the horizontal overflow WITHOUT creating a scroll container, so
+	   sticky keeps working while sideways scroll is still suppressed. */
 	:global(html),
 	:global(body) {
-		overflow-x: hidden;
+		overflow-x: clip;
 		max-width: 100%;
 	}
 
@@ -224,6 +257,74 @@
 		}
 		.page-wipe[data-phase='reveal'] {
 			opacity: 0;
+		}
+	}
+
+	/* ── Chapter open/close: slide-up View Transition ───────────────────────────
+	   When opening/closing a history chapter, the page snapshots animate so the new
+	   chapter rises from the bottom (open) or drops off the bottom (close), while the
+	   other page stays still underneath. We disable the default cross-fade and drive
+	   the incoming/outgoing snapshots with slide keyframes. Keyed on the html
+	   data-attribute set in onNavigate, so normal navigations are unaffected. */
+
+	/* Lift the fixed NavBar (black pill + blue strip) OUT of the sliding `root`
+	   snapshot so it stays pinned on top while only the page content slides. Only
+	   during the chapter transition (the name is set before the snapshot is taken). */
+	:global(html[data-chapter-vt] .navbar) {
+		view-transition-name: navbar;
+	}
+	/* The navbar snapshot holds still (no slide) and stays above the sliding content. */
+	:global(html[data-chapter-vt]::view-transition-group(navbar)) {
+		z-index: 100;
+	}
+	:global(html[data-chapter-vt]::view-transition-old(navbar)),
+	:global(html[data-chapter-vt]::view-transition-new(navbar)) {
+		animation: none;
+	}
+	:global(html[data-chapter-vt]::view-transition-old(root)),
+	:global(html[data-chapter-vt]::view-transition-new(root)) {
+		/* both share the same group box; we position them and animate individually */
+		animation: none;
+		mix-blend-mode: normal;
+	}
+	/* OPEN: the list (old) stays put beneath; the chapter (new) slides UP from below. */
+	:global(html[data-chapter-vt='open']::view-transition-old(root)) {
+		animation: none; /* list holds still */
+		z-index: 0;
+	}
+	:global(html[data-chapter-vt='open']::view-transition-new(root)) {
+		z-index: 1;
+		animation: chapter-slide-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	/* CLOSE: the chapter (old) slides DOWN off the bottom; the list (new) holds beneath. */
+	:global(html[data-chapter-vt='close']::view-transition-new(root)) {
+		animation: none; /* list holds still */
+		z-index: 0;
+	}
+	:global(html[data-chapter-vt='close']::view-transition-old(root)) {
+		z-index: 1;
+		animation: chapter-slide-down 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	@keyframes chapter-slide-up {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+	@keyframes chapter-slide-down {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(100%);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		:global(html[data-chapter-vt]::view-transition-old(root)),
+		:global(html[data-chapter-vt]::view-transition-new(root)) {
+			animation-duration: 0.01ms !important;
 		}
 	}
 </style>

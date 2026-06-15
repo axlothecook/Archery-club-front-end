@@ -4,7 +4,6 @@
 	import { error } from '@sveltejs/kit';
 	import type { ClubHistoryPeriodResolved, ClubHistoryParagraph } from 'archery-contracts';
 	import { splitParagraphs } from '$lib/text';
-	import CrossedArrowsIcon from '$lib/components/icons/CrossedArrowsIcon.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 
 	const periods = $derived((page.data.periods ?? []) as ClubHistoryPeriodResolved[]);
@@ -135,6 +134,8 @@
 	     visible on top (Barça letterbox-blur). The band is WHITE until the photo
 	     has loaded, then the photo + blur FADE in. position:fixed → scroll-over. -->
 	<div class="cover" class:loaded={imgLoaded} aria-hidden="true">
+		<!-- DESKTOP: a blurred copy fills the band behind the sharp contained photo
+		     (Barça letterbox). PHONE: the blur is hidden and the photo fills via cover. -->
 		<div class="cover-blur" style="background-image:url({coverUrl})"></div>
 		{#if coverUrl}
 			<img
@@ -143,11 +144,6 @@
 				alt={period.coverImage?.alt ?? ''}
 				onload={() => (imgLoaded = true)}
 			/>
-		{/if}
-		<!-- While the photo downloads, the crossed VSK arrows cycle blue↔gold in the
-		     white cover band; they fade out as the photo fades in. -->
-		{#if !imgLoaded}
-			<div class="cover-loader"><CrossedArrowsIcon size={72} /></div>
 		{/if}
 	</div>
 
@@ -293,7 +289,7 @@
 		overflow: hidden;
 		background: $white; // WHITE placeholder until the photo has loaded
 	}
-	// Big blurred copy fills the whole band behind the sharp photo.
+	// DESKTOP: big blurred copy fills the whole band behind the sharp photo.
 	.cover-blur {
 		position: absolute;
 		inset: -40px; // bleed so the blur has no hard edges
@@ -302,7 +298,7 @@
 		filter: blur(28px) brightness(0.8);
 		transform: scale(1.1);
 	}
-	// Sharp photo, fully visible (contain), centred over the blur.
+	// DESKTOP: sharp photo, fully visible (contain), centred over the blur.
 	.cover-photo {
 		position: absolute;
 		inset: 0;
@@ -320,41 +316,6 @@
 	.cover.loaded .cover-blur,
 	.cover.loaded .cover-photo {
 		opacity: 1;
-	}
-
-	// Crossed VSK arrows centred in the white cover band while the photo loads.
-	.cover-loader {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1;
-	}
-	// The two arrows alternate lighten↔darken: one blue arrow, one gold arrow.
-	.cover-loader :global(.arrow-a) {
-		animation: arrow-a-cycle 1.2s ease-in-out infinite;
-	}
-	.cover-loader :global(.arrow-b) {
-		animation: arrow-b-cycle 1.2s ease-in-out infinite;
-	}
-	@keyframes arrow-a-cycle {
-		0%,
-		100% {
-			fill: #4d86ff;
-		}
-		50% {
-			fill: #16306e;
-		}
-	}
-	@keyframes arrow-b-cycle {
-		0%,
-		100% {
-			fill: #b8860b;
-		}
-		50% {
-			fill: #ffd24a;
-		}
 	}
 
 	// ── Title band: in FLOW, pulled up over the sticky cover ──────────────────
@@ -453,8 +414,13 @@
 		// Equal breathing room above (intro → list) and below (list → next header,
 		// which the section's own bottom margin already provides).
 		margin: ($sp * 3.25) 0 0;
-		padding: 0;
+		padding: 0 0 ($sp * 0.5); // small bottom pad so the scrollbar doesn't crowd the rows
 		list-style: none;
+		// Each entry stays on ONE row (white-space:nowrap); when an entry is wider than
+		// the column it would clip, so let the whole list SCROLL horizontally instead
+		// (a scrollbar appears only when the rows actually overflow).
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
 		li {
 			margin: 0 0 ($sp * 1.25); // airy gap between entries
 			font-size: 15px;
@@ -644,11 +610,12 @@
 		background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
 	}
 
-	// ── X close button — bounded to the chapter shell ─────────────────────────
-	// The X rail is `position: sticky` INSIDE `.panel` (which is position:relative),
-	// so it's naturally bounded by the white panel: it floats at the viewport bottom
-	// while reading, then stops at the panel's bottom padding (3rem above the gold
-	// line) — it can never enter the golden section below.
+	// ── X close button — bounded to the white panel ───────────────────────────
+	// DESKTOP: `position: sticky` INSIDE `.panel` (which is position:relative), so it
+	// floats at the viewport bottom WHILE scrolling the white panel, then STOPS at the
+	// panel's bottom padding (3rem above the gold line) — it never enters the golden
+	// section below. The panel's 3rem bottom padding IS the gap that gives the X its
+	// stop-zone, which is why the flourish→golden-div gap is larger here.
 	.chapter-close-rail {
 		position: sticky;
 		bottom: $sp * 1.5; // float position while scrolling
@@ -672,6 +639,60 @@
 		transition: background-color 0.2s ease;
 		&:hover {
 			background: map.get(lib.$colors, 'supermarket-blue'); // light blue on hover
+		}
+	}
+	// PHONE: move the X to the TOP-RIGHT of the cover (just below the fixed header
+	// bars) with a BLACK background, instead of floating at the bottom.
+	@media (max-width: 720px) {
+		.chapter-close-rail {
+			position: fixed;
+			top: calc(#{$header-h} + #{$sp});
+			right: $sp;
+			left: auto;
+			bottom: auto;
+			justify-content: flex-end;
+		}
+		.chapter-close {
+			width: 44px;
+			height: 44px;
+			background: #000;
+			&:hover {
+				background: #000;
+			}
+		}
+		// PHONE: the cover photo FILLS the band (cover) instead of the desktop letterbox
+		// (blurred fill + contained photo). Hide the blur; the photo zooms to cover.
+		.cover-blur {
+			display: none;
+		}
+		.cover-photo {
+			object-fit: cover;
+		}
+		// Smaller chapter title so even the longest titles ("Klub dostiže svoj vrhunac")
+		// stay to two lines, not three.
+		.chapter-title {
+			font-size: 1.55rem;
+		}
+		// Paragraph + intro text mirror the Identitet pages' body size (15px / 24px);
+		// the lead (intro) matches the paragraph size too.
+		.section-body,
+		.chapter-lead {
+			font-size: 15px;
+			line-height: 24px;
+		}
+		// "POVEZANO S OVIM ČLANKOM" fits on ONE row: a slightly smaller font + nowrap,
+		// with side padding so it stays clear of the screen edges.
+		.related-heading {
+			padding-left: $sp;
+			padding-right: $sp;
+			font-size: 1.15rem;
+			white-space: nowrap;
+		}
+		// Increase the flourish→related-section gap to match the Identitet pages'
+		// flourish→golden-div gap (124px). The related section's 48px top padding adds
+		// on top, so 4.75rem here (76 + 48 = 124).
+		.flourish {
+			margin-bottom: ($sp * 4.75);
 		}
 	}
 	.x-line {

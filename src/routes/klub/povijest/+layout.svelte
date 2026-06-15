@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import Flourish from '$lib/components/Flourish.svelte';
+	import SectionExplore from '$lib/components/SectionExplore.svelte';
 
 	let { children } = $props();
 
@@ -35,7 +37,14 @@
 		<!-- Content: white card on the dark page bg. -->
 		<div class="history-content">
 			{@render children()}
+
+			<!-- End-of-card flourish: VSK crest + fanning gold lines (same as the other
+			     section pages), just before the golden explore block. -->
+			<div class="history-flourish"><Flourish /></div>
 		</div>
+
+		<!-- Golden "explore the club" block at the bottom (consistent with other pages). -->
+		<SectionExplore />
 	</div>
 {/if}
 
@@ -106,8 +115,69 @@
 		margin: 0 auto;
 		background-color: $white;
 		color: $navy;
-		border-radius: 12px;
+		// Only the TOP corners round — the golden explore block continues the card's
+		// bottom edge (matches the Identitet card shape).
+		border-radius: 12px 12px 0 0;
 		// +2rem top padding → more gap between the heading and the top of the card.
 		padding: ($sp * 4.5) ($sp * 2.5) ($sp * 2.5);
+	}
+	// The golden explore block matches the white card's width (85%, centred) and
+	// continues from its (square) bottom edge (same as Identitet).
+	:global(.history .explore) {
+		width: 85%;
+		margin: 0 auto;
+		border-radius: 0 0 12px 12px;
+		overflow: hidden;
+	}
+	// End-of-card flourish: generous top space from the content, bottom gap before the
+	// golden block equalised with the chapter page (124px = this 5.25rem margin + the
+	// content card's 40px bottom padding).
+	.history-flourish {
+		margin: ($sp * 6) 0 ($sp * 5.25);
+	}
+
+	// ── Phone ───────────────────────────────────────────────────────────────────
+	@media (max-width: 720px) {
+		// PHONE: match Identitet/Postignuća — slim cover band + bigger title, and a
+		// WHITE page background (hero photo fades into white at the bottom).
+		.history {
+			background-color: #fff;
+		}
+		.history-hero {
+			height: 180px; // same slim band as Identitet on phone
+		}
+		.history-hero-title {
+			font-size: 2.6rem; // same as Identitet's phone title
+		}
+		.history-hero-overlay {
+			// Fade the hero photo into the now-WHITE page background at the bottom.
+			background-image: linear-gradient(
+				to bottom,
+				color.change($navy, $alpha: 0.35) 0%,
+				color.change($navy, $alpha: 0.45) 55%,
+				#fff 100%
+			);
+		}
+		// Less side padding so the quote + chapter cards use more width (matching the
+		// roomier Identitet/Vrijednosti content width on phone). Wider card + smaller
+		// gutters → bigger chapter cards.
+		.history-content {
+			width: 96%;
+			padding: ($sp * 3) ($sp * 0.75) ($sp * 2.5);
+		}
+		// Golden explore block goes FULL-BLEED on phone — touches both screen edges,
+		// no rounding (matches Postignuća/Identitet).
+		:global(.history .explore) {
+			width: 100%;
+			border-radius: 0;
+		}
+		// Gap below the end flourish equalised to the chapter page (124px on phone);
+		// the card's 40px bottom padding adds on top, so use 5.25rem here. Pull out by
+		// the card's side padding so the flourish spans the card width and its gold
+		// lines match the chapter page's reference length closely (~118px).
+		.history-flourish {
+			margin-bottom: ($sp * 5.25);
+			margin-inline: (-$sp * 0.75);
+		}
 	}
 </style>

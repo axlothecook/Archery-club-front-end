@@ -531,7 +531,7 @@
 		// all four fit on ONE centred row, with inner padding from the screen edges.
 		.strip {
 			flex-wrap: nowrap;
-			gap: clamp(0.5rem, 3.2vw, 1.1rem);
+			gap: clamp(0.6rem, 4.2vw, 1.3rem); // a touch more space between the 4 links
 			padding: 0 clamp(0.75rem, 4vw, 1.25rem);
 		}
 		.strip-link {
