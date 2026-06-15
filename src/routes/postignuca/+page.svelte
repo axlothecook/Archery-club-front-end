@@ -46,6 +46,17 @@
 		<h1 class="ach-hero-title">Postignuća</h1>
 	</header>
 
+	<!-- Intro blurb (PSG "Honours" style): a gold heading + a short pride paragraph
+	     summarising the club's standout titles, sitting between the cover and the list. -->
+	<section class="ach-intro">
+		<p class="ach-intro-text">
+			Malo je klubova u Hrvatskoj koji su osvojili toliko naslova. Najveći ponos kluba
+			ostaju 6 svjetskih i 8 europskih naslova, među kojima se ističu obranjeno svjetsko
+			juniorsko zlato (2019. i 2021.), tri uzastopne pobjede na Conquest Cupu
+			(od 2024. do 2026.) te tri naslova u Indoor World Seriesu.
+		</p>
+	</section>
+
 	<!-- White card (matches the Povijest card width). PSG-style honour list. -->
 	<div class="ach-content">
 		{#if groups.length === 0}
@@ -146,6 +157,23 @@
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-transform: uppercase;
+	}
+
+	// ── Intro blurb (PSG "Honours" style) ───────────────────────────────────────
+	// Centred gold heading + a short, comfortably-narrow pride paragraph beneath the
+	// cover, before the honour list. Muted light text reads on the dark page bg.
+	.ach-intro {
+		max-width: 1040px; // wider so the paragraph wraps over fewer rows
+		margin: 0 auto;
+		padding: ($sp * 5) ($sp * 2) ($sp * 2);
+		text-align: center;
+	}
+	.ach-intro-text {
+		margin: 0;
+		font-size: 1.15rem;
+		font-weight: 300;
+		line-height: 1.7;
+		color: #ccc;
 	}
 
 	// ── Content surface ───────────────────────────────────────────────────────
@@ -291,15 +319,35 @@
 	// both image + text run FULL WIDTH centred (reset the desktop zig-zag justify-self
 	// that otherwise leaves the stacked blocks indented to one side).
 	@media (max-width: 680px) {
-		// The desktop 8rem side padding leaves almost no room on a phone (collapsed the
-		// honour list to ~100px). Use full width with small gutters.
+		// Full-width content; vertical padding only — the carousel handles its own side
+		// gutters via scroll-padding so the snapped card clears the screen edges.
 		.ach-content {
 			width: 100%;
-			padding: 3rem 1.25rem 2rem;
+			padding: 3rem 0 2rem;
+		}
+		// PHONE: the honour list becomes a horizontal SWIPE carousel — one card per slide,
+		// scroll-snap so each settles centred, with the next card peeking to hint the swipe.
+		// scroll-padding + the track's leading/trailing space keep cards off the screen edges.
+		.ach-list {
+			display: flex;
+			align-items: start; // every card pins to the same top → photos line up across slides
+			gap: 1rem;
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding: 0 1.25rem; // snapped card aligns with this left/right gutter
+			padding: 0 1.25rem; // leading/trailing space so the first/last card has a gutter
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none; // hide the scrollbar (Firefox)
+			&::-webkit-scrollbar {
+				display: none; // hide the scrollbar (WebKit)
+			}
 		}
 		.honour {
+			flex: 0 0 92%; // each slide ~92vw (bigger photo); next card still peeks a little
 			grid-template-columns: 1fr;
-			gap: ($sp * 1.25);
+			gap: ($sp * 1); // title sits just beneath the photo, with a touch of breathing room
+			scroll-snap-align: start;
+			scroll-snap-stop: always; // a flick advances at most ONE card, never skips past
 			// reset the even-row swap so the image always sits on top
 			&:nth-child(even) {
 				.honour-media {
@@ -321,11 +369,16 @@
 		.honour .honour-head,
 		.honour:nth-child(even) .honour-head {
 			justify-self: stretch;
-			padding: 0 ($sp);
-			text-align: center;
+			padding: 0; // the track gutter already insets the card; keep title flush to photo
+			text-align: left; // title + years share the same left edge
+		}
+		// Years: bigger + pulled closer under the title (left-aligned with it via the head).
+		.honour-years {
+			margin-top: ($sp * 0.5);
+			font-size: 1.15rem;
 		}
 		.honour-media {
-			aspect-ratio: 16 / 9;
+			aspect-ratio: 4 / 3; // taller crop → a bigger photo on the swipe card
 		}
 		.honour-num,
 		.honour-title {
@@ -333,6 +386,24 @@
 		}
 		.ach-hero-title {
 			font-size: 2.6rem;
+		}
+		// PHONE ONLY: shrink the cover to a slim band (~30rem shorter than desktop) so
+		// less vertical space is wasted before the honour list.
+		.ach-hero {
+			min-height: 180px;
+		}
+		// Scale the photo by WIDTH so the full horizontal field of view shows, letting
+		// the extra height overflow the short band (clipped by .ach-hero overflow:hidden).
+		// min-height:100% keeps it covering the band with no gaps; the translate centres
+		// it. Fits MORE of the scene than object-fit:cover would in such a short band.
+		.ach-hero-img {
+			inset: auto;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 100%;
+			height: auto;
+			min-height: 100%;
 		}
 	}
 </style>
