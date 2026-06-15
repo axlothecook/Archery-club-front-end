@@ -141,43 +141,103 @@ existing SvelteKit app (`/prijava`, `/admin/*`), NOT a separate app/subdomain.
 - **Stack fit:** adapter-node SvelteKit server + Express API both behind one nginx (or the Tunnel ingress):
   `/api/*` → Express container; everything else → SvelteKit Node server. + Cloudflare "Always Use HTTPS".
 
+### ⚠️ PRE-FLIGHT FIXES & GOTCHAS (found by an adversarial code+plan sweep 2026-06-15, each verified vs source)
+Do these BEFORE/INSIDE the relevant day or the sprint hits known walls. 🔴 = blocker.
+- 🔴 **Cookie is `SameSite=strict`, NOT Lax** (`backend/src/auth/cookies.ts:13,19`). This CONTRADICTS the
+  topology note above. Strict is withheld on top-level cross-site navigations INTO the site, so the planned
+  `/admin` `+layout.server.ts` guard calling `/api/auth/me` after an emailed invite/reset link (or any
+  external link) sees NO cookie → bounces a logged-in admin to `/prijava`. **Change to `sameSite: "lax"`**
+  (Day 1). Lax still covers CSRF here: same-origin API + POST/PUT/DELETE mutations aren't sent cross-site.
+- 🔴 **FE API base must stay ABSOLUTE, not `/api`** (`frontend/src/lib/api.ts:39` does `new URL(path, BASE)`,
+  which THROWS on a relative base). Day-5's "`API_URL=/api` (relative)" would break every page's data load.
+  Fix: in prod set `PUBLIC_API_BASE_URL=https://<vsk-host>.axlothecook.com/api` (absolute) and let nginx route
+  it — OR rewrite api.ts to build path-only. (Same-origin still holds; the browser request is same-origin.)
+- 🔴 **nginx MUST strip the `/api` prefix** — Express mounts routes at bare paths (`/auth`, `/admin`, …, no
+  `/api`). Use `location /api/ { proxy_pass http://backend:3100/; }` (trailing slash on BOTH = strips `/api`).
+  A no-slash `proxy_pass` 404s the whole API. Day-5 smoke test: `curl https://host/api/health`.
+- 🔴 **Postgres needs a NAMED VOLUME** — run PG as its OWN compose service with
+  `pg_data:/var/lib/postgresql/data`; never bake it into the backend image. Without the volume, the Day-7 CI
+  `compose pull && up -d` wipes the club DB on every redeploy. Verify `down && up -d` preserves data (Day 5).
+- 🔴 **Supabase→R2 is bigger than the FE** — live DB rows + **8 backend seed files** still hold dead
+  `*.supabase.co` URLs (achievement-categories, achievements, club-history, crest, home-stat-images, jersey,
+  roster residual, sponsors); only `posts.json`+`roster.json` have migration scripts. Day 5: migrate ALL seed
+  JSON **and** add a one-off DB `UPDATE` sweep of every `*Url` column (admin-edited rows aren't in the seed).
+- **CORS + prod env**: set `CORS_ORIGINS=<prod origin>`, `DASHBOARD_URL=https://<vsk-host>...` (else invite
+  emails link to `localhost:5173`), a FRESH prod `AUTH_TOKEN_SECRET`, and `DATABASE_URL` → the compose PG
+  service. Hand-place a prod `.env` on the Pi (gitignored) via compose `env_file:`. Add a startup guard that
+  throws if any required env is missing (fail fast, not 500s).
+- **`app.set('trust proxy', 1)`** — behind nginx+Tunnel, else the inquiries rate-limiter keys every client to
+  the proxy IP (one shared bucket). Low blast radius but real.
+- **Reset-password token is replayable** for its 30-min window (no nonce/`passwordChangedAt` binding,
+  `auth/action-token.ts`). Bind it to server state. (Security hardening, not deploy-blocking.)
+- **`import-seed` is NOT safe to re-run on a live DB** — it resets `adminEdited:false` and overwrites admin
+  edits. Treat as one-time bootstrap; gate behind an empty-DB check.
+
 ### Day 1 (Mon) — Dashboard auth shell
 - [ ] `/prijava` login page → `POST /api/auth/login`; on success → `/admin`. Wire the menu's dead `#` link.
 - [ ] `/admin` protected layout: a SvelteKit `+layout.server.ts`/hook that calls `/api/auth/me`, redirects to
   `/prijava` if 401; admin shell (sidebar nav per entity, logout). Verify the session cookie round-trips.
 - [ ] `accept-invite` + `reset-password` + `forgot-password` pages (the backend tokens already exist).
 - [ ] Typed admin API client (mirror the public one) hitting `/api/admin/*`, `credentials: 'include'`.
+- [ ] 🔴 **FIRST: switch cookie to `sameSite: "lax"`** (`backend/src/auth/cookies.ts`) + add a backend
+  integration test asserting login's `Set-Cookie` carries `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`.
+- [ ] 🧪 FE: a hook/load test that an unauthenticated `/admin` request (mock `/api/auth/me` → 401) redirects
+  to `/prijava` (this is the regression net for the whole guard; FE already has vitest + Playwright installed).
+- [ ] 🧪 Backend: integration test for the EXPIRED/idle session path (back-date `expiresAt` → `/auth/me` 401 +
+  row deleted) — the session path gates all 37 admin endpoints and is currently untested.
 
 ### Day 2 (Tue) — Highest-churn editors: Articles/News + Events
 - [ ] Articles list + create/edit (incl. the draft → publish-draft → delete-draft workflow) + image upload.
 - [ ] Events + event-levels CRUD. Verify each against the live API (create/edit/delete round-trips).
+- [ ] 🧪 Backend integration test for the **articles draft lifecycle** (PUT `/:id/draft` → assert public feed
+  still shows OLD content → POST `/publish-draft` → assert public reflects new + `draftRevision` cleared).
+  This is bespoke state-machine logic, currently ZERO coverage, and it's the editor you build today.
+- [ ] 🧪 Backend CRUD round-trip tests for **events + event-levels** (both fully untested today).
+- [ ] 🧪 FE component test: a 400 with `error.fields` renders inline field errors (one editor proves the pattern).
 
 ### Day 3 (Wed) — Roster + Achievements + Sponsors
 - [ ] Archers (roster) CRUD (bio, stats, performance, per-archer achievements, roles, image).
 - [ ] Achievements CRUD + Sponsors CRUD (translations where the API expects them).
+- [ ] 🧪 Backend CRUD round-trip test for **achievements** (untested router). (Sponsors/archers already covered.)
 
 ### Day 4 (Thu) — Remaining editors + Inquiries inbox + Uploads
 - [ ] Hero images, club-info (contact fields incl. the new phone), club-identity/history (if editable).
 - [ ] Inquiries inbox (membership / sponsor / donation) — list, mark status, reply.
 - [ ] Reusable image/video upload component → `/api/admin/upload` (R2). Dashboard click-through QA pass.
+- [ ] 🧪 Backend tests: **hero** CRUD round-trip; inquiries **status-PATCH + sponsor/donation** inboxes
+  (only `membership` list+reply is covered today) — parametrize the existing membership test over all 3 types.
+- [ ] 🧪 FE upload-component test: spoofed-type + video-on-non-article rejection messages surface gracefully.
 
 ### Day 5 (Fri) — 🔴 Kill Supabase → R2, then Dockerize
-- [ ] Sweep EVERY `*.supabase.co` URL in the FE (NavBar/Footer/RosterCard/identity/…) + any backend seed →
-  repoint to R2 (`images.axlothecook.com`). Grep both repos; ZERO `supabase` refs must remain.
-- [ ] Dockerfile (backend + Postgres) + Dockerfile (FE adapter-node) + `docker-compose.prod.yml`.
-- [ ] nginx reverse proxy: `/api/*` → backend, `/` → SvelteKit; SvelteKit `API_URL=/api` (relative).
-- [ ] Verify the WHOLE stack runs in Docker locally; login works same-origin end-to-end.
+- [ ] Sweep EVERY `*.supabase.co` URL in **both repos** — FE (NavBar/Footer/RosterCard/identity/…) AND the
+  **8 backend seed JSONs** (achievement-categories, achievements, club-history, crest, home-stat-images,
+  jersey, roster, sponsors) → repoint to R2 (`images.axlothecook.com`). Generalize the migration to walk ALL
+  seed JSON, not just posts/roster.
+- [ ] **One-off DB `UPDATE` sweep** of every `*Url` column on the live DB (admin-edited rows aren't in seed).
+- [ ] 🧪 CI grep-guard that FAILS the build if any `*.supabase.co` string remains in either repo (turns the
+  "ZERO refs" rule from a manual grep into an enforced gate).
+- [ ] Dockerfile (FE adapter-node) + Dockerfile (backend) + **Postgres as its OWN service** with a named
+  `pg_data` volume + `docker-compose.prod.yml`. nginx: `location /api/ { proxy_pass http://backend:3100/; }`
+  (trailing slash strips `/api`), `/` → SvelteKit. Prod `PUBLIC_API_BASE_URL` = ABSOLUTE `https://host/api`.
+- [ ] Prod env on the Pi (gitignored, via compose `env_file:`): fresh `AUTH_TOKEN_SECRET`, `DATABASE_URL` →
+  compose PG, `CORS_ORIGINS` + `DASHBOARD_URL` = prod host, R2 creds. Add a startup fail-fast env guard.
+- [ ] Verify locally: full stack in Docker; `curl /api/health` 200; login round-trips same-origin; **`compose
+  down && up -d` preserves the DB** (proves the volume).
 
 ### Day 6 (Sat) — 🔴 Cloudflare Tunnel + first live deploy
 - [ ] Cloudflare Tunnel: one public hostname → nginx (game-shop pattern: Service Type HTTP, `host:port`, no
   scheme). "Always Use HTTPS" ON. Bring the stack up on the Pi (`IceCreamTruck`, `100.97.123.51`).
-- [ ] Create the first admin (invite flow) on the live DB; seed import; translate-backfill.
-- [ ] Verify: public site live on the domain; dashboard login works on a PHONE (strict-browser cookie test).
+- [ ] Create the first admin (invite flow) on the live DB; seed import (ONE-TIME, empty DB); translate-backfill.
+- [ ] Verify: public site live on the domain; dashboard login works on a PHONE (strict-browser cookie test);
+  the emailed invite link resolves to the live host (not localhost), proving `DASHBOARD_URL`.
 
 ### Day 7 (Sun) — 🔴 CI/CD + backup + harden
 - [ ] `.github/workflows` deploy: build → GHCR → Tailscale → Pi → `compose pull && up -d` (reuse game-shop's
-  5 secrets + Node-24 action majors; `appleboy/ssh-action@v1` stays). Verify push-to-main auto-deploys.
-- [ ] Nightly **`pg_dump`** backup (Pi cron + PC scp pull, 2-tier like game-shop). Verify restorable.
+  5 secrets + Node-24 action majors; `appleboy/ssh-action@v1` stays). Verify push-to-main auto-deploys
+  **AND that the redeploy preserves DB data** (the volume test, now live).
+- [ ] Nightly **`pg_dump`** backup (Pi cron + PC scp pull, 2-tier like game-shop). **Actually restore** the
+  archive into a scratch DB and assert row counts (not just a checkbox — the game-shop restore drill).
+- [ ] Run the full test suite (`npm run test:all` backend + FE `npm run test`) green in CI before deploy.
 - [ ] Full end-to-end: forms email, locale switch, image cache, 404s, mobile pass. **DONE — client-ready.**
 
 ### Risks (this sprint)
