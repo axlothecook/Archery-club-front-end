@@ -58,7 +58,7 @@
 		/>
 		<div class="sp-hero-overlay"></div>
 		<div class="sp-hero-inner">
-			<h1 class="sp-hero-title">VSK Službeni partneri</h1>
+			<h1 class="sp-hero-title">Službeni partneri</h1>
 			<p class="sp-hero-text">
 				Varaždinski streličarski klub poznat je po svojoj predanosti i izvrsnosti, s
 				dosljednim uspjesima na svjetskim i državnim natjecanjima, te njegovanom zajednicom u
@@ -317,7 +317,10 @@
 	}
 
 	.sp-flourish {
-		margin: ($sp * 2) 0 ($sp * 2);
+		// Bottom gap matches postignuca's flourish→golden-block gap (now +2rem on both:
+		// 4.5rem → 6.5rem here). Postignuca gets ~half from its content-card bottom
+		// padding; sponzori's flourish has no such wrapper, so it comes from this margin.
+		margin: ($sp * 2) 0 ($sp * 6.5);
 	}
 
 	// ── Responsive ────────────────────────────────────────────────────────────
@@ -333,6 +336,34 @@
 	@media (max-width: 560px) {
 		.sp-hero-title {
 			font-size: 2rem;
+		}
+	}
+	// PHONE: a few logos (Lasercopy, Cico-Sport) have a 380px max-width that exceeds
+	// the card's inner width, so they stick out past the card padding. Cap every logo
+	// to the card's content width so they always fit inside the padding.
+	@media (max-width: 720px) {
+		.partner-logo img,
+		.partner-logo[data-sponsor='KODRA'] img,
+		.partner-logo[data-sponsor='Raiffeisen Bank'] img {
+			max-width: 100%;
+		}
+		// Raise the whole hero block (title + subtext + button) up off the cover's
+		// lower edge via extra bottom padding; make the title bolder.
+		.sp-hero-inner {
+			padding-bottom: ($sp * 6);
+		}
+		.sp-hero-title {
+			font-weight: 800;
+		}
+		// Same gap below the end flourish before the golden block as postignuca (whose
+		// flourish sits inside a padded content card, giving it ~112px total; sponzori's
+		// flourish has no such wrapper, so it needs the full 7rem here to match).
+		.sp-flourish {
+			margin-bottom: ($sp * 7);
+		}
+		// Smaller honorary-mention quote on phones (the 1.05rem reads oversized here).
+		.sp-honorary-quote {
+			font-size: 0.85rem;
 		}
 	}
 </style>
