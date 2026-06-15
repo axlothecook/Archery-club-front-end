@@ -287,8 +287,16 @@
 			width: 92%;
 		}
 	}
-	// On narrow screens, stack image-over-text (no zig-zag); image always first.
+	// On narrow screens, stack image-over-text (no zig-zag); image always first, and
+	// both image + text run FULL WIDTH centred (reset the desktop zig-zag justify-self
+	// that otherwise leaves the stacked blocks indented to one side).
 	@media (max-width: 680px) {
+		// The desktop 8rem side padding leaves almost no room on a phone (collapsed the
+		// honour list to ~100px). Use full width with small gutters.
+		.ach-content {
+			width: 100%;
+			padding: 3rem 1.25rem 2rem;
+		}
 		.honour {
 			grid-template-columns: 1fr;
 			gap: ($sp * 1.25);
@@ -303,6 +311,18 @@
 					grid-row: 2;
 				}
 			}
+		}
+		// Full-width, centred stacking (override the desktop end/start justify-self on
+		// BOTH the odd rows and the even-row swap).
+		.honour .honour-media,
+		.honour:nth-child(even) .honour-media {
+			justify-self: stretch;
+		}
+		.honour .honour-head,
+		.honour:nth-child(even) .honour-head {
+			justify-self: stretch;
+			padding: 0 ($sp);
+			text-align: center;
 		}
 		.honour-media {
 			aspect-ratio: 16 / 9;
