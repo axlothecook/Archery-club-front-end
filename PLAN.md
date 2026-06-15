@@ -110,16 +110,82 @@ Front-end · Back-end · DB · custom CI/CD deploy · daily data backup.
 
 ---
 
-## PHASE 2 — DASHBOARD / ADMIN UI (separate app, AFTER the public site ships 15.6)
-The backend already exposes a full `/admin/*` CRUD API (auth, every entity, image upload, inquiries inbox)
-but there is NO admin frontend yet. Per the handoff the dashboard is a SEPARATE app/subdomain; the public
-site only links to it via a discreet footer "Prijava". Decided 2026-06-08: finish + deploy the public site
-by 15.6 FIRST, then write a dedicated dashboard plan and build it. Rough scope (its own multi-day project):
-- [ ] Scaffold the dashboard app (own repo or subdir) + auth (login/logout, protected routes, session cookie).
-- [ ] CRUD UIs per entity: sponsors, archers/roster, articles/news, events, achievements, event-levels, hero,
-  club-info (contact fields), club-identity/history (if editable).
-- [ ] Image/video upload UI → `/admin/upload` (R2). Inquiries inbox (membership/sponsor/donation) + reply.
-- [ ] Invite/accept-invite + forgot/reset password flows. Deploy (its own subdomain + tunnel).
+## PHASE 2 — DASHBOARD + FULL DEPLOY · 7-DAY SPRINT (Mon → Sun, ~12h/day)
+**Goal:** ship a CLIENT-READY admin dashboard (the WHOLE thing, handed to a client) AND the public
+site, both LIVE on the Pi, in 7 days. Established 2026-06-15.
+
+### Verified starting state (2026-06-15, checked against the code — corrects earlier notes)
+- ❌ **There is NO separate "dashboard repo."** The admin lives INSIDE the two existing repos.
+- ✅ **Dashboard BACKEND is essentially DONE.** Full session auth (login/logout/me, invite, accept-invite,
+  forgot/reset — bcrypt + action tokens + email) and **37 `/admin/*` write endpoints** across 11 routers
+  (sponsors, achievements, archers, articles w/ draft→publish, events, event-levels, hero, club-info,
+  inquiries+reply, upload, dev), ALL `requireAuth`-gated. Prisma 7 + Postgres, 30 models.
+- ❌ **Dashboard FRONTEND does not exist.** No `/prijava`, `/admin/*` in SvelteKit; "Prijava" = dead `#`
+  link. **This is the bulk of the 7 days.**
+- ✅ **Public site pages all BUILT** (home, klub/identitet+povijest, najnovije, momcad, postignuca,
+  raspored, kontakt, sponzori, legal). Stack: SvelteKit 2.57 + Svelte 5 + **adapter-node**.
+- 🔴 **Supabase URLs still in ~10 FE files** (NavBar logo, Footer, RosterCard×4, identity hero, …) —
+  HARD deploy blocker (rule: zero `supabase` refs at deploy). Must migrate to R2.
+- 🔴 **Deploy = GREENFIELD.** No Dockerfile/compose/nginx/CI in either repo. No deploy repo.
+
+### 🔑 TOPOLOGY DECISION — same-origin (RESEARCH-VERIFIED 2026-06-15, 10+ sources)
+Serve the **public site, the `/admin` dashboard, AND the API on ONE origin**
+(`<vsk-host>.axlothecook.com`), API reverse-proxied at **`/api`**. Dashboard = routes INSIDE the
+existing SvelteKit app (`/prijava`, `/admin/*`), NOT a separate app/subdomain.
+- **Why (verified vs MDN + RFC 6265bis):** `app.*` and `api.*` subdomains are *same-site* but NOT enough —
+  SvelteKit's default `SameSite=Lax` cookie is NOT sent on cross-origin `fetch()` (MDN: Lax excludes fetch
+  + subresources). A split forces `SameSite=None; Secure`, which Safari ITP / Firefox TCP / Brave drop or
+  partition → the "works on PC, fails on phone, `Failed to fetch`" trap (the exact Create_Resume bug).
+  Same-origin keeps the cookie first-party `Lax`, no CORS, no strict-browser breakage. See
+  [[same-origin-api-to-avoid-cross-site-cookie-block]] + [[secure-cookie-needs-https-force-redirect]].
+- **Stack fit:** adapter-node SvelteKit server + Express API both behind one nginx (or the Tunnel ingress):
+  `/api/*` → Express container; everything else → SvelteKit Node server. + Cloudflare "Always Use HTTPS".
+
+### Day 1 (Mon) — Dashboard auth shell
+- [ ] `/prijava` login page → `POST /api/auth/login`; on success → `/admin`. Wire the menu's dead `#` link.
+- [ ] `/admin` protected layout: a SvelteKit `+layout.server.ts`/hook that calls `/api/auth/me`, redirects to
+  `/prijava` if 401; admin shell (sidebar nav per entity, logout). Verify the session cookie round-trips.
+- [ ] `accept-invite` + `reset-password` + `forgot-password` pages (the backend tokens already exist).
+- [ ] Typed admin API client (mirror the public one) hitting `/api/admin/*`, `credentials: 'include'`.
+
+### Day 2 (Tue) — Highest-churn editors: Articles/News + Events
+- [ ] Articles list + create/edit (incl. the draft → publish-draft → delete-draft workflow) + image upload.
+- [ ] Events + event-levels CRUD. Verify each against the live API (create/edit/delete round-trips).
+
+### Day 3 (Wed) — Roster + Achievements + Sponsors
+- [ ] Archers (roster) CRUD (bio, stats, performance, per-archer achievements, roles, image).
+- [ ] Achievements CRUD + Sponsors CRUD (translations where the API expects them).
+
+### Day 4 (Thu) — Remaining editors + Inquiries inbox + Uploads
+- [ ] Hero images, club-info (contact fields incl. the new phone), club-identity/history (if editable).
+- [ ] Inquiries inbox (membership / sponsor / donation) — list, mark status, reply.
+- [ ] Reusable image/video upload component → `/api/admin/upload` (R2). Dashboard click-through QA pass.
+
+### Day 5 (Fri) — 🔴 Kill Supabase → R2, then Dockerize
+- [ ] Sweep EVERY `*.supabase.co` URL in the FE (NavBar/Footer/RosterCard/identity/…) + any backend seed →
+  repoint to R2 (`images.axlothecook.com`). Grep both repos; ZERO `supabase` refs must remain.
+- [ ] Dockerfile (backend + Postgres) + Dockerfile (FE adapter-node) + `docker-compose.prod.yml`.
+- [ ] nginx reverse proxy: `/api/*` → backend, `/` → SvelteKit; SvelteKit `API_URL=/api` (relative).
+- [ ] Verify the WHOLE stack runs in Docker locally; login works same-origin end-to-end.
+
+### Day 6 (Sat) — 🔴 Cloudflare Tunnel + first live deploy
+- [ ] Cloudflare Tunnel: one public hostname → nginx (game-shop pattern: Service Type HTTP, `host:port`, no
+  scheme). "Always Use HTTPS" ON. Bring the stack up on the Pi (`IceCreamTruck`, `100.97.123.51`).
+- [ ] Create the first admin (invite flow) on the live DB; seed import; translate-backfill.
+- [ ] Verify: public site live on the domain; dashboard login works on a PHONE (strict-browser cookie test).
+
+### Day 7 (Sun) — 🔴 CI/CD + backup + harden
+- [ ] `.github/workflows` deploy: build → GHCR → Tailscale → Pi → `compose pull && up -d` (reuse game-shop's
+  5 secrets + Node-24 action majors; `appleboy/ssh-action@v1` stays). Verify push-to-main auto-deploys.
+- [ ] Nightly **`pg_dump`** backup (Pi cron + PC scp pull, 2-tier like game-shop). Verify restorable.
+- [ ] Full end-to-end: forms email, locale switch, image cache, 404s, mobile pass. **DONE — client-ready.**
+
+### Risks (this sprint)
+1. Days 5–7 (Supabase→R2 + greenfield deploy) = the blow-up risk, exactly as the public sprint warned.
+   First Docker/CI for these repos, Postgres-not-Mongo. Front-loaded; cut dashboard polish before deploy.
+2. 37 endpoints → a lot of CRUD UI in Days 1–4. If it slips, the Day-2 priority order (news/events first)
+   means the highest-value editors ship even if the rarest (hero/identity) slip to "after live."
+3. Strict-browser cookie test (Day 6 phone check) is the gate that proves the same-origin decision held.
 
 ## If website gets adopted (only build IF the club commits to running the site)
 Features that only make sense once the club actively maintains the site; skip until then.

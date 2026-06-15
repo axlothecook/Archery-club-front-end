@@ -517,7 +517,9 @@
 		.facc-links {
 			list-style: none;
 			margin: 0;
-			padding: 0 0 0.9rem;
+			// Extra bottom padding = more gap between the last link of an open
+			// section and the next section's header below it.
+			padding: 0 0 2.4rem;
 			display: flex;
 			flex-direction: column;
 			gap: 0.75rem;
