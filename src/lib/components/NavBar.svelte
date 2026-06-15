@@ -38,8 +38,21 @@
 		SECTION_NAV_PATHS.some((p) => path === p || path.startsWith(p + '/'))
 	);
 
-	// merged = section links sit INSIDE the pill (scrolled on a section page).
-	const merged = $derived(onSectionPage && scrolled);
+	// Phone flag (≤720px = the site-wide phone breakpoint). On phone the pill can't hold
+	// the 4 extra section links, so we DON'T merge there: the bar stays full + the blue
+	// strip stays pinned below it (always visible). Desktop keeps the scroll-merge.
+	let isPhone = $state(typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches);
+	$effect(() => {
+		const mq = window.matchMedia('(max-width: 720px)');
+		const sync = () => (isPhone = mq.matches);
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+
+	// merged = section links sit INSIDE the pill (scrolled on a section page). NEVER on
+	// phone — see isPhone above.
+	const merged = $derived(onSectionPage && scrolled && !isPhone);
 
 	// The Raspored page opens with a full-screen video hero that the navbar floats
 	// over: at the TOP there, the pill goes transparent with black text/icons so it
@@ -66,7 +79,8 @@
 	$effect(() => {
 		const onScroll = () => {
 			const next = window.scrollY > 10;
-			if (next !== scrolled && navEl) {
+			// On phone there's no merge, so don't capture/animate Flip state.
+			if (next !== scrolled && navEl && !isPhone && onSectionPage) {
 				// state change incoming → capture the positions of BOTH the moving
 				// section links AND the shifting Meni/Vijesti/Momčad/Raspored, so they
 				// all animate to their new spots together (the black-bar links slide to
@@ -98,11 +112,17 @@
 	// the fixed bar (pill alone vs pill + blue strip). When merged/scrolled the pill
 	// floats over content (no strip), so the spacer shrinks back to the pill height.
 	$effect(() => {
-		// recompute whenever the split/merged state changes
+		// recompute whenever the split/merged/scroll state changes
 		void merged;
 		void onSectionPage;
+		void scrolled;
+		void isPhone;
 		const update = () => {
-			const stripH = onSectionPage && !scrolled ? (stripEl?.offsetHeight ?? 0) : 0;
+			// The spacer must include the strip height whenever the strip is SHOWN, i.e.
+			// on a section page and not merged. On phone we never merge, so the strip (and
+			// thus this height) stays even when scrolled.
+			const stripShown = onSectionPage && !merged;
+			const stripH = stripShown ? (stripEl?.offsetHeight ?? 0) : 0;
 			document.documentElement.style.setProperty('--nav-h', `${64 + stripH}px`);
 		};
 		// after DOM settles
@@ -443,9 +463,23 @@
 	// Keep the TOP-BAR links (Vijesti / Momčad / Raspored) visible on phones — only the
 	// extra SECTION links (Postignuća/Sponzori/Identitet/Povijest) collapse into Meni.
 	// Everything shrinks + tightens so the row fits a narrow screen.
-	@media (max-width: 640px) {
+	@media (max-width: 720px) {
 		.section-link {
 			display: none; // the docked section links would overcrowd the phone pill
+		}
+		// PHONE section pages: the bar does NOT morph into the floating pill on scroll —
+		// it stays the full-width SOLID BLACK top bar, with the blue strip pinned below it
+		// (always visible). Keep the base black bg; just drop the .scrolled rounding/glass.
+		.navbar.scrolled.section .pill {
+			border-radius: 0;
+			box-shadow: none;
+			background-color: #0a0a0a;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			border-color: transparent;
+		}
+		.navbar.scrolled.section .pill-wrap {
+			padding: 0; // full-bleed bar, no inset that would reveal the floating-pill shape
 		}
 		// Keep the desktop layout: clusters each take an equal half (logo dead-centre,
 		// links hugging it from both sides). The document is now clamped to the viewport
@@ -486,10 +520,24 @@
 			height: 2.25rem; // a touch bigger; still clears the 65px bar
 		}
 		// Pill-wrap side padding must collapse on phones — the desktop 14rem/5rem
-		// insets would push the pill far narrower than the screen and overflow.
-		.navbar.scrolled .pill-wrap,
-		.navbar.scrolled.section .pill-wrap {
+		// insets would push the pill far narrower than the screen and overflow. NB: this
+		// must NOT include .section (section pages stay a flush full-bleed bar — see the
+		// `padding: 0` rule above; a top/side inset here is what left gaps around the bar).
+		.navbar.scrolled:not(.section) .pill-wrap {
 			padding: 1rem 0.5rem 0;
+		}
+		// Blue section strip: the desktop 2.5rem gap wraps the 4 links onto a 2nd row
+		// (POVIJEST spilled below the bar). Shrink the gap + font and forbid wrapping so
+		// all four fit on ONE centred row, with inner padding from the screen edges.
+		.strip {
+			flex-wrap: nowrap;
+			gap: clamp(0.5rem, 3.2vw, 1.1rem);
+			padding: 0 clamp(0.75rem, 4vw, 1.25rem);
+		}
+		.strip-link {
+			font-size: clamp(0.62rem, 3vw, 0.85rem);
+			letter-spacing: 0.01em;
+			white-space: nowrap;
 		}
 	}
 
