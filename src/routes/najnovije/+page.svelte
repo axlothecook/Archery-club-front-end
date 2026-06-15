@@ -3,12 +3,15 @@
 	//   1. a featured CAROUSEL of the 5 newest articles (NewsCarousel),
 	//   2. a row of 4 compact ArticleCards (next-newest highlights),
 	//   3. a newsletter signup band (VISUAL-ONLY placeholder; see PLAN "If adopted"),
-	//   4. a "Više vijesti" ArticleCard grid that grows by INFINITE SCROLL (an
-	//      IntersectionObserver sentinel fetches the next cursor page — no button).
+	//   4. a "Više vijesti" ArticleCard grid (same compact card layout as the
+	//      highlights row) that grows via a "Više" BUTTON — one click loads the next
+	//      cursor page (9 articles on desktop, 6 on phone); the button hides when the
+	//      feed is exhausted.
 	// Both card bands reuse the shared ArticleCard component (image + title).
 
 	import { apiFetch } from '$lib/api';
 	import { DEFAULT_LOCALE } from '$lib/locale';
+	import { onMount } from 'svelte';
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import NewsCarousel from '$lib/components/NewsCarousel.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
@@ -36,14 +39,44 @@
 	let loading = $state(false);
 	let loadError = $state(false);
 
+	// Articles to hide from the "Više vijesti" grid ON PHONE ONLY (by slug). They still
+	// show on desktop; this just trims the phone grid per the editor's request.
+	const PHONE_HIDE = new Set([
+		'velike-najave-amande-mlinaric-u-prilogu-hrt-sporta',
+		'sest-nastupa-sest-medalja-strelicari-vsk-a-uspjesni-u-sisku',
+		'zlato-za-tenu-mikolaj-i-zorana-velagica-na-sisackoj-zimi'
+	]);
+	// Reactive phone flag (<=720px) so the grid filter updates if the viewport changes.
+	let isPhone = $state(
+		typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
+	);
+	$effect(() => {
+		const mq = window.matchMedia('(max-width: 720px)');
+		const sync = () => (isPhone = mq.matches);
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+
 	const featured = $derived(items.slice(0, FEATURED));
 	const highlights = $derived(items.slice(FEATURED, FEATURED + HIGHLIGHTS));
-	const rest = $derived(items.slice(FEATURED + HIGHLIGHTS));
+	const rest = $derived(
+		items
+			.slice(FEATURED + HIGHLIGHTS)
+			.filter((a) => !(isPhone && PHONE_HIDE.has(a.slug)))
+	);
 	const hasMore = $derived(cursor !== null);
 
-	// "Više vijesti" loads the next 9 older articles into the grid (one click = one
-	// page). nextCursor goes null when there are no more, hiding the button.
-	const PAGE = 9;
+	// "Više vijesti" loads the next page of older articles into the grid (one click =
+	// one page). The page size is RESPONSIVE: 9 on desktop, 6 on phone (<=720px),
+	// resolved at click time so it adapts if the viewport changes. nextCursor goes
+	// null when there are no more, hiding the button.
+	const PAGE_DESKTOP = 9;
+	const PAGE_PHONE = 6;
+	function pageSize(): number {
+		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches)
+			return PAGE_PHONE;
+		return PAGE_DESKTOP;
+	}
 	async function loadOlder() {
 		if (loading || !cursor) return;
 		loading = true;
@@ -51,7 +84,7 @@
 		try {
 			const next = await apiFetch<ArticleFeedPage>('/articles', {
 				locale: DEFAULT_LOCALE,
-				query: { before: cursor, limit: PAGE }
+				query: { before: cursor, limit: pageSize() }
 			});
 			items = [...items, ...next.items];
 			cursor = next.nextCursor;
@@ -61,6 +94,19 @@
 			loading = false;
 		}
 	}
+
+	// Ensure the "Više vijesti" grid starts FILLED: the desktop grid is 4 columns, so
+	// we want at least 12 cards (a full 4×3) in `rest` on first paint. If the seeded
+	// page (or a restored snapshot) has fewer, top up from the cursor on mount. Guards:
+	// only runs client-side, only when short AND more pages exist.
+	const GRID_TARGET = 12; // 4 columns × 3 rows
+	onMount(async () => {
+		while (rest.length < GRID_TARGET && cursor && !loading) {
+			const before = items.length;
+			await loadOlder();
+			if (items.length === before) break; // no progress (e.g. error) → stop
+		}
+	});
 
 	// ── Feed-state restore ───────────────────────────────────────────────────────
 	// Snapshot the loaded items + cursor when leaving the feed (e.g. opening an
@@ -314,6 +360,7 @@
 			&:nth-child(3) {
 				flex: 2.5;
 				min-width: 0;
+				border-right: none; // no grey divider between the last input and the button
 			}
 			&:focus {
 				outline: none;
@@ -375,15 +422,19 @@
 	// Each column is capped narrower than its 1/3 share, and the leftover space is
 	// distributed BETWEEN the columns — so cards are smaller with more breathing
 	// room horizontally; a generous row gap separates the rows vertically.
+	// "Više vijesti" uses the SAME layout as the highlights row below the carousel
+	// (the .card-row above): 4 capped-width columns, space-between, compact cards —
+	// instead of the old wider 3-column grid. The responsive media queries below
+	// collapse both to 2 columns (<=900px) then 1 (<=600px) identically.
 	.news-grid {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 420px));
+		grid-template-columns: repeat(4, minmax(0, 340px));
 		justify-content: space-between;
-		row-gap: ($sp * 4.5);
-		column-gap: ($sp * 4);
+		row-gap: ($sp * 3);
+		column-gap: ($sp * 1.5);
 		li {
 			display: flex;
 		}
@@ -445,32 +496,60 @@
 		.card-row {
 			grid-template-columns: repeat(2, 1fr);
 		}
+		// PHONE: keep the envelope BESIDE the form (row) but small, and tighten padding
+		// so the box height fits the content instead of running tall.
 		.signup-inner {
-			flex-direction: column;
-			align-items: stretch;
+			flex-direction: row;
+			align-items: center;
 			gap: ($sp * 1.25);
+			padding: ($sp * 1.25) ($sp * 1.5); // less side padding than desktop's 5rem
 		}
-		.signup-envelope {
-			align-self: center;
+		// Shrink the big envelope SVG so the inputs fit next to it.
+		.signup-envelope :global(svg) {
+			width: 56px;
+			height: 56px;
+		}
+		.signup-crest {
+			width: 26px;
+			top: -6px;
+			right: -8px;
+		}
+		.signup-form {
+			flex: 1 1 auto;
+			width: auto;
 		}
 	}
 	@media (max-width: 600px) {
-		.news-grid {
-			grid-template-columns: 1fr;
-		}
+		// (Više vijesti stays 2 columns here, matching the highlights .card-row — the
+		// old 1-column override was removed so the two layouts match on phones.)
 		.news-hero-title {
 			font-size: 2.6rem;
 		}
+		// Slightly tighter side gap between the carousel and the screen edges on phone.
+		.news-featured {
+			padding-left: $sp;
+			padding-right: $sp;
+		}
+		// Inputs stack in the bar; the SUBSCRIBE button drops BELOW the input group.
 		.signup-fields {
 			flex-direction: column;
+			height: auto; // fit the stacked inputs (the 46px fixed bar would clip them)
 			input,
 			.signup-btn {
 				border-right: none;
 				width: 100%;
 				justify-content: center;
 			}
+			input {
+				height: 42px;
+			}
 			input:not(:last-of-type) {
 				border-bottom: 1px solid map.get(lib.$colors, 'heather');
+			}
+			// Button below the inputs, separated from the input group.
+			.signup-btn {
+				height: 44px;
+				border-top: 1px solid map.get(lib.$colors, 'heather');
 			}
 		}
 	}

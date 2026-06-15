@@ -8,9 +8,10 @@ import type { ArticleCard } from 'archery-contracts';
 // there are no more. Empty + null on failure so the page still renders.
 export type ArticleFeedPage = { items: ArticleCard[]; nextCursor: string | null };
 
-// First page is larger: 9 fill the carousel (5) + highlights (4), then 9 more seed
-// the first grid batch. Subsequent "Više vijesti" clicks load 9 at a time.
-const FIRST_PAGE = 18;
+// First page is larger: 9 fill the carousel (5) + highlights (4), then 12 more seed
+// the first grid batch so the desktop 4-column grid starts as a full 4×3 (12 cards).
+// Subsequent "Više vijesti" clicks load 9 (desktop) / 6 (phone) at a time.
+const FIRST_PAGE = 21;
 
 export const load = async ({ fetch }) => {
 	const feed = await apiFetch<ArticleFeedPage>('/articles', {
