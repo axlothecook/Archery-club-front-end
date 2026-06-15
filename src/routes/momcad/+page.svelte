@@ -7,7 +7,18 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
 	import ArcheryArrowIcon from '$lib/components/icons/ArcheryArrowIcon.svelte';
-	import { BOW_LABEL, BOW_ORDER, BOW_LEFT } from '$lib/archer';
+	import {
+		BOW_LABEL,
+		BOW_ORDER,
+		BOW_LEFT,
+		FIG_SCALE,
+		PHONE_SCALE,
+		PHONE_BOW_X,
+		PHONE_BOW_Y,
+		PHONE_BOW_SCALE,
+		FIG_OFFSET,
+		BOW_NUDGE
+	} from '$lib/archer';
 	import type { ArticleCard } from 'archery-contracts';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
@@ -17,89 +28,9 @@
 	const roster = $derived((data.roster ?? []) as ArcherCard[]);
 	const articles = $derived((data.articles ?? []) as ArticleCard[]);
 
-	// Per-archer figure-scale override (default 1.3 in RosterCard). Bump a few who read
-	// slightly small.
-	const FIG_SCALE: Record<string, number> = {
-		'amanda-mlinaric': 1.65,
-		'tomislav-mlinaric': 1.55,
-		'cvijetoslav-zorman': 1.65,
-		'rafael-barulek': 1.55,
-		'mija-mance': 1.4,
-		'leda-crncec': 1.55,
-		'nikola-portner-pavicevic': 1.55
-	};
-
-	// Per-archer PHONE photo scale (PSG card, contained image). Default 1 = the whole
-	// photo shown as-is. These archers read a bit small in the contained box, so scale
-	// their figure up (the box keeps overflow hidden, so a scaled figure stays clipped
-	// to the card). Phone-only — independent of the desktop --fig-scale above.
-	const PHONE_SCALE: Record<string, number> = {
-		'amanda-mlinaric': 1.35,
-		'alen-remar': 1.1,
-		'leo-sulik': 1.35,
-		'zoran-velagic': 1.35,
-		'ela-drozdek': 1.35,
-		'mija-mance': 1.5,
-		'mila-vrbesic': 1.35,
-		'nikola-portner-pavicevic': 1.15,
-		'nicole-bratonja': 1.2,
-		'tomislav-mlinaric': 1.35,
-		'karmen-ahmetovic': 1.35,
-		'rafael-barulek': 1.35,
-		'cvijetoslav-zorman': 1.35,
-		'leda-crncec': 1.1,
-		'bojan-rodik': 1.2
-	};
-
-	// Per-archer PHONE bow-watermark tuning (the faint bow behind the contained photo).
-	// x = horizontal shift (negative = LEFT), scale = size. Only listed archers differ.
-	const PHONE_BOW_X: Record<string, string> = {
-		'amanda-mlinaric': '-18%',
-		'alen-remar': '28%',
-		'leo-sulik': '28%',
-		'zoran-velagic': '22%',
-		'ela-drozdek': '28%',
-		'mila-vrbesic': '14%',
-		'jakov-crnicki': '28%',
-		'leda-crncec': '28%',
-		'karmen-ahmetovic': '28%',
-		'filip-bistricic': '28%',
-		// Un-flipped bows (NO_FLIP set) face the other way → shift LEFT.
-		'nicole-bratonja': '-28%',
-		'bojan-rodik': '-22%',
-		'luka-ciglaric': '-28%',
-		'tena-mikolaj': '-22%',
-		'mija-mance': '-22%',
-		// Compound tweaks: these three shift LEFT.
-		'mia-medimurec': '-22%',
-		'tomislav-mlinaric': '-22%',
-		'rafael-barulek': '-22%',
-		// Nikola + Aurelia: flipped (FLIP set below) and shifted RIGHT.
-		'nikola-portner-pavicevic': '22%',
-		'aurelia-mlinaric': '22%'
-	};
-	const PHONE_BOW_Y: Record<string, string> = {
-		'amanda-mlinaric': '-8%'
-	};
-	const PHONE_BOW_SCALE: Record<string, number> = {
-		'amanda-mlinaric': 2.1
-	};
-
-	// Per-archer vertical photo nudge (negative = pull the figure UP). Anyone not listed
-	// = 0. Used to align individual photos that sit a bit low/high.
-	const FIG_OFFSET: Record<string, string> = {
-		'bojan-rodik': '0rem', // no nudge (negative lifted his bottom off the card on hover)
-		'cvijetoslav-zorman': '2.1rem' // lower
-	};
-
-	// Archers whose bow image emerges on the LEFT instead of the default RIGHT (the
-	// first-name watermark flips to the opposite side automatically in the card).
-	// Per-archer horizontal nudge for the bow image (negative = shift LEFT). Layered on top
-	// of the side slide; for fine-tuning individual cards where the bow sits a bit off.
-	const BOW_NUDGE: Record<string, string> = {
-		'karmen-ahmetovic': '1.8rem',
-		'zoran-velagic': '1.8rem'
-	};
+	// Per-archer card tuning (FIG_SCALE / PHONE_SCALE / PHONE_BOW_* / FIG_OFFSET / BOW_NUDGE)
+	// now lives in $lib/archer.ts so the SAME values drive the archer page's coach/student
+	// RosterCards — one source of truth, cards match everywhere. (Imported above.)
 
 	// Faded club crest watermark (Real-Madrid style) on the hero's right side.
 	const LOGO_URL =
@@ -154,8 +85,9 @@
 		}
 	};
 
-	// Per-archer photo scale now lives in $lib/archer (ARCHER_CARD_SCALE) so the SAME
-	// scale is shared with the archer profile's coaches / "Trenira" card rows.
+	// Per-archer card tuning (FIG_SCALE / PHONE_SCALE / PHONE_BOW_* / FIG_OFFSET / BOW_NUDGE)
+	// lives in $lib/archer so the SAME values drive the archer profile's coaches / "Trenira"
+	// card rows — one source of truth, cards match everywhere.
 
 	// Visible archers for the active filter, preserving roster order.
 	const shown = $derived.by(() => {

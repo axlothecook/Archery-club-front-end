@@ -21,7 +21,30 @@
 	import RosterCard from '$lib/components/RosterCard.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
-	import { BOW_LABEL, ARCHER_CARD_SCALE, BOW_LEFT } from '$lib/archer';
+	import {
+		BOW_LABEL,
+		BOW_LEFT,
+		FIG_SCALE,
+		PHONE_SCALE,
+		PHONE_BOW_X,
+		PHONE_BOW_Y,
+		PHONE_BOW_SCALE,
+		FIG_OFFSET,
+		BOW_NUDGE
+	} from '$lib/archer';
+
+	// Build the SAME per-archer CSS-var style string the roster uses, so coach/student
+	// RosterCards render identically to the momcad grid (one shared source of truth).
+	const cardVars = (slug: string) =>
+		[
+			FIG_SCALE[slug] ? `--fig-scale:${FIG_SCALE[slug]};` : '',
+			PHONE_SCALE[slug] ? `--phone-scale:${PHONE_SCALE[slug]};` : '',
+			PHONE_BOW_X[slug] ? `--phone-bow-x:${PHONE_BOW_X[slug]};` : '',
+			PHONE_BOW_Y[slug] ? `--phone-bow-y:${PHONE_BOW_Y[slug]};` : '',
+			PHONE_BOW_SCALE[slug] ? `--phone-bow-scale:${PHONE_BOW_SCALE[slug]};` : '',
+			FIG_OFFSET[slug] ? `--photo-nudge:${FIG_OFFSET[slug]};` : '',
+			BOW_NUDGE[slug] ? `--bow-nudge:${BOW_NUDGE[slug]};` : ''
+		].join('');
 	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
@@ -105,64 +128,90 @@
 	//   phoneX = horizontal object-position % (lower = archer further RIGHT). Default 30%.
 	//   phoneZoom = uniform zoom of the cover photo (1 = none; > 1 = bigger). Default 1.
 	//   phoneTall = EXTRA vertical stretch on top of phoneZoom (1 = none; > 1 = taller).
-	type Cover = { design: 'filter'; orient: 'A' | 'B'; gap: string; imgShift?: string; imgRise?: string; imgScale?: number; imgFit?: 'cover' | 'contain'; imgAnchor?: string; cutLeft?: string; winVeil?: number; bowLeft?: string; bowClip?: string; bowPng?: string; phoneX?: string; phoneZoom?: number; phoneTall?: number };
+	//   phoneY = vertical nudge of the photo (translateY; e.g. '6%' LOWERS it). Default 0.
+	//   phoneTx = horizontal nudge (translateX; for moving RIGHT once phoneX hits its 0%
+	//             floor — e.g. '6%' moves further right). Default 0.
+	type Cover = { design: 'filter'; orient: 'A' | 'B'; gap: string; imgShift?: string; imgRise?: string; imgScale?: number; imgFit?: 'cover' | 'contain'; imgAnchor?: string; cutLeft?: string; winVeil?: number; bowLeft?: string; bowClip?: string; bowPng?: string; phoneX?: string; phoneZoom?: number; phoneTall?: number; phoneY?: string; phoneTx?: string };
 	// EVERY archer uses the filter cover now. This map holds only the PER-ARCHER overrides
 	// (photo framing / orient / cut-out tuning); anyone not listed falls back to the generic
 	// defaults below — whole photo shown (contain), bottom-anchored, orient A.
 	const COVER_OVERRIDE: Record<string, Partial<Cover>> = {
-		'amanda-mlinaric': { orient: 'A', gap: '10rem', imgAnchor: 'center bottom', imgShift: '2%', imgScale: 1.3, imgRise: '5%', cutLeft: '28%', winVeil: 0.28, bowLeft: '52%', phoneX: '9%', phoneZoom: 1.45 },
-		'alen-remar': { orient: 'B', gap: '20rem', imgFit: 'cover', imgAnchor: 'center top', bowLeft: '60%' },
-		'leo-sulik': { imgShift: '10%', imgScale: 1.55, imgRise: '26%', bowLeft: '44%' },
+		'amanda-mlinaric': { orient: 'A', gap: '10rem', imgAnchor: 'center bottom', imgShift: '2%', imgScale: 1.3, imgRise: '5%', cutLeft: '28%', winVeil: 0.28, bowLeft: '52%', phoneX: '9%', phoneZoom: 1.45, phoneY: '-4%' },
+		'alen-remar': { orient: 'B', gap: '20rem', imgFit: 'cover', imgAnchor: 'center top', bowLeft: '60%', phoneX: '18%', phoneZoom: 1.15 },
+		'leo-sulik': { imgShift: '10%', imgScale: 1.55, imgRise: '26%', bowLeft: '44%', phoneX: '10%', phoneZoom: 1.5 },
 		'mia-medimurec': {
 			imgShift: '-6%',
 			imgScale: 1.6,
 			imgRise: '48%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/mia-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/mia-bow-help.png',
+			phoneX: '0%',
+			phoneZoom: 1.5,
+			phoneY: '12%',
+			phoneTx: '8%'
 		},
-		'zoran-velagic': { imgShift: '-12%' },
-		'mila-vrbesic': { imgShift: '-20%', imgScale: 1.6, imgRise: '62%' },
-		'mija-mance': { imgShift: '-22%', imgScale: 1.6, imgRise: '60%' },
+		'zoran-velagic': { imgShift: '-12%', phoneZoom: 0.92, phoneTx: '-5%', phoneY: '5%' },
+		'mila-vrbesic': { imgShift: '-20%', imgScale: 1.6, imgRise: '62%', phoneY: '33%', phoneZoom: 1.4 },
+		'mija-mance': { imgShift: '-22%', imgScale: 1.6, imgRise: '60%', phoneX: '45%', phoneZoom: 1.25, phoneY: '24%', phoneTx: '-14%' },
 		'aurelia-mlinaric': {
 			imgShift: '-18%',
 			imgScale: 2.15,
 			imgRise: '86%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/aurelia-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/aurelia-bow-help.png',
+			phoneX: '18%',
+			phoneZoom: 2.05,
+			phoneY: '20%'
 		},
 		'ela-drozdek': {
 			imgShift: '-12%',
 			imgScale: 1.42,
 			imgRise: '12%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/ela-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/ela-bow-help.png',
+			phoneX: '6%',
+			phoneZoom: 1.4,
+			phoneY: '-6%'
 		},
 		'filip-bistricic': {
 			imgShift: '-18%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/filip-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/filip-bow-help.png',
+			phoneX: '0%',
+			phoneZoom: 1.2,
+			phoneY: '-5%',
+			phoneTx: '6%'
 		},
-		'nicole-bratonja': { imgShift: '-18%', imgScale: 1.0 },
+		'nicole-bratonja': { imgShift: '-18%', imgScale: 1.0, phoneTx: '-8%' },
 		'jakov-crnicki': {
 			imgShift: '-18%',
 			imgScale: 1.55,
 			imgRise: '18%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/crnicki-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/crnicki-bow-help.png',
+			phoneX: '0%',
+			phoneZoom: 1.5,
+			phoneY: '-10%',
+			phoneTx: '12%'
 		},
 		'bojan-rodik': {
 			imgShift: '-15%',
 			imgScale: 1.6,
 			imgRise: '30%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/bojan-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/bojan-bow-help.png',
+			phoneZoom: 1.5,
+			phoneY: '2%'
 		},
-		'tomislav-mlinaric': { imgShift: '0%', imgRise: '6%' },
+		'tomislav-mlinaric': { imgShift: '0%', imgRise: '6%', phoneZoom: 0.92, phoneY: '8%', phoneTx: '-5%' },
 		'luka-ciglaric': {
 			imgShift: '-12%',
 			imgRise: '11%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/luka-bow-type.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/luka-bow-type.png',
+			phoneZoom: 0.98,
+			phoneY: '8%',
+			phoneTx: '-6%'
 		},
 		'tena-mikolaj': { imgShift: '-13%' },
 		'leda-crncec': {
@@ -170,7 +219,10 @@
 			imgScale: 1.5,
 			imgRise: '54%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/leda-bow-type.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/leda-bow-type.png',
+			phoneX: '10%',
+			phoneZoom: 1.5,
+			phoneY: '36%'
 		},
 		'karmen-ahmetovic': { imgShift: '-12%' },
 		'nikola-portner-pavicevic': {
@@ -178,16 +230,21 @@
 			imgScale: 1.25,
 			imgRise: '0%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/nikola-bow-help.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/nikola-bow-help.png',
+			phoneX: '18%',
+			phoneZoom: 1.25,
+			phoneY: '-14%'
 		},
 		'rafael-barulek': {
 			imgShift: '-18%',
 			imgScale: 1.25,
 			imgRise: '12%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/rafael-bow-type.png'
+				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/rafael-bow-type.png',
+			phoneZoom: 1.25,
+			phoneTx: '-14%'
 		},
-		'cvijetoslav-zorman': { imgShift: '-1.5%' }
+		'cvijetoslav-zorman': { imgShift: '-1.5%', phoneX: '85%' }
 	};
 	// Generic defaults: the whole photo shows (contain), sitting flush to the cover's base.
 	const COVER_DEFAULT: Cover = {
@@ -210,8 +267,17 @@
 	// shown on the public profile, so there's no birthplace row here.
 
 	// ── Stats / Results switch (styled like the Momčad "Svi / Klasični luk" tabs) ──
+	// Each table only renders when ITS data exists; the section is dropped entirely when
+	// neither does. The active tab defaults to whichever has data (stats first).
 	type Tab = 'stats' | 'results';
+	const hasStats = $derived(a.careerStats.length > 0);
+	const hasResults = $derived(a.performance.length > 0);
 	let activeTab = $state<Tab>('stats');
+	// If the default tab ('stats') has no data but the other does, switch to it.
+	$effect(() => {
+		if (activeTab === 'stats' && !hasStats && hasResults) activeTab = 'results';
+		else if (activeTab === 'results' && !hasResults && hasStats) activeTab = 'stats';
+	});
 
 	// Sliding tab underline: measure the active button and drive the indicator's
 	// left/width (so it GLIDES between tabs instead of each tab fading its own line).
@@ -335,7 +401,7 @@
 			class="pf-fcover"
 			data-orient={cover.orient}
 			data-revealed={revealed}
-			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}; --phone-cover-x:{cover.phoneX ?? '30%'}; --phone-cover-zoom:{cover.phoneZoom ?? 1}; --phone-cover-tall:{cover.phoneTall ?? 1}"
+			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}; --phone-cover-x:{cover.phoneX ?? '30%'}; --phone-cover-zoom:{cover.phoneZoom ?? 1}; --phone-cover-tall:{cover.phoneTall ?? 1}; --phone-cover-y:{cover.phoneY ?? '0%'}; --phone-cover-tx:{cover.phoneTx ?? '0%'}"
 		>
 			{#if coverPhoto}
 				<!-- Photo behind everything; a grey veil dims it; then a clear copy of the
@@ -535,38 +601,47 @@
 		{/if}
 
 		<!-- ── 4. STATS / RESULTS (tabbed, fixed-height scrollable table) ────────── -->
-		{#if a.careerStats.length || a.performance.length}
+		{#if hasStats || hasResults}
 			<section class="pf-block" use:reveal>
-				<nav
-					class="pf-tabs"
-					data-active={activeTab}
-					bind:this={tabsEl}
-					aria-label="Statistika ili rezultati"
-				>
-					<button
-						class="pf-tab"
-						class:active={activeTab === 'stats'}
-						type="button"
-						onclick={() => (activeTab = 'stats')}
+				<!-- Only render the tab nav when BOTH tables exist; with a single table the
+				     tabs would be pointless, so show just that table's heading instead. -->
+				{#if hasStats && hasResults}
+					<nav
+						class="pf-tabs"
+						data-active={activeTab}
+						bind:this={tabsEl}
+						aria-label="Statistika ili rezultati"
 					>
-						Statistika po godinama
-					</button>
-					<button
-						class="pf-tab"
-						class:active={activeTab === 'results'}
-						type="button"
-						onclick={() => (activeTab = 'results')}
-					>
-						Rezultati
-					</button>
-					<!-- Single underline that SLIDES between the two tabs (instead of each
-					     tab growing/fading its own). Its left/width track the active tab. -->
-					<span
-						class="pf-tab-underline"
-						style="--ul-left:{ulLeft}px; --ul-width:{ulWidth}px;"
-						aria-hidden="true"
-					></span>
-				</nav>
+						<button
+							class="pf-tab"
+							class:active={activeTab === 'stats'}
+							type="button"
+							onclick={() => (activeTab = 'stats')}
+						>
+							Statistika po godinama
+						</button>
+						<button
+							class="pf-tab"
+							class:active={activeTab === 'results'}
+							type="button"
+							onclick={() => (activeTab = 'results')}
+						>
+							Rezultati
+						</button>
+						<!-- Single underline that SLIDES between the two tabs (instead of each
+						     tab growing/fading its own). Its left/width track the active tab. -->
+						<span
+							class="pf-tab-underline"
+							style="--ul-left:{ulLeft}px; --ul-width:{ulWidth}px;"
+							aria-hidden="true"
+						></span>
+					</nav>
+				{:else}
+					<!-- Single available table: a plain section heading, no tabs. -->
+					<h2 class="pf-block-title">
+						{hasStats ? 'Statistika po godinama' : 'Rezultati'}
+					</h2>
+				{/if}
 
 				<div class="pf-table-scroll">
 					{#if activeTab === 'stats'}
@@ -651,10 +726,7 @@
 				<h2 class="pf-block-title">{coachesTitle}</h2>
 				<ul class="pf-related-grid pf-roster-grid">
 					{#each coachCards as c, i (c.slug)}
-						<li
-							class:alt={i % 2 === 1}
-							style="--fig-scale:{ARCHER_CARD_SCALE[c.slug] ?? 1.4};"
-						>
+						<li class:alt={i % 2 === 1} style={cardVars(c.slug)}>
 							<RosterCard archer={c} tall={true} bowLeft={BOW_LEFT.has(c.slug)} />
 						</li>
 					{/each}
@@ -693,11 +765,7 @@
 				<div class="pf-row-viewport">
 					<ul class="pf-row-track pf-roster-grid" style="--page:{traineePage}">
 						{#each studentCards as s, i (s.slug)}
-							<li
-								class="pf-row-cell"
-								class:alt={i % 2 === 1}
-								style="--fig-scale:{ARCHER_CARD_SCALE[s.slug] ?? 1.4};"
-							>
+							<li class="pf-row-cell" class:alt={i % 2 === 1} style={cardVars(s.slug)}>
 								<RosterCard archer={s} tall={true} bowLeft={BOW_LEFT.has(s.slug)} />
 							</li>
 						{/each}
@@ -1681,12 +1749,27 @@
 			//  --phone-cover-x    : object-position X (lower % = archer further RIGHT)
 			//  --phone-cover-zoom : uniform zoom (1 = none, > 1 = bigger)
 			//  --phone-cover-tall : EXTRA vertical stretch on top of zoom (1 = none)
+			//  --phone-cover-y    : vertical nudge of the photo (e.g. '6%' lowers it)
+			//  --phone-cover-tx   : horizontal nudge (translateX; for moving RIGHT past the
+			//                       object-position 0% floor — e.g. '6%' moves further right)
 			object-fit: cover !important;
 			object-position: var(--phone-cover-x, 30%) center !important;
-			transform: scale(
-				var(--phone-cover-zoom, 1),
-				calc(var(--phone-cover-zoom, 1) * var(--phone-cover-tall, 1))
-			) !important;
+			transform: translate(var(--phone-cover-tx, 0%), var(--phone-cover-y, 0%))
+				scale(
+					var(--phone-cover-zoom, 1),
+					calc(var(--phone-cover-zoom, 1) * var(--phone-cover-tall, 1))
+				) !important;
+		}
+		// The red/orange ECHO ghost: the phone .pf-fphoto scale above would overwrite its
+		// resting slide-out offset and hide it directly behind the photo (no shadow). Keep
+		// BOTH the zoom AND the offset so the orange shade still peeks out behind the figure.
+		[data-revealed='true'] .pf-fphoto--echo {
+			transform: translate(var(--phone-cover-tx, 0%), var(--phone-cover-y, 0%))
+				scale(
+					var(--phone-cover-zoom, 1),
+					calc(var(--phone-cover-zoom, 1) * var(--phone-cover-tall, 1))
+				)
+				translate(3rem, 1.5rem) !important;
 		}
 		// Hide the band-filter / bow-overlay complexity on phone — keep it a clean photo.
 		.pf-fbow {

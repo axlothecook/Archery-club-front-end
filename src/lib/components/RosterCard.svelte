@@ -172,6 +172,8 @@
 		height: 12rem; // less tall
 		overflow: visible;
 		isolation: isolate;
+		// Kill the blue flash mobile browsers paint over the card on tap.
+		-webkit-tap-highlight-color: transparent;
 		// Clip the CARD region's BOTTOM (so a photo translated DOWN has its lowered part
 		// hidden below the card) while leaving the TOP OPEN (head pokes out, never cut).
 		// This clip stays FIXED at the card bottom because .rc itself doesn't move; the
