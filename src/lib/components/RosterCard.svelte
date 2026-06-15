@@ -542,6 +542,23 @@
 			transition: none;
 			overflow: hidden; // contain the photo within the box
 		}
+		// The TALL variant (coach/Trenira rows on the archer page) keeps its desktop
+		// $tall-h on the box, which is shorter than the photo on phone → the photo's
+		// bottom spills past the box onto the name. Force the tall box to the same 3/4
+		// aspect as the normal phone card so the photo fits inside it cleanly.
+		.rc.tall .rc-card {
+			height: auto;
+			aspect-ratio: 3 / 4;
+		}
+		// The desktop tall-photo rule translates the figure DOWN (translateY $tall-rest-drop)
+		// with higher specificity than the phone .rc-photo reset, spilling the photo past
+		// the box. Cancel it on phone so the photo sits in the box like a normal card.
+		.rc.tall .rc-photo {
+			transform: none;
+		}
+		.rc.tall .rc-photo :global(.img-loader img) {
+			transform: scale(var(--phone-scale, 1));
+		}
 
 		// Photo overlays ONLY the box: anchored to the card top, full width, with the SAME
 		// aspect-ratio as the box → its height matches the box exactly, so it never spills

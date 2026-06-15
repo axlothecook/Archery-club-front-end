@@ -101,12 +101,16 @@
 	//   imgFit = 'contain' shows the WHOLE photo (no crop), bottom-anchored; 'cover' fills + crops.
 	//   imgScale = uniform zoom of the photo (1 = none); scaled from the bottom edge.
 	//   cutLeft = left edge of the cut-out window (overrides the orient default).
-	type Cover = { design: 'filter'; orient: 'A' | 'B'; gap: string; imgShift?: string; imgRise?: string; imgScale?: number; imgFit?: 'cover' | 'contain'; imgAnchor?: string; cutLeft?: string; winVeil?: number; bowLeft?: string; bowClip?: string; bowPng?: string };
+	//   PHONE cover knobs (the photo stays `object-fit: cover`, full-bleed):
+	//   phoneX = horizontal object-position % (lower = archer further RIGHT). Default 30%.
+	//   phoneZoom = uniform zoom of the cover photo (1 = none; > 1 = bigger). Default 1.
+	//   phoneTall = EXTRA vertical stretch on top of phoneZoom (1 = none; > 1 = taller).
+	type Cover = { design: 'filter'; orient: 'A' | 'B'; gap: string; imgShift?: string; imgRise?: string; imgScale?: number; imgFit?: 'cover' | 'contain'; imgAnchor?: string; cutLeft?: string; winVeil?: number; bowLeft?: string; bowClip?: string; bowPng?: string; phoneX?: string; phoneZoom?: number; phoneTall?: number };
 	// EVERY archer uses the filter cover now. This map holds only the PER-ARCHER overrides
 	// (photo framing / orient / cut-out tuning); anyone not listed falls back to the generic
 	// defaults below — whole photo shown (contain), bottom-anchored, orient A.
 	const COVER_OVERRIDE: Record<string, Partial<Cover>> = {
-		'amanda-mlinaric': { orient: 'A', gap: '10rem', imgAnchor: 'center bottom', imgShift: '2%', imgScale: 1.3, imgRise: '5%', cutLeft: '28%', winVeil: 0.28, bowLeft: '52%' },
+		'amanda-mlinaric': { orient: 'A', gap: '10rem', imgAnchor: 'center bottom', imgShift: '2%', imgScale: 1.3, imgRise: '5%', cutLeft: '28%', winVeil: 0.28, bowLeft: '52%', phoneX: '9%', phoneZoom: 1.45 },
 		'alen-remar': { orient: 'B', gap: '20rem', imgFit: 'cover', imgAnchor: 'center top', bowLeft: '60%' },
 		'leo-sulik': { imgShift: '10%', imgScale: 1.55, imgRise: '26%', bowLeft: '44%' },
 		'mia-medimurec': {
@@ -323,7 +327,7 @@
 			class="pf-fcover"
 			data-orient={cover.orient}
 			data-revealed={revealed}
-			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}"
+			style="--gap:{cover.gap}; --img-shift:{cover.imgShift ?? '0'}; --img-rise:{cover.imgRise ?? '0'}; --img-scale:{cover.imgScale ?? 1}; --img-fit:{cover.imgFit ?? 'cover'}; --img-anchor:{cover.imgAnchor ?? 'center top'}; {cover.cutLeft ? `--cut-left:${cover.cutLeft};` : ''} --win-veil:{cover.winVeil ?? 0.28}; --phone-cover-x:{cover.phoneX ?? '30%'}; --phone-cover-zoom:{cover.phoneZoom ?? 1}; --phone-cover-tall:{cover.phoneTall ?? 1}"
 		>
 			{#if coverPhoto}
 				<!-- Photo behind everything; a grey veil dims it; then a clear copy of the
@@ -482,7 +486,7 @@
 		<!-- ── 3. ACHIEVEMENTS (honour cards) ───────────────────────────────────── -->
 		{#if honours.length}
 			<section class="pf-block" use:reveal>
-				<h2 class="pf-block-title pf-block-title--plain">Postignuća</h2>
+				<h2 class="pf-block-title">Postignuća</h2>
 				<div class="pf-honours-block">
 					<ul class="pf-honours">
 					{#each honours as h, hi (h.title + '|' + h.level + '|' + h.medal)}
@@ -499,7 +503,11 @@
 							<div class="pf-honour-top">
 								<span class="pf-honour-count">{h.count}</span>
 								<span class="pf-honour-icon" data-medal={h.medal} data-level={h.level}>
-									{#if h.level === 'world'}
+									{#if h.level === 'world' || h.level === 'other'}
+										<!-- 'other' = international events not tied to a continent (e.g. The
+										     Vegas Shoot, Conquest Cup in Istanbul) → globe, NOT the Croatian
+										     icon. They're kept out of the EU/world title COUNTS (level !==
+										     'world'), but visually they're global, so the globe represents them. -->
 										<GlobeRecordIcon size={108} />
 									{:else if h.level === 'european'}
 										<EuropeRecordIcon size={90} />
@@ -1107,12 +1115,6 @@
 		letter-spacing: 0.02em;
 		border-bottom: 2px solid color.change($gold, $alpha: 0.5);
 	}
-	// Plain title: no gold underline (used for the Postignuća heading that sits
-	// ABOVE the glowing achievements box).
-	.pf-block-title--plain {
-		border-bottom: none;
-		padding-bottom: 0;
-	}
 
 	// ══ 2. DETAILS + BIO ════════════════════════════════════════════════════════
 	.pf-intro {
@@ -1259,13 +1261,15 @@
 		// same size on its own, independent of neighbours. With the grid's
 		// align-items:start, no card stretches another, and the bottom-pinned title
 		// lands at the same spot on all.
-		height: 270px;
+		height: 250px;
 		padding: ($sp * 1.75);
 		border-radius: 16px;
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		overflow: hidden; // clip the sparkles to the card
 		cursor: pointer;
+		// Kill the blue flash mobile browsers paint on tap (default tap-highlight).
+		-webkit-tap-highlight-color: transparent;
 		transition:
 			transform 0.2s ease,
 			border-color 0.2s ease;
@@ -1278,9 +1282,10 @@
 		position: relative;
 		z-index: 1; // above the sparkle layer
 		display: flex;
-		// Both children are forced to the SAME box height (110px) and center their
-		// content, so the number and icon line up on one centred row (no drift).
-		align-items: stretch;
+		// Vertically CENTRE both children so the level icon and the number sit on
+		// the same line (the SVG never floats higher than the digit). Applies on
+		// both desktop and phone.
+		align-items: center;
 		justify-content: space-between;
 		gap: ($sp);
 		min-height: 120px; // matches the level-icon box height
@@ -1527,9 +1532,11 @@
 	$rc-cornflower: map.get(lib.$colors, 'cornflower');
 	$rc-primary: map.get(lib.$colors, 'primary');
 	.pf-roster-grid {
-		gap: 0;
-		// extra top room so the hover-grown cards rise without clipping awkwardly
-		padding-top: 2rem;
+		// Space between cards so the coach / student cards don't touch.
+		gap: ($sp * 1.5);
+		// Tight top gap under the title. (These rows use the TALL card variant, which
+		// does NOT grow on hover, so no extra headroom is needed.)
+		padding-top: 0.25rem;
 		> li {
 			position: relative;
 			--card-bg: #{$rc-cornflower};
@@ -1593,7 +1600,9 @@
 		// so the clip edge doesn't slice them flat; the negative margin pulls that
 		// padding back out so the visible row still spans the full block width. The
 		// track is 100% of the padded content box, so a page is still exactly 4 cards.
-		padding: ($sp * 0.75) ($sp * 1.25);
+		// Tight top gap (cards close to the title line); keep the horizontal padding so
+		// the outermost cards' box-shadow/rounded corners aren't clipped flat.
+		padding: 0.25rem ($sp * 1.25) ($sp * 0.75);
 		margin: 0 (-$sp * 1.25);
 		overflow: hidden;
 	}
@@ -1619,7 +1628,7 @@
 	@media (max-width: 900px) {
 		.pf-intro {
 			grid-template-columns: 1fr;
-			gap: ($sp * 2.5);
+			gap: ($sp * 5); // more space above Biografija (between it and the details)
 		}
 		.pf-bow {
 			grid-template-columns: 1fr;
@@ -1640,6 +1649,265 @@
 	@media (max-width: 560px) {
 		.pf-related-grid {
 			grid-template-columns: 1fr;
+		}
+	}
+
+	// ══ PHONE (≤720px): make the archer page fit a narrow screen ════════════════════
+	@media (max-width: 720px) {
+		// ── Cover ─────────────────────────────────────────────────────────────────
+		// Shorter hero so the WHOLE photo fits (contain), with both name marquees big
+		// and readable. Reset the per-archer transform tuning (desktop-aimed shift/rise/
+		// scale) so the contained photo sits cleanly, bottom-anchored.
+		.pf-fcover {
+			// Fill the visible screen and END at the screen edge on load — like the front-page
+			// hero. 100svh = the SMALL viewport height (URL bar showing), so the cover doesn't
+			// run BELOW the fold the way 100vh does on mobile.
+			min-height: 100svh;
+		}
+		.pf-fstage,
+		.pf-fbow {
+			transform: none !important; // drop the desktop shift/rise/scale on phone
+		}
+		.pf-fphoto {
+			// Bigger, centred archer (cover = fills + crops). Per-archer phone knobs:
+			//  --phone-cover-x    : object-position X (lower % = archer further RIGHT)
+			//  --phone-cover-zoom : uniform zoom (1 = none, > 1 = bigger)
+			//  --phone-cover-tall : EXTRA vertical stretch on top of zoom (1 = none)
+			object-fit: cover !important;
+			object-position: var(--phone-cover-x, 30%) center !important;
+			transform: scale(
+				var(--phone-cover-zoom, 1),
+				calc(var(--phone-cover-zoom, 1) * var(--phone-cover-tall, 1))
+			) !important;
+		}
+		// Hide the band-filter / bow-overlay complexity on phone — keep it a clean photo.
+		.pf-fbow {
+			display: none;
+		}
+		.pf-fbottom-fade {
+			height: 30vh; // shorter fade for the shorter hero
+		}
+		// First name (phone): a big SCROLLING marquee tucked just under the topbar.
+		.pf-fcover .pf-firstname.pf-marquee {
+			// Pull UP so the visible caps tuck right under the topbar. The font has big
+			// internal leading above the cap-height, so a negative top lifts the caps to
+			// the bar; overflow hidden clips the empty leading above.
+			top: -3rem;
+			height: 36rem; // holds the full 30rem glyph (no clipping)
+			overflow: hidden;
+			display: flex;
+			align-items: flex-start;
+			.pf-marquee-track {
+				font-size: 30rem; // BIG
+				line-height: 1;
+				// keep the desktop marquee scroll running (do NOT freeze)
+			}
+			// Keep TWO copies of the first name on phone (desktop renders 4×). Two is the
+			// minimum for a SEAMLESS loop: as the first copy scrolls off the left, the
+			// second is already entering, so the wrap-around has no visible glitch/reset.
+			.pf-marquee-item:nth-child(n + 3) {
+				display: none;
+			}
+			.pf-marquee-item {
+				transform: none; // drop the desktop scaleY(1.35) stretch
+				// SAME fade as desktop: darker navy crest at the top fading to fully
+				// transparent lower down (text reads DARKER than the bright blue bg, like
+				// desktop — not lighter).
+				background: linear-gradient(
+					to bottom,
+					#{color.adjust($navy, $lightness: 18%)} 0%,
+					#{$navy} 35%,
+					rgba(16, 46, 102, 0) 75%
+				);
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
+			}
+		}
+		// Surname: BIGGER (20rem), tucked against the bottom of the screen.
+		// NOTE: keep the container a plain block (NOT flex) — the marqueeSpeed action
+		// translates the track and a flex container destabilises the loop (the copies
+		// drift fully off-screen). Bottom-anchor + glyph headroom come from height +
+		// line-height, not flex.
+		.pf-fcover .pf-surname.pf-marquee {
+			top: auto;
+			bottom: 0;
+			// Tall enough to hold the full glyph PLUS the Ć diacritic above the caps; the
+			// extra line-height leading pushes the glyph down so its baseline hugs the base.
+			height: 24rem;
+			.pf-marquee-track {
+				font-size: 20rem;
+				line-height: 1.15; // leading above the caps → room for the Ć accent
+			}
+			// The item carries an 18vw font-size on desktop that wins over the track —
+			// force 20rem here too. Brighter watermark so the big surname reads clearly.
+			.pf-marquee-item {
+				font-size: 20rem;
+				background: linear-gradient(
+					to bottom,
+					rgba(255, 255, 255, 0.4) 0%,
+					rgba(255, 255, 255, 0.18) 100%
+				);
+				-webkit-background-clip: text;
+				background-clip: text;
+			}
+		}
+
+		// ── Sheet rhythm (tighter on phone) ─────────────────────────────────────────
+		.pf-sheet {
+			padding-top: 4rem;
+			padding-bottom: ($sp * 6);
+		}
+		.pf-block {
+			margin-bottom: ($sp * 5);
+		}
+		.pf-block-title {
+			font-size: 1.15rem;
+		}
+
+		// ── Achievements (RM-style horizontal swipe row) ────────────────────────────
+		// Smaller cards laid out in ONE horizontal track the user swipes sideways
+		// through (scroll-snap), instead of stacking down the page.
+		.pf-honours-block {
+			// No edge-bleed: the row's first and last cards line up with the page
+			// gutter (16px) like every other block (biography, table, etc.).
+			margin-inline: 0;
+		}
+		.pf-honours {
+			display: flex;
+			flex-wrap: nowrap;
+			grid-template-columns: none;
+			gap: ($sp * 1.25);
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			-webkit-overflow-scrolling: touch;
+			// Only respond to horizontal swipes; vertical (page) scroll passes straight
+			// through so the card row doesn't drift / re-snap while scrolling the page.
+			touch-action: pan-x;
+			scrollbar-width: none; // Firefox — hide the scrollbar
+			// No side padding: cards sit flush with the block's own 16px gutter so
+			// the first/last card align with biography/table on both sides.
+			padding: ($sp * 0.5) 0;
+			&::-webkit-scrollbar {
+				display: none; // WebKit — hide the scrollbar
+			}
+		}
+		.pf-honour {
+			flex: 0 0 auto;
+			// Wider + a bit shorter so there's room for a clear gap between the
+			// number and the level icon.
+			width: 240px;
+			height: 165px;
+			padding: ($sp * 1.25);
+			scroll-snap-align: start;
+			&:hover {
+				transform: none; // no hover lift on touch
+			}
+		}
+		.pf-honour-top {
+			min-height: 72px;
+			gap: ($sp * 1.75); // more space between number and svg on phone
+			align-items: center; // number + svg on the same centred line (svg not higher)
+		}
+		.pf-honour-count {
+			font-size: 5rem;
+			line-height: 0.8;
+		}
+		.pf-honour-icon {
+			width: 64px;
+			height: 64px;
+			:global(svg) {
+				height: 56px;
+				max-width: 64px;
+			}
+		}
+		.pf-honour-name {
+			padding-top: ($sp);
+			font-size: 0.9rem;
+		}
+
+		// ── Bow (3D model + text) ───────────────────────────────────────────────────
+		// Stack the model over the text; smaller canvas + tighter padding.
+		.pf-bow {
+			grid-template-columns: 1fr;
+			gap: ($sp * 3); // more breathing room between the model and the text
+			padding: ($sp);
+		}
+		.pf-bow-media {
+			min-height: 260px;
+		}
+
+		// ── Coaches (Trener) + roster grids ─────────────────────────────────────────
+		// 2-up on phone so the cards aren't a single full-width column.
+		.pf-related-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		// Pull the cards closer to the title's underline, and separate the cards
+		// from each other (they butt together on desktop). Names go white since the
+		// cards sit on the blue cornflower/primary checkerboard, not the white page.
+		.pf-roster-grid {
+			// Tighter gap between the title's underline and the cards (applies to both
+			// the coach grid and the Trenira student row, which share this class).
+			padding-top: 0.25rem;
+			gap: ($sp * 1.5);
+			:global(.rc-firstname),
+			:global(.rc-last) {
+				color: #fff;
+			}
+		}
+
+		// ── Students ("Trenira") row — SWIPE instead of paged buttons ───────────────
+		// On phone the row is a native horizontal scroller the user swipes through;
+		// the desktop transform-paging + arrow buttons are dropped.
+		.pf-row-pager {
+			display: none; // no left/right buttons on phone — swipe instead
+		}
+		.pf-row-viewport {
+			overflow-x: auto;
+			overflow-y: visible;
+			scroll-snap-type: x mandatory;
+			-webkit-overflow-scrolling: touch;
+			touch-action: pan-x; // vertical page scroll passes through; only swipe pages
+			scrollbar-width: none;
+			// Drop the desktop edge-bleed so the first/last card rest at the page
+			// gutter (no card flush against / cut off at the screen edge). Zero the top
+			// padding so the student gap matches the coach grid (track handles spacing).
+			margin: 0;
+			padding-left: 0;
+			padding-right: 0;
+			padding-top: 0;
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
+		.pf-row-track {
+			// Drop the transform-paging; lay the cells out in a swipeable row, ~2 in
+			// view at a time (each cell snaps to the left edge).
+			transform: none;
+			grid-auto-columns: calc((100% - #{$row-gap}) / 2);
+		}
+		.pf-row-cell {
+			scroll-snap-align: start;
+		}
+
+		// ── Stats tabs + table ──────────────────────────────────────────────────────
+		// Centre the two selectors instead of flushing them left.
+		.pf-tabs {
+			justify-content: center;
+		}
+		.pf-tab {
+			font-size: 1rem;
+		}
+		// Allow the table to scroll horizontally (touch) rather than overflow the page.
+		.pf-event {
+			min-width: 140px;
+		}
+		.pf-table {
+			font-size: 0.9rem;
+			th,
+			td {
+				padding: ($sp * 0.75) ($sp);
+			}
 		}
 	}
 </style>
