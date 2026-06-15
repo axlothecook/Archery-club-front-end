@@ -18,33 +18,78 @@ export function bowLabel(bows: Bow[]): string {
 	return bows[0] ? BOW_LABEL[bows[0]] : '';
 }
 
-// Per-archer photo scale for the roster CARD (ArcherCard, bottom-anchored). Each
-// source headshot frames the figure differently, so the figure size is tuned per
-// slug. 1 = default; >1 enlarges, <1 shrinks. Anyone not listed = 1. SHARED so the
-// SAME scale is used everywhere a card renders (roster grid AND the archer profile's
-// coaches/"Trenira" rows) — otherwise figures sit at different heights between pages.
-export const ARCHER_CARD_SCALE: Record<string, number> = {
-	'amanda-mlinaric': 1.32,
-	'leo-sulik': 1.2,
-	'zoran-velagic': 1.32,
-	'mija-mance': 1.22,
-	'tomislav-mlinaric': 1.32,
-	'mila-vrbesic': 1.2,
-	'nikola-portner-pavicevic': 1.05,
-	'ela-drozdek': 1.12,
-	'alen-remar': 1.0,
-	'mia-medimurec': 1.0,
-	'filip-bistricic': 1.0,
-	'nicole-bratonja': 0.97,
-	'aurelia-mlinaric': 0.85,
-	'jakov-crnicki': 1.0,
-	'bojan-rodik': 1.0,
-	'luka-ciglaric': 0.97,
-	'tena-mikolaj': 1.0,
-	'leda-crncec': 0.97,
-	'karmen-ahmetovic': 1.15,
-	'rafael-barulek': 1.15,
-	'cvijetoslav-zorman': 1.05
+// ── Per-archer RosterCard tuning (SHARED) ────────────────────────────────────────
+// RosterCard reads per-archer framing from CSS vars its PARENT sets on the card wrapper.
+// These maps are the ONE source of truth so a card looks IDENTICAL wherever it renders:
+// the momcad roster grid AND the archer page's coach ("Treneri") / student ("Trenira")
+// rows. (The bow FLIP direction lives inside RosterCard itself, keyed by slug + bowLeft.)
+//   FIG_SCALE      → --fig-scale     : desktop figure scale (default 1.3 in the card)
+//   PHONE_SCALE    → --phone-scale   : phone contained-photo scale (default 1)
+//   PHONE_BOW_X/Y  → --phone-bow-x/y : phone bow-watermark shift (negative x = LEFT)
+//   PHONE_BOW_SCALE→ --phone-bow-scale: phone bow-watermark size
+//   FIG_OFFSET     → --photo-nudge   : vertical photo nudge (negative = lift UP)
+//   BOW_NUDGE      → --bow-nudge      : extra horizontal bow nudge (negative = LEFT)
+export const FIG_SCALE: Record<string, number> = {
+	'amanda-mlinaric': 1.65,
+	'tomislav-mlinaric': 1.55,
+	'cvijetoslav-zorman': 1.65,
+	'rafael-barulek': 1.55,
+	'mija-mance': 1.4,
+	'leda-crncec': 1.55,
+	'nikola-portner-pavicevic': 1.55
+};
+export const PHONE_SCALE: Record<string, number> = {
+	'amanda-mlinaric': 1.45,
+	'alen-remar': 1.1,
+	'leo-sulik': 1.35,
+	'zoran-velagic': 1.35,
+	'ela-drozdek': 1.35,
+	'mija-mance': 1.5,
+	'mila-vrbesic': 1.35,
+	'nikola-portner-pavicevic': 1.15,
+	'nicole-bratonja': 1.2,
+	'tomislav-mlinaric': 1.35,
+	'karmen-ahmetovic': 1.35,
+	'rafael-barulek': 1.35,
+	'cvijetoslav-zorman': 1.35,
+	'leda-crncec': 1.1,
+	'bojan-rodik': 1.2
+};
+export const PHONE_BOW_X: Record<string, string> = {
+	'amanda-mlinaric': '-18%',
+	'alen-remar': '28%',
+	'leo-sulik': '28%',
+	'zoran-velagic': '22%',
+	'ela-drozdek': '28%',
+	'mila-vrbesic': '14%',
+	'jakov-crnicki': '28%',
+	'leda-crncec': '28%',
+	'karmen-ahmetovic': '28%',
+	'filip-bistricic': '28%',
+	'nicole-bratonja': '-28%',
+	'bojan-rodik': '-22%',
+	'luka-ciglaric': '-28%',
+	'tena-mikolaj': '-22%',
+	'mija-mance': '-22%',
+	'mia-medimurec': '-22%',
+	'tomislav-mlinaric': '-22%',
+	'rafael-barulek': '-22%',
+	'nikola-portner-pavicevic': '22%',
+	'aurelia-mlinaric': '22%'
+};
+export const PHONE_BOW_Y: Record<string, string> = {
+	'amanda-mlinaric': '-8%'
+};
+export const PHONE_BOW_SCALE: Record<string, number> = {
+	'amanda-mlinaric': 2.1
+};
+export const FIG_OFFSET: Record<string, string> = {
+	'bojan-rodik': '0rem',
+	'cvijetoslav-zorman': '2.1rem'
+};
+export const BOW_NUDGE: Record<string, string> = {
+	'karmen-ahmetovic': '1.8rem',
+	'zoran-velagic': '1.8rem'
 };
 
 // Archers whose hover BOW image emerges on the LEFT (default is RIGHT). The first-name
