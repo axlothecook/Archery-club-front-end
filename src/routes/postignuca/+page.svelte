@@ -387,6 +387,24 @@
 		.ach-hero-title {
 			font-size: 2.6rem;
 		}
+		// Restore the golden explore block to FULL viewport width on phones (the
+		// 1024px tablet rule above shrinks it to 92%, which left a side gap and stopped
+		// the edge-to-edge parallelogram strip from reaching the screen edges).
+		:global(.achievements .explore) {
+			width: 100%;
+		}
+		// More breathing room between the end flourish (crest) and the golden block.
+		.ach-flourish {
+			margin-bottom: ($sp * 5);
+		}
+		// Smaller intro paragraph on phones (the desktop 1.15rem reads oversized here).
+		.ach-intro {
+			padding: ($sp * 3) ($sp * 1.5) ($sp * 1.5);
+		}
+		.ach-intro-text {
+			font-size: 0.95rem;
+			line-height: 1.6;
+		}
 		// PHONE ONLY: shrink the cover to a slim band (~30rem shorter than desktop) so
 		// less vertical space is wasted before the honour list.
 		.ach-hero {
