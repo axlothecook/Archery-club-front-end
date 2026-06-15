@@ -323,7 +323,9 @@
 
 	@media (max-width: 760px) {
 		.news-carousel :global(.carousel-content) {
-			aspect-ratio: 4 / 3;
+			// Shorter carousel on phone: cut ~20rem off the 680px desktop height.
+			height: 360px;
+			aspect-ratio: auto;
 		}
 		.slide-text {
 			max-width: 100%;
