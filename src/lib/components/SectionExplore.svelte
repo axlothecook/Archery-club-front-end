@@ -161,17 +161,55 @@
 		}
 	}
 
-	// Responsive: stack to 2 columns on smaller screens (lines hidden).
+	// PHONE: the 4 cards become ONE edge-to-edge strip — no gaps, no rounding, the
+	// row spans the full viewport width (cancelling the section's side padding), and
+	// each card is a PARALLELOGRAM: angled left/right edges via clip-path, with the
+	// adjacent slants overlapped (negative margin) so a thin angled divider shows
+	// between images. The first card's LEFT edge and last card's RIGHT edge stay
+	// vertical so the strip butts cleanly against the screen sides.
 	@media (max-width: 720px) {
+		$slant: 26px; // vertical offset of the angled (parallelogram) top/bottom edges
+		// Phone: stack the 4 options as a VERTICAL column of wide parallelogram cards.
+		// They touch with NO gap (overlapped by the slant so the angled edges interlock);
+		// the column is inset from the screen sides with side padding.
 		.explore-row {
-			flex-wrap: wrap;
-			justify-content: center;
+			flex-direction: column;
+			flex-wrap: nowrap;
+			gap: 0; // cards touch (overlapped via negative margin below)
+			max-width: none;
+			width: auto;
+			margin-inline: ($sp * 1.5); // padding from the left/right screen sides
 		}
 		.explore-line {
-			display: none;
+			display: none; // no flanking lines in the column
+		}
+		// More space between the "MOŽDA ĆE VAM SE SVIDJETI" heading and the cards.
+		.explore-heading {
+			margin-bottom: ($sp * 4);
 		}
 		.explore-card {
-			width: 45%;
+			flex: 0 0 auto;
+			width: 100%;
+			max-width: none;
+			aspect-ratio: 16 / 7; // wide, short banners stacked vertically
+			border-radius: 0;
+			box-shadow: none;
+			// Parallelogram: slanted TOP + BOTTOM edges. Adjacent cards overlap by the
+			// slant (negative top margin) so their angled edges interlock with no gap.
+			clip-path: polygon(0 #{$slant}, 100% 0, 100% calc(100% - #{$slant}), 0 100%);
+			margin-top: (-$slant);
+			&:first-child {
+				// Top edge FLAT so the column starts with a clean horizontal edge.
+				clip-path: polygon(0 0, 100% 0, 100% calc(100% - #{$slant}), 0 100%);
+				margin-top: 0;
+			}
+			&:last-child {
+				// Bottom edge FLAT so the column ends with a clean horizontal edge.
+				clip-path: polygon(0 #{$slant}, 100% 0, 100% 100%, 0 100%);
+			}
+		}
+		.explore-card-label {
+			font-size: 1.4rem; // larger name now the banners are full width
 		}
 	}
 </style>

@@ -81,4 +81,14 @@
 	.flourish.revealed .flourish-line {
 		transform: scaleX(1); // fan out
 	}
+
+	// PHONE: keep the gold lines clear of the screen edges (side padding shortens
+	// them so they don't run flush into the viewport sides).
+	@media (max-width: 720px) {
+		.flourish {
+			// Side padding shortens the lines; reduce it 0.5rem per side to lengthen
+			// each gold line by 0.5rem (still clear of the screen edges).
+			padding: 0 calc(#{$sp} * 3 - 0.5rem);
+		}
+	}
 </style>
