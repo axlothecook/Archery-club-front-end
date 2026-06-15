@@ -203,9 +203,9 @@
 	// End-of-card flourish: generous top space from the last honour, small bottom
 	// gap before the golden block (mirrors the chapter article's flourish spacing).
 	.ach-flourish {
-		// Bottom gap +2rem (1.5rem → 3.5rem) for more space before the golden block on
-		// desktop. (Phone has its own margin-bottom override below.)
-		margin: ($sp * 8) 0 ($sp * 3.5);
+		// Bottom gap equalised to the individual chapter page's flourish→related gap
+		// (124px on desktop). (Phone has its own margin-bottom override below.)
+		margin: ($sp * 8) 0 ($sp * 4.75);
 	}
 
 	// ── Honour list (PSG style) ───────────────────────────────────────────────
@@ -395,9 +395,9 @@
 		:global(.achievements .explore) {
 			width: 100%;
 		}
-		// More breathing room between the end flourish (crest) and the golden block.
+		// Gap below the end flourish equalised to the chapter page (124px on phone).
 		.ach-flourish {
-			margin-bottom: ($sp * 5);
+			margin-bottom: ($sp * 5.75);
 		}
 		// Smaller intro paragraph on phones (the desktop 1.15rem reads oversized here).
 		.ach-intro {

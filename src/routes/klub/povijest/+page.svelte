@@ -97,21 +97,26 @@
 		text-decoration: none;
 		border: 1px solid #efefef; // Barça: thin light-grey border, square corners
 		transition: transform 0.2s ease;
+		// Kill the browser's blue/grey tap-flash overlay when a card is tapped on phone.
+		-webkit-tap-highlight-color: transparent;
 		&:hover {
 			transform: translateY(-4px);
 		}
 	}
 
 	.period-cover {
-		aspect-ratio: 16 / 9; // Barça image ratio
+		// Shorter cover (2/1, was 16/9) so the white text area below it can be taller
+		// WITHOUT changing the card's overall height — the image shrinks by what the
+		// text grows. (Same rebalance is applied on phone in the media block.)
+		aspect-ratio: 2 / 1;
 		overflow: hidden;
 	}
 
 	.period-text {
 		// Taller text surface (Barça cards have a bigger text block under the image).
-		// Title sits at the TOP of the block (not centred); the extra height is
-		// empty space below it (Barça layout).
-		min-height: 96px;
+		// Title sits at the TOP of the block; the cover above shrank by the same amount
+		// this grew, so the overall card height is unchanged.
+		min-height: 113px;
 		padding: ($sp * 0.9) ($sp * 0.75) ($sp * 1.4);
 	}
 	.period-title {
@@ -132,6 +137,26 @@
 	@media (max-width: 560px) {
 		.history-grid {
 			grid-template-columns: 1fr;
+		}
+	}
+	// PHONE: smaller founder quote under the "Klub kroz godine" title (the 1.15rem
+	// reads oversized here), matching the Identitet lead quote.
+	@media (max-width: 720px) {
+		.history-quote blockquote {
+			font-size: 0.95rem;
+		}
+		// No desktop hover/lift on touch — it would "stick" after a tap on phones.
+		.period-card:hover {
+			transform: none;
+		}
+		// Grow the white text area UPWARD (taller) WITHOUT changing the card's overall
+		// height: shrink the cover image by the same amount the text grows. (16/9 ≈ 196px
+		// → 2/1 ≈ 175px cover; text min-height 96px → 119px. Total card height unchanged.)
+		.period-cover {
+			aspect-ratio: 2 / 1;
+		}
+		.period-text {
+			min-height: 119px;
 		}
 	}
 </style>
