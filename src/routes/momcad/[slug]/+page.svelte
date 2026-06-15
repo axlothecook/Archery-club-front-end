@@ -244,9 +244,17 @@
 	];
 
 	// ── Achievements (honour cards) ───────────────────────────────────────────────
-	// Real per-archer honours from the profile API, grouped by title+level+medal with
-	// a count. Empty for archers (e.g. coaches) with none → the section is hidden.
+	// Real per-archer honours from the profile API, grouped PER EVENT: one card for all
+	// of an event's MEDALS (type 'title'/'other'), one for its RECORDS (type 'record').
+	// Empty for archers (e.g. coaches) with none → the section is hidden.
 	const honours = $derived(a.achievements ?? []);
+
+	// Card title: MEDAL cards get the word "medalje" appended (so "Indoor World Series"
+	// reads "Indoor World Series medalje") — mirroring how RECORD cards already end in
+	// "rekord" in their own title. Records are left as-is.
+	function honourLabel(h: { title: string; type: string }): string {
+		return h.type === 'record' ? h.title : `${h.title} medalje`;
+	}
 
 	// ── Bow data (5th div) — the bow renders as a live 3D model via BowViewer; the model
 	//    description body lives in $lib/bow.ts (shared with the homepage). Only the INTRO
@@ -518,7 +526,7 @@
 									{/if}
 								</span>
 							</div>
-							<p class="pf-honour-name">{h.title}</p>
+							<p class="pf-honour-name">{honourLabel(h)}</p>
 						</li>
 					{/each}
 					</ul>
@@ -1261,8 +1269,8 @@
 		// same size on its own, independent of neighbours. With the grid's
 		// align-items:start, no card stretches another, and the bottom-pinned title
 		// lands at the same spot on all.
-		height: 250px;
-		padding: ($sp * 1.75);
+		height: 220px;
+		padding: 1rem; // tighter, equal on all 4 sides
 		border-radius: 16px;
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1797,8 +1805,8 @@
 			// Wider + a bit shorter so there's room for a clear gap between the
 			// number and the level icon.
 			width: 240px;
-			height: 165px;
-			padding: ($sp * 1.25);
+			height: 148px;
+			padding: 1rem; // tighter, equal on all 4 sides
 			scroll-snap-align: start;
 			&:hover {
 				transform: none; // no hover lift on touch
