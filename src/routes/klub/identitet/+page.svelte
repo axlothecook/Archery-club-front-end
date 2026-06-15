@@ -158,4 +158,27 @@
 		line-height: 28px;
 		color: map.get(lib.$colors, 'shark'); // #232323 ≈ Barça's #222
 	}
+
+	// ── Phone ───────────────────────────────────────────────────────────────────
+	@media (max-width: 720px) {
+		// Smaller lead quote under the "Vrijednosti" title (the 1.2rem reads oversized
+		// on phones).
+		.values-quote blockquote {
+			font-size: 0.95rem;
+		}
+		// Stop the quote from breaking out wider than the column (the 880px/90vw
+		// breakout + translateX centred it so it clipped at the sides). Let it fill
+		// the body width instead.
+		.values-quote {
+			width: 100%;
+			max-width: 100%;
+			margin-left: 0;
+			transform: none;
+		}
+		// Smaller value-block paragraph BODY text (headers unchanged) on phones.
+		.value-body {
+			font-size: 15px;
+			line-height: 24px;
+		}
+	}
 </style>

@@ -214,4 +214,51 @@
 	.identity-flourish {
 		margin: ($sp * 6) 0 ($sp * 1.5);
 	}
+
+	// ── Phone ───────────────────────────────────────────────────────────────────
+	@media (max-width: 720px) {
+		// PHONE: match Postignuća's hero — taller cover band + bigger title, and a
+		// WHITE page background (hero photo fades into white at the bottom).
+		.identity {
+			background-color: #fff;
+		}
+		.identity-hero {
+			height: 180px; // same slim band as Postignuća on phone
+		}
+		.identity-hero-title {
+			font-size: 2.6rem; // same as Postignuća's phone title
+		}
+		.identity-hero-overlay {
+			// Fade the hero photo into the now-WHITE page background at the bottom.
+			background-image: linear-gradient(
+				to bottom,
+				color.change($navy, $alpha: 0.35) 0%,
+				color.change($navy, $alpha: 0.45) 55%,
+				#fff 100%
+			);
+		}
+		// Full-bleed content on phone: the white card spans the whole width (no 85%
+		// inset, no rounding) so the tab bar + golden block touch both screen edges.
+		.identity-content {
+			width: 100%;
+			border-radius: 0;
+		}
+		:global(.identity .explore) {
+			width: 100%;
+			border-radius: 0;
+		}
+		// Less side padding so the content text uses more width (the quote stops
+		// getting clipped at the sides).
+		.identity-body {
+			padding: ($sp * 3) ($sp * 1.25) ($sp * 2.5);
+		}
+		// Match the flourish→golden-block gap used on Postignuća/Sponzori (~112px).
+		// The body's own 40px bottom padding adds on top, so use 4.5rem here (72+40).
+		// Cancel the body's SIDE padding (negative inline margin) so the gold lines get
+		// the full content width and match the line length on the other pages.
+		.identity-flourish {
+			margin-bottom: ($sp * 4.5);
+			margin-inline: (-$sp * 1.25);
+		}
+	}
 </style>

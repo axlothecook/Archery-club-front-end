@@ -140,4 +140,15 @@
 		line-height: 28px;
 		color: $shark;
 	}
+
+	// ── Phone ───────────────────────────────────────────────────────────────────
+	@media (max-width: 720px) {
+		// Smaller paragraph BODY text (Grb body + Dres descriptions), matching the
+		// Vrijednosti page's .value-body. Titles + period headers unchanged.
+		.single-body,
+		.timeline-desc {
+			font-size: 15px;
+			line-height: 24px;
+		}
+	}
 </style>
