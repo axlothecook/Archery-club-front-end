@@ -11,6 +11,7 @@
 	import { page } from '$app/state';
 	import { ui } from '$lib/ui.svelte';
 	import { TOP_BAR_LINKS, SECTION_NAV_LINKS, SECTION_NAV_PATHS } from '$lib/nav';
+	import { t } from '$lib/i18n';
 	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import { gsap } from 'gsap';
 	import { Flip } from 'gsap/Flip';
@@ -31,6 +32,9 @@
 		typeof document !== 'undefined' &&
 			(document.documentElement.hasAttribute('data-scrolled') || window.scrollY > 10)
 	);
+
+	// Active locale (cookie-driven, resolved server-side in +layout.server.ts).
+	const locale = $derived(page.data.locale);
 
 	// Section pages show the blue strip + get the scroll-merge behaviour.
 	const path = $derived(page.url.pathname.replace(/\/$/, ''));
@@ -165,9 +169,9 @@
 					class="menu-button"
 					data-flip-shift
 					onclick={() => ui.openMenu()}
-					aria-label="Otvori meni"
+					aria-label={t(locale, 'nav.openMenu')}
 				>
-					<span>Meni</span>
+					<span>{t(locale, 'nav.menu')}</span>
 					<MenuIcon size={22} />
 				</button>
 				{#each TOP_BAR_LINKS.left as link (link.href)}
@@ -175,7 +179,7 @@
 						class="nav-link"
 						class:active={isActive(link.href)}
 						data-flip-shift
-						href={link.href}>{link.label}</a
+						href={link.href}>{link.key ? t(locale, link.key) : link.label}</a
 					>
 				{/each}
 				{#if merged}
@@ -184,13 +188,13 @@
 							class="nav-link section-link"
 							class:active={isActive(link.href)}
 							data-flip-id="sec-{link.href}"
-							href={link.href}>{link.label}</a
+							href={link.href}>{link.key ? t(locale, link.key) : link.label}</a
 						>
 					{/each}
 				{/if}
 			</div>
 
-			<a class="logo" href="/" aria-label="Naslovnica">
+			<a class="logo" href="/" aria-label={t(locale, 'nav.home')}>
 				<img src={LOGO_URL} alt="Varaždinski streličarski klub" />
 			</a>
 
@@ -201,7 +205,7 @@
 							class="nav-link section-link"
 							class:active={isActive(link.href)}
 							data-flip-id="sec-{link.href}"
-							href={link.href}>{link.label}</a
+							href={link.href}>{link.key ? t(locale, link.key) : link.label}</a
 						>
 					{/each}
 				{/if}
@@ -210,7 +214,7 @@
 						class="nav-link"
 						class:active={isActive(link.href)}
 						data-flip-shift
-						href={link.href}>{link.label}</a
+						href={link.href}>{link.key ? t(locale, link.key) : link.label}</a
 					>
 				{/each}
 			</div>
@@ -219,13 +223,13 @@
 
 	<!-- ── The blue section strip (only on section pages, only while split) ───── -->
 	{#if onSectionPage && !merged}
-		<nav class="strip" aria-label="Sekcije kluba">
+		<nav class="strip" aria-label={t(locale, 'nav.clubSections')}>
 			{#each [...SECTION_NAV_LINKS.left, ...SECTION_NAV_LINKS.right] as link (link.href)}
 				<a
 					class="strip-link"
 					class:active={isActive(link.href)}
 					data-flip-id="sec-{link.href}"
-					href={link.href}>{link.label}</a
+					href={link.href}>{link.key ? t(locale, link.key) : link.label}</a
 				>
 			{/each}
 		</nav>

@@ -5,17 +5,19 @@
 // Edit here to add/rename/reorder nav items.
 
 export type NavLink = {
-	label: string; // Croatian label
+	label: string; // Croatian label (source locale; the EN value comes from the i18n key)
 	href: string;
+	key?: string; // i18n key (see $lib/i18n). When set, components render t(locale, key)
+	// instead of `label`, so the link translates. `label` stays as the hr fallback.
 };
 
 // Top bar primary links (besides the menu button, the centred logo, and the
 // locale switcher, which the TopBar component renders directly).
 export const TOP_BAR_LINKS = {
-	left: [{ label: 'Momčad', href: '/momcad' }] satisfies NavLink[],
+	left: [{ label: 'Momčad', href: '/momcad', key: 'nav.team' }] satisfies NavLink[],
 	right: [
-		{ label: 'Vijesti', href: '/najnovije' },
-		{ label: 'Raspored', href: '/raspored' }
+		{ label: 'Vijesti', href: '/najnovije', key: 'nav.news' },
+		{ label: 'Raspored', href: '/raspored', key: 'nav.schedule' }
 	] satisfies NavLink[]
 };
 
@@ -25,12 +27,12 @@ export const TOP_BAR_LINKS = {
 // shown here: left cluster = section.left, right cluster = section.right.
 export const SECTION_NAV_LINKS = {
 	left: [
-		{ label: 'Postignuća', href: '/postignuca' },
-		{ label: 'Sponzori', href: '/sponzori' }
+		{ label: 'Postignuća', href: '/postignuca', key: 'nav.achievements' },
+		{ label: 'Sponzori', href: '/sponzori', key: 'nav.sponsors' }
 	] satisfies NavLink[],
 	right: [
-		{ label: 'Identitet', href: '/klub/identitet' },
-		{ label: 'Povijest', href: '/klub/povijest' }
+		{ label: 'Identitet', href: '/klub/identitet', key: 'nav.identity' },
+		{ label: 'Povijest', href: '/klub/povijest', key: 'nav.history' }
 	] satisfies NavLink[]
 };
 
@@ -50,59 +52,63 @@ export const SECTION_NAV_PATHS = [
 export type MenuLink = NavLink & { children?: NavLink[] };
 
 export const MENU_LINKS: MenuLink[] = [
-	{ label: 'Povijest', href: '/klub/povijest' },
+	{ label: 'Povijest', href: '/klub/povijest', key: 'nav.history' },
 	{
 		label: 'Identitet',
 		href: '/klub/identitet',
+		key: 'nav.identity',
 		children: [
-			{ label: 'Grb', href: '/klub/identitet/grb' },
-			{ label: 'Dres', href: '/klub/identitet/dres' },
-			{ label: 'Vrijednosti', href: '/klub/identitet' }
+			{ label: 'Grb', href: '/klub/identitet/grb', key: 'nav.crest' },
+			{ label: 'Dres', href: '/klub/identitet/dres', key: 'nav.jersey' },
+			{ label: 'Vrijednosti', href: '/klub/identitet', key: 'nav.values' }
 		]
 	},
-	{ label: 'Postignuća', href: '/postignuca' },
-	{ label: 'Sponzori', href: '/sponzori' }
+	{ label: 'Postignuća', href: '/postignuca', key: 'nav.achievements' },
+	{ label: 'Sponzori', href: '/sponzori', key: 'nav.sponsors' }
 ];
 
 // Middle-tier link (Gucci's secondary block) — rendered between the big page
 // links and the small utility tier, at its own medium size.
-export const MENU_CONTACT: NavLink = { label: 'Kontakt', href: '/kontakt' };
+export const MENU_CONTACT: NavLink = { label: 'Kontakt', href: '/kontakt', key: 'nav.contact' };
 
 // Smallest-tier utility links shown beneath the main menu links. Email/phone are
 // rendered separately (email from ClubInfo; phone hardcoded until ClubInfo gains
 // a phone field). Prijava (Log In) points to the dashboard — placeholder until deploy.
-export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '#' }];
+export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '#', key: 'nav.login' }];
 
 // Footer columns (RM-style spacing). The social links + sponsor logos render
 // separately (sponsors fetched from the API; socials from ClubInfo).
-export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
+export const FOOTER_COLUMNS: { heading: string; headingKey: string; links: NavLink[] }[] = [
 	{
 		heading: 'Klub',
+		headingKey: 'footer.colClub',
 		links: [
-			{ label: 'Vijesti', href: '/najnovije' },
-			{ label: 'Momčad', href: '/momcad' },
-			{ label: 'Raspored', href: '/raspored' },
-			{ label: 'Sponzori', href: '/sponzori' }
+			{ label: 'Vijesti', href: '/najnovije', key: 'nav.news' },
+			{ label: 'Momčad', href: '/momcad', key: 'nav.team' },
+			{ label: 'Raspored', href: '/raspored', key: 'nav.schedule' },
+			{ label: 'Sponzori', href: '/sponzori', key: 'nav.sponsors' }
 		]
 	},
 	{
 		heading: 'O klubu',
+		headingKey: 'footer.colAboutClub',
 		links: [
-			{ label: 'Postignuća', href: '/postignuca' },
-			{ label: 'Povijest', href: '/klub/povijest' },
-			{ label: 'Grb', href: '/klub/identitet/grb' },
-			{ label: 'Dres', href: '/klub/identitet/dres' },
-			{ label: 'Vrijednosti', href: '/klub/identitet' }
+			{ label: 'Postignuća', href: '/postignuca', key: 'nav.achievements' },
+			{ label: 'Povijest', href: '/klub/povijest', key: 'nav.history' },
+			{ label: 'Grb', href: '/klub/identitet/grb', key: 'nav.crest' },
+			{ label: 'Dres', href: '/klub/identitet/dres', key: 'nav.jersey' },
+			{ label: 'Vrijednosti', href: '/klub/identitet', key: 'nav.values' }
 		]
 	},
 	{
 		heading: 'Usluge',
+		headingKey: 'footer.colServices',
 		// The three public inquiry forms on /kontakt, deep-linked via ?vrsta= so each
 		// footer link opens the kontakt page on the matching form (the page reads the param).
 		links: [
-			{ label: 'Učlanjenje', href: '/kontakt?vrsta=uclanjenje' },
-			{ label: 'Sponzorstvo', href: '/kontakt?vrsta=sponzorstvo' },
-			{ label: 'Donacija', href: '/kontakt?vrsta=donacija' }
+			{ label: 'Učlanjenje', href: '/kontakt?vrsta=uclanjenje', key: 'footer.membership' },
+			{ label: 'Sponzorstvo', href: '/kontakt?vrsta=sponzorstvo', key: 'footer.sponsorship' },
+			{ label: 'Donacija', href: '/kontakt?vrsta=donacija', key: 'footer.donation' }
 		]
 	}
 ];
@@ -111,10 +117,10 @@ export const FOOTER_COLUMNS: { heading: string; links: NavLink[] }[] = [
 // pages ("u pripremi") until the real legal copy is written; Karta stranice is a live
 // sitemap.
 export const FOOTER_LEGAL: NavLink[] = [
-	{ label: 'Pravni uvjeti', href: '/pravni-uvjeti' },
-	{ label: 'Pravila privatnosti', href: '/privatnost' },
-	{ label: 'Kolačići', href: '/kolacici' },
-	{ label: 'Karta stranice', href: '/karta-stranice' }
+	{ label: 'Pravni uvjeti', href: '/pravni-uvjeti', key: 'footer.legalTerms' },
+	{ label: 'Pravila privatnosti', href: '/privatnost', key: 'footer.privacy' },
+	{ label: 'Kolačići', href: '/kolacici', key: 'footer.cookies' },
+	{ label: 'Karta stranice', href: '/karta-stranice', key: 'footer.sitemap' }
 ];
 
 // Locale switcher. `country` = ISO country code for the flag-icons class (fi-<country>).

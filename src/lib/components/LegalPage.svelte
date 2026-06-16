@@ -3,12 +3,17 @@
 	// Kolačići). One title + intro + a list of {heading, body[]} sections rendered as
 	// simple prose. The copy is GENERIC boilerplate (a personal-project template, not
 	// lawyer-reviewed); a notice at the bottom says so. Karta stranice uses its own page.
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+
 	type Section = { heading: string; body: string[] };
 	let {
 		title,
 		intro,
 		sections = []
 	}: { title: string; intro?: string; sections?: Section[] } = $props();
+
+	const locale = $derived(page.data.locale);
 </script>
 
 <svelte:head>
@@ -34,9 +39,7 @@
 		{/each}
 
 		<p class="legal-disclaimer">
-			Napomena: ovo je osobni projekt, a ne službena stranica kluba. Gornji tekst je
-			općenit predložak i nije pravno provjeren. Za stvarna pravna pitanja obratite se
-			klubu putem <a href="/kontakt">kontakt stranice</a>.
+			{t(locale, 'legal.disclaimerBefore')}<a href="/kontakt">{t(locale, 'legal.disclaimerLink')}</a>{t(locale, 'legal.disclaimerAfter')}
 		</p>
 	</div>
 </div>

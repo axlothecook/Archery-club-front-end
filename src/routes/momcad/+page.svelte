@@ -9,7 +9,7 @@
 	import Flourish from '$lib/components/Flourish.svelte';
 	import ArcheryArrowIcon from '$lib/components/icons/ArcheryArrowIcon.svelte';
 	import {
-		BOW_LABEL,
+		BOW_LABEL_KEY,
 		BOW_ORDER,
 		BOW_LEFT,
 		FIG_SCALE,
@@ -20,6 +20,7 @@
 		FIG_OFFSET,
 		BOW_NUDGE
 	} from '$lib/archer';
+	import { t } from '$lib/i18n';
 	import type { ArticleCard } from 'archery-contracts';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
@@ -28,6 +29,9 @@
 	let { data } = $props();
 	const roster = $derived((data.roster ?? []) as ArcherCard[]);
 	const articles = $derived((data.articles ?? []) as ArticleCard[]);
+
+	// Active locale (cookie-driven, merged in from the root layout load).
+	const locale = $derived(data.locale);
 
 	// Per-archer card tuning (FIG_SCALE / PHONE_SCALE / PHONE_BOW_* / FIG_OFFSET / BOW_NUDGE)
 	// now lives in $lib/archer.ts so the SAME values drive the archer page's coach/student
@@ -64,11 +68,11 @@
 	type FilterKey = 'all' | Bow | 'coaches';
 	const isCoach = (a: ArcherCard) => a.roles?.includes('coach');
 	const filters = $derived.by<{ key: FilterKey; label: string }[]>(() => {
-		const out: { key: FilterKey; label: string }[] = [{ key: 'all', label: 'Svi' }];
+		const out: { key: FilterKey; label: string }[] = [{ key: 'all', label: t(locale, 'roster.all') }];
 		for (const bow of BOW_ORDER) {
-			if (roster.some((a) => a.bowType[0] === bow)) out.push({ key: bow, label: BOW_LABEL[bow] });
+			if (roster.some((a) => a.bowType[0] === bow)) out.push({ key: bow, label: t(locale, BOW_LABEL_KEY[bow]) });
 		}
-		if (roster.some(isCoach)) out.push({ key: 'coaches', label: 'Treneri' });
+		if (roster.some(isCoach)) out.push({ key: 'coaches', label: t(locale, 'roster.coaches') });
 		return out;
 	});
 
@@ -100,8 +104,8 @@
 </script>
 
 <Seo
-	title="Momčad"
-	description="Streličari i treneri Varaždinskog streličarskog kluba — upoznajte našu momčad."
+	title={t(locale, 'roster.title')}
+	description={t(locale, 'roster.seoDesc')}
 />
 
 <div class="team">
@@ -119,19 +123,19 @@
 
 	<!-- ── Heading block: title + year (tight), left-aligned ── -->
 	<div class="tm-head">
-		<h2 class="tm-head-title">Momčad</h2>
+		<h2 class="tm-head-title">{t(locale, 'roster.title')}</h2>
 		<p class="tm-head-year">2025/26</p>
 	</div>
 
 	<!-- ── Two-column body: VERTICAL sticky filter rail (left) + card grid (right) ── -->
 	<div class="tm-content">
 		{#if shown.length === 0}
-			<p class="tm-empty">Popis članova uskoro će biti dostupan.</p>
+			<p class="tm-empty">{t(locale, 'roster.empty')}</p>
 		{:else}
 			<div class="tm-body">
 				<!-- Vertical filter rail: horizontal words stacked in a column, a vertical grey
 				     line beside them, blue highlight on the line marks the active filter. -->
-				<nav class="tm-filters" aria-label="Filtriraj po luku">
+				<nav class="tm-filters" aria-label={t(locale, 'roster.filterByBow')}>
 					{#each filters as f (f.key)}
 						<button
 							class="tm-filter"

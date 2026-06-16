@@ -4,18 +4,22 @@
 	// date overlaid at the bottom over a dark gradient scrim. Links to the article.
 	import type { ArticleCard as ArticleCardData, ArticleMediaType } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
-	import { formatDateHr } from '$lib/date';
+	import { formatDate } from '$lib/date';
+	import { t } from '$lib/i18n';
+	import { page } from '$app/state';
 
 	let { article }: { article: ArticleCardData } = $props();
 
-	const MEDIA_LABEL: Record<ArticleMediaType, string> = {
-		event: 'EVENT',
-		gallery: 'GALERIJA',
-		'video-only': 'VIDEO',
-		'external-link': 'VANJSKA POVEZNICA'
+	const locale = $derived(page.data.locale);
+
+	const MEDIA_KEY: Record<ArticleMediaType, string> = {
+		event: 'media.event',
+		gallery: 'media.gallery',
+		'video-only': 'media.video',
+		'external-link': 'media.externalLink'
 	};
-	const category = $derived(MEDIA_LABEL[article.mediaType] ?? 'EVENT');
-	const dateLabel = $derived(formatDateHr(article.publishedAt));
+	const category = $derived(t(locale, MEDIA_KEY[article.mediaType] ?? 'media.event'));
+	const dateLabel = $derived(formatDate(article.publishedAt, locale));
 </script>
 
 <a class="news-hero" href="/najnovije/{article.slug}">

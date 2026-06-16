@@ -1,24 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+
+	const locale = $derived(page.data.locale);
 
 	// One error page for all cases — switches on the HTTP status. 404 gets a
 	// "not found" message; everything else (500, load failures, thrown errors)
 	// gets a generic "something went wrong". Renders inside the root layout, so
 	// the NavBar + Footer still frame it.
 	const isNotFound = $derived(page.status === 404);
-	const title = $derived(isNotFound ? 'Stranica nije pronađena' : 'Nešto je pošlo po zlu');
-	const message = $derived(
-		isNotFound
-			? 'Stranica koju tražite ne postoji ili je premještena.'
-			: 'Dogodila se pogreška. Pokušajte ponovno kasnije.'
-	);
+	const title = $derived(t(locale, isNotFound ? 'err.notFoundTitle' : 'err.genericTitle'));
+	const message = $derived(t(locale, isNotFound ? 'err.notFoundMsg' : 'err.genericMsg'));
 </script>
 
 <section class="error">
 	<p class="error-status">Error {page.status}</p>
 	<h1 class="error-title">{title}</h1>
 	<p class="error-message">{message}</p>
-	<a class="error-home" href="/">Povratak na početnu</a>
+	<a class="error-home" href="/">{t(locale, 'err.backHome')}</a>
 </section>
 
 <style lang="scss">

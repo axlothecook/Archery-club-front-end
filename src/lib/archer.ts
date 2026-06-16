@@ -1,13 +1,28 @@
 import type { Bow } from 'archery-contracts';
+import { t } from '$lib/i18n';
+import type { Locale } from '$lib/locale';
 
 // Croatian labels for the three bow styles. Shared by the team roster, the archer
 // profile page and the news-article "U ovom članku" cards so the wording stays in
-// one place.
+// one place. (hr fallback; for the localized label use bowLabelI18n / the 'bow.*' keys.)
 export const BOW_LABEL: Record<Bow, string> = {
 	recurve: 'Klasični luk',
 	compound: 'Složeni luk',
 	barebow: 'Goli luk'
 };
+
+// i18n key per bow style — feeds t(locale, key) so the label localizes (Recurve /
+// Compound / Barebow in en, Klasični / Složeni / Goli luk in hr).
+export const BOW_LABEL_KEY: Record<Bow, string> = {
+	recurve: 'bow.recurve',
+	compound: 'bow.compound',
+	barebow: 'bow.barebow'
+};
+
+// Localized bow-style label.
+export function bowLabelI18n(bow: Bow, locale: Locale | string | undefined): string {
+	return t(locale, BOW_LABEL_KEY[bow]);
+}
 
 // The roster grid is split into sections by PRIMARY bow (bowType[0]); render them
 // in this fixed order. Archers with no bow (coach-only) are handled separately.

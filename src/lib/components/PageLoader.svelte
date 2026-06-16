@@ -9,6 +9,10 @@
 	//
 	// SHARED — used by the archer profile page now; the homepage can reuse it.
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+
+	const locale = $derived(page.data.locale);
 
 	let {
 		assets = [],
@@ -116,7 +120,7 @@
 		class:page-loader--hiding={hiding}
 		role="status"
 		aria-live="polite"
-		aria-label="Učitavanje"
+		aria-label={t(locale, 'loader.loading')}
 	>
 		<span class="page-loader-pct">{Math.round(pct)}<span class="page-loader-sign">%</span></span>
 	</div>

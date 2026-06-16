@@ -5,15 +5,16 @@ import type { ClubIdentitySectionResolved } from 'archery-contracts';
 // Vrijednosti is the default — its URL is the base /klub/identitet (no slug).
 
 export type IdentityTab = {
-	label: string; // tab label (Croatian)
+	label: string; // tab label (Croatian source / hr fallback)
+	key: string; // i18n key (see $lib/i18n) for the localized label
 	urlSlug: string | null; // null = base /klub/identitet (Vrijednosti)
 	apiSlug: string; // backend section slug
 };
 
 export const IDENTITY_TABS: IdentityTab[] = [
-	{ label: 'Vrijednosti', urlSlug: null, apiSlug: 'values' },
-	{ label: 'Dres', urlSlug: 'dres', apiSlug: 'jersey' },
-	{ label: 'Grb', urlSlug: 'grb', apiSlug: 'crest' }
+	{ label: 'Vrijednosti', key: 'nav.values', urlSlug: null, apiSlug: 'values' },
+	{ label: 'Dres', key: 'nav.jersey', urlSlug: 'dres', apiSlug: 'jersey' },
+	{ label: 'Grb', key: 'nav.crest', urlSlug: 'grb', apiSlug: 'crest' }
 ];
 
 // Map a Croatian URL slug → backend section slug (for the [slug] loader).

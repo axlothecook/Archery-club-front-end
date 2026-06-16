@@ -4,9 +4,11 @@
 	import SponsorInquiryModal from '$lib/components/SponsorInquiryModal.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 	const sponsors = $derived((data.sponsors ?? []) as SponsorResolved[]);
+	const locale = $derived(data.locale);
 
 	const HERO_IMAGE =
 		'https://images.axlothecook.com/archery/achivements/sponsors-cover.jpg';
@@ -44,8 +46,8 @@
 </script>
 
 <Seo
-	title="Partneri"
-	description="Službeni partneri i sponzori Varaždinskog streličarskog kluba. Pridružite se i podržite naše streličare."
+	title={t(locale, 'spon.seoTitle')}
+	description={t(locale, 'spon.seoDesc')}
 />
 
 <div class="sponsors">
@@ -60,25 +62,18 @@
 		/>
 		<div class="sp-hero-overlay"></div>
 		<div class="sp-hero-inner">
-			<h1 class="sp-hero-title">Službeni partneri</h1>
-			<p class="sp-hero-text">
-				Varaždinski streličarski klub poznat je po svojoj predanosti i izvrsnosti, s
-				dosljednim uspjesima na svjetskim i državnim natjecanjima, te njegovanom zajednicom u
-				kojoj napreduju i početnici i iskusni streličari. Ovo poticajno okruženje duboko je
-				povezano s velikodušnom podrškom partnera, čiji doprinosi osiguravaju vrhunsku opremu,
-				jačaju natjecateljsku snagu kluba, te učvršćuju zajedničku predanost promicanju sporta i
-				razvoju talenata.
-			</p>
+			<h1 class="sp-hero-title">{t(locale, 'spon.title')}</h1>
+			<p class="sp-hero-text">{t(locale, 'spon.heroText')}</p>
 			<button class="sp-hero-cta" type="button" onclick={() => (inquiryOpen = true)}>
-				Pridružite se
+				{t(locale, 'spon.join')}
 			</button>
 		</div>
 	</header>
 
 	<!-- ── Partners: alternating offset cards (logo + description + link) ───── -->
-	<section class="sp-partners" aria-label="Partneri">
+	<section class="sp-partners" aria-label={t(locale, 'spon.partnersAria')}>
 		{#if sponsors.length === 0}
-			<p class="sp-empty">Popis partnera uskoro će biti dostupan.</p>
+			<p class="sp-empty">{t(locale, 'spon.empty')}</p>
 		{:else}
 			<ul class="sp-list">
 				{#each sponsors as s (s.id)}
@@ -104,14 +99,9 @@
 	</section>
 
 	<!-- ── Honorary mention ────────────────────────────────────────────────── -->
-	<section class="sp-honorary" aria-label="Počasno priznanje">
-		<h2 class="sp-honorary-heading">Počasno priznanje</h2>
-		<blockquote class="sp-honorary-quote">
-			Nećemo zaboraviti prijateljsku gestu Općine Vidovec na čelu s gospodinom Hranićem te
-			Osnovne škole Vidovec s ravnateljem gospodinom Mašićem, koji su nam ustupili prijeko
-			potreban prostor za zimske treninge. Još jednom, veliko hvala svima u ime osnivača i
-			streličara Varaždinskog streličarskog kluba. Opravdat ćemo vaše povjerenje!
-		</blockquote>
+	<section class="sp-honorary" aria-label={t(locale, 'spon.honoraryAria')}>
+		<h2 class="sp-honorary-heading">{t(locale, 'spon.honoraryHeading')}</h2>
+		<blockquote class="sp-honorary-quote">{t(locale, 'spon.honoraryQuote')}</blockquote>
 	</section>
 
 	<!-- End-of-card flourish + golden explore block (consistent with other pages). -->

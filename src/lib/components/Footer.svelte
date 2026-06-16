@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { FOOTER_COLUMNS, FOOTER_LEGAL } from '$lib/nav';
+	import { t } from '$lib/i18n';
 	import type { SponsorResolved } from 'archery-contracts';
 	import type { Component } from 'svelte';
 	import FacebookIcon from './icons/FacebookIcon.svelte';
@@ -19,6 +20,9 @@
 	// Site-wide data from +layout.ts (sponsors + clubInfo socials).
 	const sponsors = $derived((page.data.sponsors ?? []) as SponsorResolved[]);
 	const socials = $derived(page.data.clubInfo?.socials ?? []);
+
+	// Active locale (cookie-driven, resolved server-side in +layout.server.ts).
+	const locale = $derived(page.data.locale);
 
 	// Split sponsors into "main" (big) and the rest (small).
 	const MAIN_NAMES = ['lasercopy', 'kodra'];
@@ -110,15 +114,15 @@
 		<div class="footer-columns">
 			{#each FOOTER_COLUMNS as col (col.heading)}
 				<div class="footer-col">
-					<h4>{col.heading}</h4>
+					<h4>{t(locale, col.headingKey)}</h4>
 					{#each col.links as link (link.label + link.href)}
-						<a href={link.href}>{link.label}</a>
+						<a href={link.href}>{link.key ? t(locale, link.key) : link.label}</a>
 					{/each}
 				</div>
 			{/each}
 			<!-- 4th column: scroll-to-top arrow -->
 			<div class="footer-col footer-col-top">
-				<button class="to-top" onclick={scrollTop} aria-label="Natrag na vrh">
+				<button class="to-top" onclick={scrollTop} aria-label={t(locale, 'footer.backToTop')}>
 					<ArrowUpIcon size={40} strokeWidth={2} />
 				</button>
 			</div>
@@ -136,13 +140,13 @@
 						aria-expanded={isOpen}
 						onclick={() => toggleSection(col.heading)}
 					>
-						<span class="facc-title">{col.heading}</span>
+						<span class="facc-title">{t(locale, col.headingKey)}</span>
 						<span class="facc-arrow"><RightArrowIcon size={16} /></span>
 					</button>
 					{#if isOpen}
 						<ul class="facc-links" transition:slide={{ duration: 280 }}>
 							{#each col.links as link (link.label + link.href)}
-								<li><a href={link.href}>{link.label}</a></li>
+								<li><a href={link.href}>{link.key ? t(locale, link.key) : link.label}</a></li>
 							{/each}
 						</ul>
 					{/if}
@@ -165,8 +169,8 @@
 		<!-- Barça-style bottom bar -->
 		<div class="footer-brand">
 			<div class="brand-left">
-				<img src={LOGO_URL} alt="Varaždinski streličarski klub" />
-				<span>Varaždinski streličarski klub</span>
+				<img src={LOGO_URL} alt={t(locale, 'clubName')} />
+				<span>{t(locale, 'clubName')}</span>
 			</div>
 			<span class="brand-right">VSK</span>
 		</div>
@@ -180,7 +184,7 @@
 			</p>
 			<div class="legal">
 				{#each FOOTER_LEGAL as l, i (l.label)}
-					<a href={l.href}>{l.label}</a>
+					<a href={l.href}>{l.key ? t(locale, l.key) : l.label}</a>
 					{#if i < FOOTER_LEGAL.length - 1}<span class="sep">|</span>{/if}
 				{/each}
 			</div>

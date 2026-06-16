@@ -24,9 +24,13 @@
 	import HalfScreenMenu from '$lib/components/HalfScreenMenu.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { onNavigate } from '$app/navigation';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 	import { tick } from 'svelte';
 
 	let { children } = $props();
+
+	const locale = $derived(page.data.locale);
 
 	// ── Page transitions / loader ──────────────────────────────────────────────────
 	// THE universal transition: a full-screen panel in the loader colour (#1e1f1c) wipes
@@ -128,11 +132,8 @@
 	<!-- Site-wide DEFAULT title + description. Pages set their own via the <Seo>
 	     component; SvelteKit dedupes <svelte:head> titles so the page value wins. This
 	     fallback covers any page without an explicit <Seo>. -->
-	<title>Varaždinski streličarski klub</title>
-	<meta
-		name="description"
-		content="Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Vijesti, raspored natjecanja, momčad i postignuća."
-	/>
+	<title>{t(locale, 'clubName')}</title>
+	<meta name="description" content={t(locale, 'meta.defaultDesc')} />
 </svelte:head>
 
 <div class="app-shell">

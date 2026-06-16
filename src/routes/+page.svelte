@@ -20,13 +20,17 @@
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
 	import CopyrightIcon from '$lib/components/icons/CopyrightIcon.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
-	import { BOW_INFO, BOW_MODEL, BOW_DEMO, BOW_HOME_ORDER } from '$lib/bow';
+	import { BOW_MODEL, BOW_HOME_ORDER, bowTitle, bowBody, bowDemoIntro } from '$lib/bow';
+	import { t } from '$lib/i18n';
 	import { reveal } from '$lib/actions/reveal';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 
 	let { data } = $props();
+
+	// Active locale (cookie-driven, merged in from the root layout load).
+	const locale = $derived(data.locale);
 
 	// Homepage events teaser: the next few upcoming competitions (soonest first).
 	const upcomingTeaser = $derived(data.upcoming.slice(0, 8));
@@ -57,7 +61,6 @@
 	let bowTabsEl = $state<HTMLElement>();
 	let bowUlLeft = $state(0);
 	let bowUlWidth = $state(0);
-	const activeBowInfo = $derived(BOW_INFO[activeBow]);
 	const activeBowModel = $derived(BOW_MODEL[activeBow]);
 	$effect(() => {
 		void activeBow; // re-measure when the active bow tab changes
@@ -375,15 +378,13 @@
 	}
 </script>
 
-<Seo
-	description="Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Pratite vijesti, raspored natjecanja, momčad i postignuća kluba."
-/>
+<Seo description={t(locale, 'home.seoDesc')} />
 
 {#if freshLoad}
 	<PageLoader assets={heroAssets} onreveal={startIntro} />
 {/if}
 
-<div class="hero" aria-label="Pregled kandidata za naslovnu">
+<div class="hero" aria-label={t(locale, 'home.heroAlt')}>
 	<!-- Stacked full-screen images: all cover the whole viewport; only `active` is shown.
 	     Real <img> so per-image object-position (focal point) applies. -->
 	{#each IMAGES as img, i}
@@ -402,7 +403,7 @@
 		{#each IMAGES as _img, i}
 			<button
 				class="zone"
-				aria-label={`Prikaži sliku ${i + 1}`}
+				aria-label={`${t(locale, 'home.showImage')} ${i + 1}`}
 				onmouseenter={() => (active = i)}
 				onfocus={() => (active = i)}
 			></button>
@@ -432,7 +433,7 @@
 
 	<!-- Subtext, bottom-centre. -->
 	<p class="hero-tagline" class:in={introIn}>
-		Hrvatski streličarski klub iz Varaždina, koji puca za svijet od 2014.
+		{t(locale, 'home.tagline')}
 	</p>
 
 	<!-- Intro curtain: covers the hero, then wipes off to the left to reveal it. -->
@@ -450,10 +451,10 @@
 		<section class="home-news" use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 			<!-- "VIJESTI / Sve vijesti ›" — title, slash, then the all-link inline (left). -->
 			<header class="home-sec-head">
-				<h2 class="home-sec-title">Vijesti</h2>
+				<h2 class="home-sec-title">{t(locale, 'home.news')}</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
 				<a class="home-sec-all" href="/najnovije">
-					Sve vijesti <RightArrowIcon size={11} />
+					{t(locale, 'home.allNews')} <RightArrowIcon size={11} />
 				</a>
 			</header>
 			<!-- DESKTOP: full-bleed 3D coverflow (edge to edge). NOT rendered on phone (heavy
@@ -492,10 +493,10 @@
 	{#if upcomingTeaser.length > 0}
 		<section class="home-events">
 			<header class="home-sec-head">
-				<h2 class="home-sec-title home-events-title">Nadolazeće</h2>
+				<h2 class="home-sec-title home-events-title">{t(locale, 'home.upcoming')}</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
 				<a class="home-sec-all" href="/raspored">
-					Raspored <RightArrowIcon size={11} />
+					{t(locale, 'home.schedule')} <RightArrowIcon size={11} />
 				</a>
 			</header>
 			<div class="home-events-carousel">
@@ -503,7 +504,7 @@
 					<button
 						class="home-events-arrow left br-full"
 						onclick={() => scrollEvents(-1)}
-						aria-label="Prethodno"
+						aria-label={t(locale, 'home.previous')}
 					>
 						<ChevronIcon direction="left" size={22} />
 					</button>
@@ -517,7 +518,7 @@
 					<button
 						class="home-events-arrow right br-full"
 						onclick={() => scrollEvents(1)}
-						aria-label="Sljedeće"
+						aria-label={t(locale, 'home.next')}
 					>
 						<ChevronIcon direction="right" size={22} />
 					</button>
@@ -536,14 +537,14 @@
 		     the main thread until the user is actually arriving at it. -->
 		<section class="home-ach" bind:this={achSectionEl} use:reveal={{ rootMargin: '0px 0px -35% 0px' }}>
 			<header class="home-sec-head">
-				<h2 class="home-sec-title home-ach-honour-title">Ponos hrvatskog streličarstva</h2>
+				<h2 class="home-sec-title home-ach-honour-title">{t(locale, 'home.achHonour')}</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
 				<a class="home-sec-all" href="/postignuca">
-					Sva postignuća <RightArrowIcon size={11} />
+					{t(locale, 'home.allAchievements')} <RightArrowIcon size={11} />
 				</a>
 			</header>
 
-			<a class="home-ach-stage" href="/postignuca" aria-label="Postignuća kluba">
+			<a class="home-ach-stage" href="/postignuca" aria-label={t(locale, 'home.clubAchievements')}>
 				{#key achIndex}
 					<!-- ONE shared fly transition on the whole slide so the image + text move
 					     together as a single unit (was two separate fly transitions — image with
@@ -579,11 +580,11 @@
 	-->
 	<section class="home-bows" use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 		<header class="home-sec-head">
-			<h2 class="home-sec-title home-bows-title">Lukovi najboljih streličara</h2>
+			<h2 class="home-sec-title home-bows-title">{t(locale, 'home.bestBows')}</h2>
 		</header>
 
 		<!-- Tabs: one per bow type, with a sliding gold underline. -->
-		<nav class="home-bow-tabs" bind:this={bowTabsEl} aria-label="Tip luka">
+		<nav class="home-bow-tabs" bind:this={bowTabsEl} aria-label={t(locale, 'home.bowType')}>
 			{#each BOW_HOME_ORDER as bow}
 				<button
 					class="home-bow-tab"
@@ -591,7 +592,7 @@
 					type="button"
 					onclick={() => (activeBow = bow)}
 				>
-					{BOW_INFO[bow].title}
+					{bowTitle(bow, locale)}
 				</button>
 			{/each}
 			<span
@@ -607,7 +608,7 @@
 				{#key activeBow}
 					<BowViewer
 						url={activeBowModel.url}
-						alt={activeBowInfo.title}
+						alt={bowTitle(activeBow, locale)}
 						fixRotation={activeBowModel.fixRotation}
 						yOffset={activeBowModel.yOffset}
 						spinDir={activeBowModel.spinDir}
@@ -621,11 +622,11 @@
 						class="home-bow-text-inner"
 						in:fly={{ x: 40, duration: 450, easing: cubicInOut }}
 					>
-						<p class="home-bow-body">{BOW_DEMO[activeBow].intro} {activeBowInfo.body}</p>
+						<p class="home-bow-body">{bowDemoIntro(activeBow, locale)} {bowBody(activeBow, locale)}</p>
 						<!-- Required model-licence attribution (CC). -->
 						<p class="home-bow-credit">
 							3D model: <a href={activeBowModel.credit.url} target="_blank" rel="noopener"
-								>{activeBowInfo.title} by {activeBowModel.credit.author}</a
+								>{bowTitle(activeBow, locale)} by {activeBowModel.credit.author}</a
 							>
 							({activeBowModel.credit.license})
 						</p>
@@ -656,16 +657,16 @@
 		{/each}
 		<div class="home-join-fade" aria-hidden="true"></div>
 		<div class="home-join-inner">
-			<h2 class="home-join-title">Postani dio <span class="home-join-gold">kluba</span></h2>
+			<h2 class="home-join-title">{t(locale, 'home.joinTitlePre')} <span class="home-join-gold">{t(locale, 'home.joinTitleAccent')}</span></h2>
 			<p class="home-join-sub">
-				Pridruži se Varaždinskom streličarskom klubu.
+				{t(locale, 'home.joinSub')}
 				<span
 					class="home-join-type"
-					use:typewriter={{ text: 'Početnici su dobrodošli.', cycle: 7000 }}
-					aria-label="Početnici su dobrodošli."
+					use:typewriter={{ text: t(locale, 'home.joinType'), cycle: 7000 }}
+					aria-label={t(locale, 'home.joinType')}
 				></span>
 			</p>
-			<a class="home-join-btn" href="/kontakt">Registriraj se</a>
+			<a class="home-join-btn" href="/kontakt">{t(locale, 'home.joinBtn')}</a>
 		</div>
 	</section>
 

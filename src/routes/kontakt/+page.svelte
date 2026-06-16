@@ -6,6 +6,7 @@
 
 	import { page } from '$app/state';
 	import { env } from '$env/dynamic/public';
+	import { t } from '$lib/i18n';
 	import MailIcon from '$lib/components/icons/MailIcon.svelte';
 	import FacebookIcon from '$lib/components/icons/FacebookIcon.svelte';
 	import InstagramIcon from '$lib/components/icons/InstagramIcon.svelte';
@@ -16,6 +17,7 @@
 	// Club contact details (site-wide layout data). Phone is hardcoded until ClubInfo
 	// gains a phone field (per the menu note).
 	const clubInfo = $derived(page.data.clubInfo);
+	const locale = $derived(page.data.locale);
 	const CLUB_PHONE = '+385 98 372 912';
 	const socials = $derived(clubInfo?.socials ?? []);
 	const SOCIAL_ICON: Record<string, typeof FacebookIcon> = {
@@ -26,10 +28,10 @@
 
 	// ── Tabs ──────────────────────────────────────────────────────────────────────
 	type Tab = 'membership' | 'sponsor' | 'donation';
-	const TABS: { id: Tab; label: string }[] = [
-		{ id: 'membership', label: 'Učlanjenje' },
-		{ id: 'sponsor', label: 'Sponzorstvo' },
-		{ id: 'donation', label: 'Donacija' }
+	const TABS: { id: Tab; key: string }[] = [
+		{ id: 'membership', key: 'k.tabMembership' },
+		{ id: 'sponsor', key: 'k.tabSponsor' },
+		{ id: 'donation', key: 'k.tabDonation' }
 	];
 	// Initial tab from the URL (?vrsta=uclanjenje|sponzorstvo|donacija) so footer links can
 	// deep-link straight to one form; defaults to membership.
@@ -98,7 +100,7 @@
 			});
 			if (!res.ok) {
 				const b = (await res.json().catch(() => null)) as { message?: string } | null;
-				throw new Error(b?.message ?? 'Slanje nije uspjelo. Pokušajte ponovno.');
+				throw new Error(b?.message ?? t(locale, 'k.sendFailed'));
 			}
 			status = 'success';
 			// Scroll back to the top so the (now shorter) success message — and the
@@ -109,7 +111,7 @@
 			}
 		} catch (err) {
 			status = 'error';
-			errorMsg = err instanceof Error ? err.message : 'Slanje nije uspjelo. Pokušajte ponovno.';
+			errorMsg = err instanceof Error ? err.message : t(locale, 'k.sendFailed');
 		} finally {
 			submitting = false;
 		}
@@ -154,24 +156,24 @@
 
 <div class="kontakt">
 	<header class="kontakt-hero">
-		<h1 class="kontakt-title">Kontakt</h1>
-		<p class="kontakt-sub">Javite nam se za učlanjenje, suradnju ili podršku klubu.</p>
+		<h1 class="kontakt-title">{t(locale, 'k.title')}</h1>
+		<p class="kontakt-sub">{t(locale, 'k.sub')}</p>
 	</header>
 
 	<div class="kontakt-body">
 		<!-- Club contact info -->
 		<aside class="kontakt-info">
-			<h2 class="info-title">Varaždinski Streličarski Klub</h2>
+			<h2 class="info-title">{t(locale, 'k.infoTitle')}</h2>
 			<ul class="info-list">
 				{#if clubInfo?.email}
-					<li><span class="info-label">E-mail</span><a href="mailto:{clubInfo.email}">{clubInfo.email}</a></li>
+					<li><span class="info-label">{t(locale, 'k.email')}</span><a href="mailto:{clubInfo.email}">{clubInfo.email}</a></li>
 				{/if}
-				<li><span class="info-label">Telefon</span><a href="tel:{CLUB_PHONE.replace(/\s/g, '')}">{CLUB_PHONE}</a></li>
+				<li><span class="info-label">{t(locale, 'k.phone')}</span><a href="tel:{CLUB_PHONE.replace(/\s/g, '')}">{CLUB_PHONE}</a></li>
 				{#if clubInfo?.address}
-					<li><span class="info-label">Adresa</span><span>{clubInfo.address}</span></li>
+					<li><span class="info-label">{t(locale, 'k.address')}</span><span>{clubInfo.address}</span></li>
 				{/if}
 				{#if clubInfo?.oib}
-					<li><span class="info-label">OIB</span><span>{clubInfo.oib}</span></li>
+					<li><span class="info-label">{t(locale, 'k.oib')}</span><span>{clubInfo.oib}</span></li>
 				{/if}
 			</ul>
 			{#if socials.length}
@@ -191,15 +193,15 @@
 		<!-- Tabbed forms -->
 		<section class="kontakt-forms">
 			<div class="form-tabs" role="tablist">
-				{#each TABS as t (t.id)}
+				{#each TABS as tab (tab.id)}
 					<button
 						class="form-tab"
-						class:active={activeTab === t.id}
+						class:active={activeTab === tab.id}
 						role="tab"
-						aria-selected={activeTab === t.id}
-						onclick={() => switchTab(t.id)}
+						aria-selected={activeTab === tab.id}
+						onclick={() => switchTab(tab.id)}
 					>
-						{t.label}
+						{t(locale, tab.key)}
 					</button>
 				{/each}
 			</div>
@@ -217,45 +219,45 @@
 
 				{#if status === 'success'}
 					<div class="form-success">
-						<h3>Hvala vam!</h3>
-						<p>Vaš upit je zaprimljen. Javit ćemo vam se uskoro.</p>
+						<h3>{t(locale, 'k.successHeading')}</h3>
+						<p>{t(locale, 'k.successBody')}</p>
 						<button class="btn-primary" type="button" onclick={() => (status = 'idle')}>
-							Pošalji novi upit
+							{t(locale, 'k.newInquiry')}
 						</button>
 					</div>
 				{:else if activeTab === 'membership'}
 					<form class="form" onsubmit={submitMembership}>
-						<p class="form-intro">Pridružite se klubu i započnite svoj streličarski put.</p>
+						<p class="form-intro">{t(locale, 'k.introMembership')}</p>
 						<label>
-							<span>Ime i prezime<i>*</i></span>
+							<span>{t(locale, 'k.fullName')}<i>*</i></span>
 							<input type="text" required bind:value={mFullName} />
 						</label>
 						<div class="form-row">
 							<label>
-								<span>Email<i>*</i></span>
+								<span>{t(locale, 'k.fieldEmail')}<i>*</i></span>
 								<input type="email" required bind:value={mEmail} />
 							</label>
 							<label>
-								<span>Telefon</span>
+								<span>{t(locale, 'k.fieldPhone')}</span>
 								<input type="tel" bind:value={mPhone} />
 							</label>
 						</div>
 						<label>
-							<span>Streličarsko iskustvo</span>
-							<input type="text" placeholder="npr. početnik, 2 godine…" bind:value={mExperience} />
+							<span>{t(locale, 'k.experience')}</span>
+							<input type="text" placeholder={t(locale, 'k.experiencePlaceholder')} bind:value={mExperience} />
 						</label>
 						<label class="checkbox">
 							<input type="checkbox" bind:checked={mForMinor} />
-							<span>Prijavljujem maloljetnu osobu</span>
+							<span>{t(locale, 'k.forMinor')}</span>
 						</label>
 						{#if mForMinor}
 							<label>
-								<span>Podaci o maloljetniku</span>
-								<input type="text" placeholder="ime i dob djeteta" bind:value={mMinorDetails} />
+								<span>{t(locale, 'k.minorDetails')}</span>
+								<input type="text" placeholder={t(locale, 'k.minorPlaceholder')} bind:value={mMinorDetails} />
 							</label>
 						{/if}
 						<label>
-							<span>Poruka</span>
+							<span>{t(locale, 'k.message')}</span>
 							<textarea rows="3" bind:value={mMessage}></textarea>
 						</label>
 						{@render consentField('m', mConsent, (v) => (mConsent = v))}
@@ -263,33 +265,33 @@
 					</form>
 				{:else if activeTab === 'sponsor'}
 					<form class="form" onsubmit={submitSponsor}>
-						<p class="form-intro">Postanite službeni partner kluba i podržite naše streličare.</p>
+						<p class="form-intro">{t(locale, 'k.introSponsor')}</p>
 						<div class="form-row">
 							<label>
-								<span>Naziv tvrtke<i>*</i></span>
+								<span>{t(locale, 'k.companyName')}<i>*</i></span>
 								<input type="text" required bind:value={sCompany} />
 							</label>
 							<label>
-								<span>Ime i prezime<i>*</i></span>
+								<span>{t(locale, 'k.fullName')}<i>*</i></span>
 								<input type="text" required bind:value={sContact} />
 							</label>
 						</div>
 						<div class="form-row">
 							<label>
-								<span>Email<i>*</i></span>
+								<span>{t(locale, 'k.fieldEmail')}<i>*</i></span>
 								<input type="email" required bind:value={sEmail} />
 							</label>
 							<label>
-								<span>Telefon</span>
+								<span>{t(locale, 'k.fieldPhone')}</span>
 								<input type="tel" bind:value={sPhone} />
 							</label>
 						</div>
 						<label>
-							<span>Područje interesa</span>
-							<input type="text" placeholder="npr. oprema, dresovi, natjecanja" bind:value={sInterest} />
+							<span>{t(locale, 'k.interest')}</span>
+							<input type="text" placeholder={t(locale, 'k.interestPlaceholder')} bind:value={sInterest} />
 						</label>
 						<label>
-							<span>Poruka</span>
+							<span>{t(locale, 'k.message')}</span>
 							<textarea rows="3" bind:value={sMessage}></textarea>
 						</label>
 						{@render consentField('s', sConsent, (v) => (sConsent = v))}
@@ -297,23 +299,23 @@
 					</form>
 				{:else}
 					<form class="form" onsubmit={submitDonation}>
-						<p class="form-intro">Vaša donacija pomaže razvoju kluba i mladih streličara.</p>
+						<p class="form-intro">{t(locale, 'k.introDonation')}</p>
 						<label>
-							<span>Ime i prezime<i>*</i></span>
+							<span>{t(locale, 'k.fullName')}<i>*</i></span>
 							<input type="text" required bind:value={dDonor} />
 						</label>
 						<div class="form-row">
 							<label>
-								<span>Email<i>*</i></span>
+								<span>{t(locale, 'k.fieldEmail')}<i>*</i></span>
 								<input type="email" required bind:value={dEmail} />
 							</label>
 							<label>
-								<span>Telefon</span>
+								<span>{t(locale, 'k.fieldPhone')}</span>
 								<input type="tel" bind:value={dPhone} />
 							</label>
 						</div>
 						<label>
-							<span>Poruka</span>
+							<span>{t(locale, 'k.message')}</span>
 							<textarea rows="3" bind:value={dMessage}></textarea>
 						</label>
 						{@render consentField('d', dConsent, (v) => (dConsent = v))}
@@ -335,7 +337,7 @@
 			onchange={(e) => set(e.currentTarget.checked)}
 		/>
 		<span>
-			Slažem se da klub pohrani moje podatke radi odgovora na ovaj upit (GDPR).<i>*</i>
+			{t(locale, 'k.consent')}<i>*</i>
 		</span>
 	</label>
 {/snippet}
@@ -345,7 +347,7 @@
 		<p class="form-error" role="alert">{errorMsg}</p>
 	{/if}
 	<button class="btn-primary" type="submit" disabled={submitting}>
-		{submitting ? 'Šaljem…' : 'Pošalji upit'}
+		{submitting ? t(locale, 'k.sending') : t(locale, 'k.submit')}
 	</button>
 {/snippet}
 

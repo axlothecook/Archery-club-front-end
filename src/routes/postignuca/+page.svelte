@@ -4,8 +4,11 @@
 	import Flourish from '$lib/components/Flourish.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import type { AchievementGroup } from './+page.ts';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
+
+	const locale = $derived(data.locale);
 
 	// Honour cards come stacked-by-title and sorted by count (desc) from the
 	// backend. We re-order them by PRESTIGE TIER for the listing: global (world)
@@ -33,7 +36,7 @@
 	const yearsLine = (years: number[]) => years.join(' · ');
 </script>
 
-<Seo title="Postignuća" description="Postignuća Varaždinskog streličarskog kluba — svjetski, europski i državni naslovi i rekordi." />
+<Seo title={t(locale, 'ach.title')} description={t(locale, 'ach.seoDesc')} />
 
 <div class="achievements">
 	<!-- Hero: poster image (fades in) with the gold section title overlaid. -->
@@ -46,24 +49,19 @@
 			onload={() => (heroLoaded = true)}
 		/>
 		<div class="ach-hero-overlay"></div>
-		<h1 class="ach-hero-title">Postignuća</h1>
+		<h1 class="ach-hero-title">{t(locale, 'ach.title')}</h1>
 	</header>
 
 	<!-- Intro blurb (PSG "Honours" style): a gold heading + a short pride paragraph
 	     summarising the club's standout titles, sitting between the cover and the list. -->
 	<section class="ach-intro">
-		<p class="ach-intro-text">
-			Malo je klubova u Hrvatskoj koji su osvojili toliko naslova. Najveći ponos kluba
-			ostaju 6 svjetskih i 8 europskih naslova, među kojima se ističu obranjeno svjetsko
-			juniorsko zlato (2019. i 2021.), tri uzastopne pobjede na Conquest Cupu
-			(od 2024. do 2026.) te tri naslova u Indoor World Seriesu.
-		</p>
+		<p class="ach-intro-text">{t(locale, 'ach.intro')}</p>
 	</section>
 
 	<!-- White card (matches the Povijest card width). PSG-style honour list. -->
 	<div class="ach-content">
 		{#if groups.length === 0}
-			<p class="ach-empty">Postignuća će uskoro biti dostupna.</p>
+			<p class="ach-empty">{t(locale, 'ach.empty')}</p>
 		{:else}
 			<!-- PSG-style: each honour is a two-column row — a large image on one side
 			     and the text (count × title + years) on the other, vertically centred.

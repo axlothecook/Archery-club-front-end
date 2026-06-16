@@ -12,6 +12,7 @@
 
 	import { apiFetch } from '$lib/api';
 	import { readLocaleCookieClient } from '$lib/locale';
+	import { t } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import NewsCarousel from '$lib/components/NewsCarousel.svelte';
@@ -21,6 +22,9 @@
 	import type { ArticleFeedPage } from './+page.ts';
 
 	let { data } = $props();
+
+	// Active locale (cookie-driven, merged in from the root layout load).
+	const locale = $derived(data.locale);
 
 	const LOGO_URL =
 		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
@@ -155,16 +159,16 @@
 	};
 </script>
 
-<Seo title="Vijesti" description="Najnovije vijesti Varaždinskog streličarskog kluba — rezultati, natjecanja i događanja." />
+<Seo title={t(locale, 'nav.news')} description={t(locale, 'news.seoDesc')} />
 
 <div class="news">
 	<header class="news-hero">
-		<h1 class="news-hero-title">Najnovije</h1>
-		<p class="news-hero-sub">Vijesti, rezultati i događanja iz kluba.</p>
+		<h1 class="news-hero-title">{t(locale, 'news.heroTitle')}</h1>
+		<p class="news-hero-sub">{t(locale, 'news.heroSub')}</p>
 	</header>
 
 	{#if items.length === 0}
-		<p class="news-empty">Trenutno nema objava.</p>
+		<p class="news-empty">{t(locale, 'news.empty')}</p>
 	{:else}
 		<!-- Featured carousel -->
 		<section class="news-featured">
@@ -185,7 +189,7 @@
 		<!-- Newsletter signup (VISUAL-ONLY placeholder — the SUBSCRIBE button is inert.
 		     Wiring it needs a mailing-list backend; tracked in PLAN.md "If website gets
 		     adopted"). Mirrors the reference news.html subscribe band. -->
-		<section class="news-signup" aria-label="Pretplata na vijesti">
+		<section class="news-signup" aria-label={t(locale, 'news.signupAria')}>
 			<div class="signup-inner">
 				<!-- Envelope + "Bilten" title. On phone they sit on ONE row at the top of the
 				     card; on desktop the title is hidden and the envelope sits left of the bar. -->
@@ -194,7 +198,7 @@
 						<MailIcon size={104} />
 						<img class="signup-crest" src={LOGO_URL} alt="" />
 					</div>
-					<h3 class="signup-title">Pretplati se na vijesti</h3>
+					<h3 class="signup-title">{t(locale, 'news.signupTitle')}</h3>
 				</div>
 				<form
 					class="signup-form"
@@ -206,28 +210,23 @@
 					     row, then the button row) via the media block below. -->
 					<div class="signup-fields">
 						<label class="signup-field signup-field--email">
-							<span class="signup-label">E-mail</span>
-							<input type="email" placeholder="Unesite e-mail" aria-label="E-mail" />
+							<span class="signup-label">{t(locale, 'news.email')}</span>
+							<input type="email" placeholder={t(locale, 'news.emailPlaceholder')} aria-label={t(locale, 'news.email')} />
 						</label>
 						<label class="signup-field signup-field--phone">
-							<span class="signup-label">Telefon (neobavezno)</span>
-							<input type="tel" placeholder="Telefon" aria-label="Telefon" />
+							<span class="signup-label">{t(locale, 'news.phoneOptional')}</span>
+							<input type="tel" placeholder={t(locale, 'news.phone')} aria-label={t(locale, 'news.phone')} />
 						</label>
 						<label class="signup-field signup-field--zip">
-							<span class="signup-label">Poštanski broj</span>
-							<input type="text" placeholder="Poštanski broj" aria-label="Poštanski broj" />
+							<span class="signup-label">{t(locale, 'news.postal')}</span>
+							<input type="text" placeholder={t(locale, 'news.postal')} aria-label={t(locale, 'news.postal')} />
 						</label>
 						<button type="submit" class="signup-btn">
-							<MailIcon size={16} /><span>Pretplati se</span>
+							<MailIcon size={16} /><span>{t(locale, 'news.subscribe')}</span>
 						</button>
 					</div>
 					<p id="signup-disclaimer" class="signup-disclaimer">
-						Davanjem svog broja telefona pristajem da mi Varaždinski streličarski klub putem
-						Community usluge šalje vijesti i ponude na navedeni broj te prihvaćam
-						<a href="/kontakt">Pravila privatnosti</a> Varaždinskog streličarskog kluba.
-						Odgovorite HELP za pomoć. U svakom trenutku možete se odjaviti slanjem poruke
-						STOP. Napomena: ovo nije stvarni newsletter, služi isključivo za potrebe osobnog
-						projekta.
+						{t(locale, 'news.disclaimerBefore')}<a href="/kontakt">{t(locale, 'news.disclaimerLink')}</a>{t(locale, 'news.disclaimerAfter')}
 					</p>
 				</form>
 			</div>
@@ -235,7 +234,7 @@
 
 		<!-- Card grid (infinite scroll) -->
 		<section class="news-body">
-			<h2 class="news-more-heading">Više vijesti</h2>
+			<h2 class="news-more-heading">{t(locale, 'news.moreHeading')}</h2>
 
 			<ul class="news-grid">
 				{#each rest as article (article.slug)}
@@ -249,10 +248,10 @@
 			<div class="news-foot">
 				{#if hasMore}
 					{#if loadError}
-						<p class="news-load-error" role="alert">Učitavanje nije uspjelo.</p>
+						<p class="news-load-error" role="alert">{t(locale, 'news.loadFailed')}</p>
 					{/if}
 					<button class="load-more" onclick={loadOlder} disabled={loading}>
-						{loading ? 'Učitavam…' : 'Više'}
+						{loading ? t(locale, 'news.loading') : t(locale, 'news.more')}
 					</button>
 				{/if}
 				<div class="news-end"><Flourish /></div>

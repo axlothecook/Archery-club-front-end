@@ -1,43 +1,21 @@
 <script lang="ts">
 	import LegalPage from '$lib/components/LegalPage.svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
-	// Generic privacy-policy boilerplate (Croatian). Template text — not lawyer-reviewed.
-	const sections = [
-		{
-			heading: 'Koje podatke prikupljamo',
-			body: [
-				'Prikupljamo samo podatke koje nam dobrovoljno dostavite, primjerice putem kontakt obrasca (ime, adresa e-pošte, telefon i poruka). Stranica ne traži osjetljive osobne podatke.'
-			]
-		},
-		{
-			heading: 'Svrha obrade',
-			body: [
-				'Dostavljene podatke koristimo isključivo kako bismo odgovorili na vaš upit, obradili zahtjev za učlanjenje, suradnju ili donaciju te vas po potrebi kontaktirali. Podatke ne koristimo u druge svrhe bez vašeg pristanka.'
-			]
-		},
-		{
-			heading: 'Dijeljenje podataka',
-			body: [
-				'Vaše osobne podatke ne prodajemo niti ustupamo trećim stranama u marketinške svrhe. Podaci se mogu dijeliti samo ako to zahtijeva zakon ili je nužno za obradu vašeg zahtjeva.'
-			]
-		},
-		{
-			heading: 'Čuvanje podataka',
-			body: [
-				'Podatke čuvamo samo onoliko dugo koliko je potrebno za ostvarenje svrhe za koju su prikupljeni, nakon čega ih brišemo ili anonimiziramo.'
-			]
-		},
-		{
-			heading: 'Vaša prava',
-			body: [
-				'U skladu s Općom uredbom o zaštiti podataka (GDPR) imate pravo na pristup svojim podacima, njihov ispravak, brisanje te prigovor na obradu. Za ostvarivanje tih prava obratite nam se putem kontakt stranice.'
-			]
-		}
-	];
+	// Generic privacy-policy boilerplate (i18n; template text — not lawyer-reviewed).
+	const locale = $derived(page.data.locale);
+	const sections = $derived([
+		{ heading: t(locale, 'legal.p1h'), body: [t(locale, 'legal.p1b')] },
+		{ heading: t(locale, 'legal.p2h'), body: [t(locale, 'legal.p2b')] },
+		{ heading: t(locale, 'legal.p3h'), body: [t(locale, 'legal.p3b')] },
+		{ heading: t(locale, 'legal.p4h'), body: [t(locale, 'legal.p4b')] },
+		{ heading: t(locale, 'legal.p5h'), body: [t(locale, 'legal.p5b')] }
+	]);
 </script>
 
 <LegalPage
-	title="Pravila privatnosti"
-	intro="Kako prikupljamo i koristimo osobne podatke."
+	title={t(locale, 'legal.privacyTitle')}
+	intro={t(locale, 'legal.privacyIntro')}
 	{sections}
 />

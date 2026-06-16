@@ -6,6 +6,8 @@
 	// White lines flank the row (left of the first card, right of the last).
 	//
 	// Used at the bottom of the Identitet / Sponzori / Postignuća pages.
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
 	// The four main club sections. `image` is each section's representative photo.
 	// Povijest → the latest chapter's cover; Identitet → the Olympic image.
@@ -18,23 +20,26 @@
 	const SPONSORS_IMG = `${BASE}/achivements/sponsors-cover.jpg`; // Sponzori cover
 
 	const SECTIONS = [
-		{ label: 'Povijest', href: '/klub/povijest', image: LATEST_CHAPTER_IMG },
-		{ label: 'Identitet', href: '/klub/identitet', image: OLYMPIC_IMG },
-		{ label: 'Postignuća', href: '/postignuca', image: ACHIEVEMENTS_IMG },
-		{ label: 'Sponzori', href: '/sponzori', image: SPONSORS_IMG }
+		{ key: 'nav.history', href: '/klub/povijest', image: LATEST_CHAPTER_IMG },
+		{ key: 'nav.identity', href: '/klub/identitet', image: OLYMPIC_IMG },
+		{ key: 'nav.achievements', href: '/postignuca', image: ACHIEVEMENTS_IMG },
+		{ key: 'nav.sponsors', href: '/sponzori', image: SPONSORS_IMG }
 	];
 
 	// Optional content rendered at the TOP of the golden band, above the explore row
 	// (e.g. the Momčad page injects a news roster here).
 	let { top }: { top?: import('svelte').Snippet } = $props();
+
+	// Active locale (cookie-driven, from the root layout load).
+	const locale = $derived(page.data.locale);
 </script>
 
-<section class="explore" aria-label="Istraži klub">
+<section class="explore" aria-label={t(locale, 'explore.aria')}>
 	{#if top}
 		<div class="explore-top">{@render top()}</div>
 	{/if}
 
-	<h2 class="explore-heading"><strong>MOŽDA</strong> ĆE VAM SE SVIDJETI</h2>
+	<h2 class="explore-heading"><strong>{t(locale, 'explore.headStrong')}</strong> {t(locale, 'explore.headRest')}</h2>
 
 	<div class="explore-row">
 		<span class="explore-line left" aria-hidden="true"></span>
@@ -43,7 +48,7 @@
 			<a class="explore-card" href={s.href}>
 				<img class="explore-card-img" src={s.image} alt="" loading="lazy" />
 				<span class="explore-card-scrim" aria-hidden="true"></span>
-				<span class="explore-card-label">{s.label}</span>
+				<span class="explore-card-label">{t(locale, s.key)}</span>
 			</a>
 		{/each}
 

@@ -2,7 +2,10 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import { page } from '$app/state';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
+	import { t } from '$lib/i18n';
 	import type { ClubHistoryPeriodResolved } from 'archery-contracts';
+
+	const locale = $derived(page.data.locale);
 
 	// Newest chapter first → oldest last (reverse of the editorial `order`).
 	const periods = $derived(
@@ -10,19 +13,14 @@
 	);
 </script>
 
-<Seo title="Povijest" description="Povijest Varaždinskog streličarskog kluba kroz godine." />
+<Seo title={t(locale, 'hist.seoTitle')} description={t(locale, 'hist.seoDesc')} />
 
-<h1 class="history-heading">Klub kroz godine</h1>
+<h1 class="history-heading">{t(locale, 'hist.heading')}</h1>
 
 <!-- Founder quote below the section heading. -->
 <figure class="history-quote">
-	<blockquote>
-		Varaždinski streličarski klub od svojeg osnutka ima svoje streličare u redovima
-		reprezentacije i oni redovito donose izvanredne rezultate za klub i za Hrvatsku,
-		što je sve posljedica odličnog rada u klubu te izuzetnog zalaganja samih
-		streličara.
-	</blockquote>
-	<figcaption>Osnivač Tomislav Mlinarić</figcaption>
+	<blockquote>{t(locale, 'hist.founderQuote')}</blockquote>
+	<figcaption>{t(locale, 'hist.founderCaption')}</figcaption>
 </figure>
 
 <div class="history-grid">

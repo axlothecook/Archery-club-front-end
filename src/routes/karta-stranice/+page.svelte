@@ -3,37 +3,42 @@
 	// Built from the footer columns (the maintained nav source) plus the home + contact
 	// entry points, so it stays in sync as nav changes.
 	import { FOOTER_COLUMNS } from '$lib/nav';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+
+	const locale = $derived(page.data.locale);
 
 	// Lead with Home + Contact, then the footer's grouped columns (Klub / O klubu / Usluge).
-	const GROUPS = [
+	// Each group/link carries an i18n `key`; FOOTER_COLUMNS already have headingKey + per-link key.
+	const GROUPS = $derived([
 		{
-			heading: 'Početna',
+			headingKey: 'site.groupHome',
 			links: [
-				{ label: 'Naslovnica', href: '/' },
-				{ label: 'Kontakt', href: '/kontakt' }
+				{ key: 'site.home', href: '/' },
+				{ key: 'nav.contact', href: '/kontakt' }
 			]
 		},
-		...FOOTER_COLUMNS
-	];
+		...FOOTER_COLUMNS.map((c) => ({ headingKey: c.headingKey, links: c.links }))
+	]);
 </script>
 
 <svelte:head>
-	<title>Karta stranice | VSK</title>
+	<title>{t(locale, 'site.title')} | VSK</title>
 </svelte:head>
 
 <div class="sitemap">
 	<header class="sitemap-hero">
-		<h1 class="sitemap-title">Karta stranice</h1>
-		<p class="sitemap-sub">Pregled svih stranica na web stranici.</p>
+		<h1 class="sitemap-title">{t(locale, 'site.title')}</h1>
+		<p class="sitemap-sub">{t(locale, 'site.sub')}</p>
 	</header>
 
 	<div class="sitemap-grid">
-		{#each GROUPS as group (group.heading)}
+		{#each GROUPS as group (group.headingKey)}
 			<section class="sitemap-col">
-				<h2>{group.heading}</h2>
+				<h2>{t(locale, group.headingKey)}</h2>
 				<ul>
-					{#each group.links as link (link.label + link.href)}
-						<li><a href={link.href}>{link.label}</a></li>
+					{#each group.links as link (link.href)}
+						<li><a href={link.href}>{link.key ? t(locale, link.key) : link.href}</a></li>
 					{/each}
 				</ul>
 			</section>

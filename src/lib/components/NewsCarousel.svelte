@@ -6,11 +6,16 @@
 	// Food-For-Dollar slider pattern, hand-rolled — no framer-motion dep), arrow +
 	// dot clicks, and auto-advance with the dot progress bar restarted per slide.
 
-	import { formatDateHr } from '$lib/date';
+	import { formatDate } from '$lib/date';
+	import { t } from '$lib/i18n';
+	import { page } from '$app/state';
 	import ArrowUpIcon from '$lib/components/icons/ArrowUpIcon.svelte';
 	import type { ArticleCard } from 'archery-contracts';
 
 	let { slides }: { slides: ArticleCard[] } = $props();
+
+	// Active locale (cookie-driven) — drives the date format + the carousel labels.
+	const locale = $derived(page.data.locale);
 
 	const AUTO_MS = 6000; // keep in sync with $auto-advance-duration (6s) below
 	const DRAG_BUFFER = 50; // px past which a drag commits to the next/prev slide
@@ -96,16 +101,16 @@
 		class:paused={paused || dragging}
 		role="group"
 		aria-roledescription="carousel"
-		aria-label="Istaknute vijesti"
+		aria-label={t(locale, 'news.featuredAria')}
 		onmouseenter={() => (paused = true)}
 		onmouseleave={() => (paused = false)}
 	>
 		<div class="carousel-content">
 			{#if count > 1}
-				<button class="carousel-arrow-left" type="button" aria-label="Prethodna" onclick={prev}>
+				<button class="carousel-arrow-left" type="button" aria-label={t(locale, 'news.prev')} onclick={prev}>
 					<span class="arrow-icon arrow-left"><ArrowUpIcon size={40} strokeWidth={2.2} /></span>
 				</button>
-				<button class="carousel-arrow-right" type="button" aria-label="Sljedeća" onclick={next}>
+				<button class="carousel-arrow-right" type="button" aria-label={t(locale, 'news.next')} onclick={next}>
 					<span class="arrow-icon arrow-right"><ArrowUpIcon size={40} strokeWidth={2.2} /></span>
 				</button>
 			{/if}
@@ -145,11 +150,11 @@
 							<div class="slide-text">
 								{#if article.publishedAt}
 									<time class="slide-date" datetime={article.publishedAt}>
-										{formatDateHr(article.publishedAt)}
+										{formatDate(article.publishedAt, locale)}
 									</time>
 								{/if}
 								<h2 class="slide-title">{article.title}</h2>
-								<span class="slide-cta">Pročitaj više →</span>
+								<span class="slide-cta">{t(locale, 'news.readMore')}</span>
 							</div>
 						</a>
 					</div>

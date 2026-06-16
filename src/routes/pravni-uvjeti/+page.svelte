@@ -1,40 +1,17 @@
 <script lang="ts">
 	import LegalPage from '$lib/components/LegalPage.svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
-	// Generic terms-of-use boilerplate (Croatian). Template text — not lawyer-reviewed.
-	const sections = [
-		{
-			heading: 'Prihvaćanje uvjeta',
-			body: [
-				'Pristupanjem ovoj web stranici i njezinim korištenjem prihvaćate ove uvjete korištenja u cijelosti. Ako se ne slažete s bilo kojim dijelom ovih uvjeta, molimo da ne koristite stranicu.'
-			]
-		},
-		{
-			heading: 'Korištenje sadržaja',
-			body: [
-				'Sadržaj na ovoj stranici (tekstovi, slike, logotipi i ostali materijali) namijenjen je informativnoj uporabi. Sadržaj se ne smije umnožavati, distribuirati ni koristiti u komercijalne svrhe bez prethodnog dopuštenja nositelja prava.',
-				'Trudimo se da informacije budu točne i ažurne, no ne jamčimo da su bez pogrešaka niti da su u svakom trenutku potpune.'
-			]
-		},
-		{
-			heading: 'Poveznice na druge stranice',
-			body: [
-				'Stranica može sadržavati poveznice na vanjske web stranice nad kojima nemamo kontrolu. Ne preuzimamo odgovornost za sadržaj, dostupnost ni politike tih stranica.'
-			]
-		},
-		{
-			heading: 'Ograničenje odgovornosti',
-			body: [
-				'Korištenje stranice je na vlastitu odgovornost. U najvećoj mjeri dopuštenoj zakonom ne odgovaramo za bilo kakvu izravnu ili neizravnu štetu nastalu korištenjem ili nemogućnošću korištenja stranice.'
-			]
-		},
-		{
-			heading: 'Izmjene uvjeta',
-			body: [
-				'Zadržavamo pravo izmjene ovih uvjeta u bilo kojem trenutku. Izmjene stupaju na snagu objavom na ovoj stranici, pa preporučujemo povremenu provjeru.'
-			]
-		}
-	];
+	// Generic terms-of-use boilerplate (i18n; template text — not lawyer-reviewed).
+	const locale = $derived(page.data.locale);
+	const sections = $derived([
+		{ heading: t(locale, 'legal.t1h'), body: [t(locale, 'legal.t1b')] },
+		{ heading: t(locale, 'legal.t2h'), body: [t(locale, 'legal.t2b1'), t(locale, 'legal.t2b2')] },
+		{ heading: t(locale, 'legal.t3h'), body: [t(locale, 'legal.t3b')] },
+		{ heading: t(locale, 'legal.t4h'), body: [t(locale, 'legal.t4b')] },
+		{ heading: t(locale, 'legal.t5h'), body: [t(locale, 'legal.t5b')] }
+	]);
 </script>
 
-<LegalPage title="Pravni uvjeti" intro="Uvjeti korištenja web stranice." {sections} />
+<LegalPage title={t(locale, 'legal.termsTitle')} intro={t(locale, 'legal.termsIntro')} {sections} />

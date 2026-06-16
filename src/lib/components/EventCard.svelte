@@ -11,8 +11,14 @@
 	import LocationIcon from '$lib/components/icons/LocationIcon.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
+	import { localeTag } from '$lib/locale';
 
 	let { ev }: { ev: ClubEventResolved } = $props();
+
+	const locale = $derived(page.data.locale);
+	const tag = $derived(localeTag(locale));
 
 	const NEUTRAL_COLOR = '#888888'; // level-less events ("Ostalo")
 
@@ -35,19 +41,15 @@
 		}
 	}
 
-	const HR_LONG = new Intl.DateTimeFormat('hr-HR', {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric'
-	});
-	const HR_SHORT = new Intl.DateTimeFormat('hr-HR', { day: 'numeric', month: 'long' });
+	const LONG_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long', year: 'numeric' }));
+	const SHORT_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long' }));
 
-	// "7. ožujka 2026." or, for a range, "7. – 8. ožujka 2026."
+	// "7. ožujka 2026." or, for a range, "7. – 8. ožujka 2026." (in the active locale)
 	function eventDateLabel(e: ClubEventResolved): string {
 		const from = new Date(e.dateFrom);
-		if (!e.dateTo) return HR_LONG.format(from);
+		if (!e.dateTo) return LONG_FMT.format(from);
 		const to = new Date(e.dateTo);
-		return `${HR_SHORT.format(from)} – ${HR_LONG.format(to)}`;
+		return `${SHORT_FMT.format(from)} – ${LONG_FMT.format(to)}`;
 	}
 
 	const Scope = $derived(scopeIcon(ev.level));
@@ -61,17 +63,17 @@
 				<Scope size={84} />
 			</span>
 		{/if}
-		<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? 'Ostalo'}</span>
+		<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
 	</div>
 
 	<!-- White body -->
 	<div class="ev-card-body">
 		<p class="ev-cat">
-			Streličarstvo{ev.format ? ` · ${ev.format}` : ''}
+			{t(locale, 'sched.archery')}{ev.format ? ` · ${ev.format}` : ''}
 		</p>
 		<h4 class="ev-name">{ev.name}</h4>
 		{#if ev.isCancelled}
-			<p class="ev-cancelled-tag">Otkazano</p>
+			<p class="ev-cancelled-tag">{t(locale, 'sched.cancelled')}</p>
 		{/if}
 
 		<p class="ev-row">
@@ -90,10 +92,10 @@
 				<span>
 					{#if ev.attendees.length}
 						{ev.attendees.join(', ')}{ev.hasUnlistedClubAttendee
-							? ' i ostali članovi kluba'
+							? ` ${t(locale, 'sched.andOthers')}`
 							: ''}
 					{:else}
-						Članovi kluba
+						{t(locale, 'sched.clubMembers')}
 					{/if}
 				</span>
 			</p>
@@ -101,7 +103,7 @@
 
 		{#if ev.sourceUrl}
 			<a class="ev-more" href={ev.sourceUrl} target="_blank" rel="noopener">
-				Više <ChevronIcon direction="right" size={14} />
+				{t(locale, 'sched.moreLink')} <ChevronIcon direction="right" size={14} />
 			</a>
 		{/if}
 	</div>
@@ -135,7 +137,13 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.85rem;
-		padding: 2.95rem 1.25rem 3.35rem;
+		// Fixed band height (sized for a 2-line level name) so the white body below is
+		// the SAME height on every card regardless of whether the name wraps to 1 or 2
+		// lines (1-line names just sit with more vertical breathing room, centred). This
+		// keeps the cards uniform across locales (e.g. "Domestic" vs "European Championship").
+		min-height: 158px;
+		box-sizing: border-box;
+		padding: 1.25rem 1.25rem 2.15rem; // bottom > top to clear the body's -0.9rem overlap
 		border-radius: 12px 12px 0 0;
 		background: $navy;
 	}

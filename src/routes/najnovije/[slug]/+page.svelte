@@ -5,7 +5,8 @@
 	// an external-link post surfaces its source, and FB posts a "view on Facebook".
 
 	import { page } from '$app/state';
-	import { formatDateHr } from '$lib/date';
+	import { formatDate } from '$lib/date';
+	import { t } from '$lib/i18n';
 	import { splitParagraphs } from '$lib/text';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
@@ -16,11 +17,12 @@
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import ShareIcon from '$lib/components/icons/ShareIcon.svelte';
 	import Seo from '$lib/components/Seo.svelte';
-	import { bowLabel } from '$lib/archer';
+	import { bowLabelI18n } from '$lib/archer';
 
 	let { data } = $props();
 	const article = $derived(data.article);
 	const mentionedCards = $derived(data.mentionedCards ?? []);
+	const locale = $derived(page.data.locale);
 
 	// Club socials (site-wide layout data) shown as small icons in the meta row.
 	const socials = $derived(page.data.clubInfo?.socials ?? []);
@@ -269,7 +271,7 @@
 			<div class="post-meta">
 				<div class="post-meta-left">
 					<time class="post-date" datetime={article.publishedAt}>
-						{formatDateHr(article.publishedAt)}
+						{formatDate(article.publishedAt, locale)}
 					</time>
 					<span class="post-time"><ClockIcon size={16} /> 09:45 AM</span>
 				</div>
@@ -297,7 +299,7 @@
 					</a>
 				{/if}
 			{/each}
-			<button class="post-social post-share-btn" type="button" onclick={openShare} aria-label="Podijeli članak">
+			<button class="post-social post-share-btn" type="button" onclick={openShare} aria-label={t(locale, 'post.share')}>
 				<ShareIcon size={34} />
 			</button>
 		</div>
@@ -343,7 +345,7 @@
 					<p class="post-fb">
 						<a href={article.fbPermalinkUrl} target="_blank" rel="noopener noreferrer">
 							<FacebookIcon size={18} />
-							<span>Pogledaj na Facebooku</span>
+							<span>{t(locale, 'post.viewOnFacebook')}</span>
 						</a>
 					</p>
 				{/if}
@@ -367,7 +369,7 @@
 				     gallery by a thin divider line. -->
 				{#if mentionedCards.length > 0}
 					<section class="post-archers">
-						<h2 class="post-archers-title">U ovom članku</h2>
+						<h2 class="post-archers-title">{t(locale, 'post.inThisArticle')}</h2>
 						<ul class="archer-cards">
 							{#each mentionedCards as a (a.slug)}
 								<li>
@@ -379,7 +381,7 @@
 										</span>
 										<span class="archer-card-text">
 											<span class="archer-card-name">{a.firstName} {a.lastName}</span>
-											<span class="archer-card-bow">{bowLabel(a.bowType)}</span>
+											<span class="archer-card-bow">{a.bowType[0] ? bowLabelI18n(a.bowType[0], locale) : ''}</span>
 										</span>
 										<span class="archer-card-arrow"><ChevronIcon size={20} direction="right" /></span>
 									</a>
@@ -402,7 +404,7 @@
 		class="share-overlay"
 		role="button"
 		tabindex="-1"
-		aria-label="Zatvori"
+		aria-label={t(locale, 'post.close')}
 		onclick={closeShare}
 		onkeydown={(e) => e.key === 'Escape' && closeShare()}
 	>
@@ -411,11 +413,11 @@
 			role="dialog"
 			tabindex="-1"
 			aria-modal="true"
-			aria-label="Podijeli članak"
+			aria-label={t(locale, 'post.share')}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={() => {}}
 		>
-			<h2 class="share-title">Podijeli članak</h2>
+			<h2 class="share-title">{t(locale, 'post.share')}</h2>
 			<div class="share-row">
 				<input
 					id="share-url-input"
@@ -423,11 +425,11 @@
 					type="text"
 					readonly
 					value={shareUrl}
-					aria-label="Poveznica na članak"
+					aria-label={t(locale, 'post.linkToArticle')}
 					onfocus={(e) => e.currentTarget.select()}
 				/>
 				<button class="share-copy" type="button" onclick={copyLink}>
-					{copied ? 'Kopirano!' : 'Kopiraj'}
+					{copied ? t(locale, 'post.copied') : t(locale, 'post.copy')}
 				</button>
 			</div>
 		</div>

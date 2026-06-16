@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { ui } from '$lib/ui.svelte';
 	import { MENU_LINKS, MENU_CONTACT, MENU_UTILITY, LOCALE_FLAGS, type MenuLink } from '$lib/nav';
+	import { t } from '$lib/i18n';
 	import FlagIcon from './icons/FlagIcon.svelte';
 	import CloseIcon from './icons/CloseIcon.svelte';
 	import ChevronIcon from './icons/ChevronIcon.svelte';
@@ -28,6 +29,9 @@
 	const email = $derived(page.data.clubInfo?.email ?? null);
 	const PHONE = '+385 98 372 912';
 
+	// Active locale (cookie-driven, resolved server-side in +layout.server.ts).
+	const locale = $derived(page.data.locale);
+
 	// Locale flag dropdown (opens downward).
 	let localeOpen = $state(false);
 	const activeFlag = $derived(
@@ -47,9 +51,9 @@
 	aria-hidden="true"
 ></div>
 
-<nav class="half-screen-menu gucci-menu" class:open={ui.menuOpen} aria-label="Glavni izbornik">
+<nav class="half-screen-menu gucci-menu" class:open={ui.menuOpen} aria-label={t(locale, 'menu.main')}>
 	<div class="menu-head">
-		<button class="menu-close" onclick={() => ui.closeMenu()} aria-label="Zatvori izbornik">
+		<button class="menu-close" onclick={() => ui.closeMenu()} aria-label={t(locale, 'menu.close')}>
 			<CloseIcon size={22} />
 		</button>
 	</div>
@@ -64,11 +68,11 @@
 					<li>
 						{#if link.children}
 							<button class="menu-link menu-link-parent" onclick={() => (activeSub = link)}>
-								{link.label}
+								{link.key ? t(locale, link.key) : link.label}
 								<span class="menu-arrow"><ChevronIcon size={18} direction="right" /></span>
 							</button>
 						{:else}
-							<a class="menu-link" href={link.href} onclick={go}>{link.label}</a>
+							<a class="menu-link" href={link.href} onclick={go}>{link.key ? t(locale, link.key) : link.label}</a>
 						{/if}
 					</li>
 				{/each}
@@ -76,7 +80,7 @@
 
 			<!-- Middle tier (Gucci secondary block): Kontakt alone -->
 			<div class="menu-middle">
-				<a class="menu-link-middle" href={MENU_CONTACT.href} onclick={go}>{MENU_CONTACT.label}</a>
+				<a class="menu-link-middle" href={MENU_CONTACT.href} onclick={go}>{MENU_CONTACT.key ? t(locale, MENU_CONTACT.key) : MENU_CONTACT.label}</a>
 			</div>
 
 			<!-- Utility tier (smallest size): contact details + Log In -->
@@ -86,7 +90,7 @@
 				{/if}
 				<span class="menu-small">{PHONE}</span>
 				{#each MENU_UTILITY as link (link.label)}
-					<a class="menu-small menu-small-link" href={link.href} onclick={go}>{link.label}</a>
+					<a class="menu-small menu-small-link" href={link.href} onclick={go}>{link.key ? t(locale, link.key) : link.label}</a>
 				{/each}
 			</div>
 		</div>
@@ -96,12 +100,12 @@
 			{#if activeSub}
 				<button class="menu-back" onclick={() => (activeSub = null)}>
 					<ChevronIcon size={16} direction="left" />
-					<span>Natrag</span>
+					<span>{t(locale, 'menu.back')}</span>
 				</button>
-				<h2 class="menu-sub-title">{activeSub.label}</h2>
+				<h2 class="menu-sub-title">{activeSub.key ? t(locale, activeSub.key) : activeSub.label}</h2>
 				<ul class="menu-links">
 					{#each activeSub.children ?? [] as sub (sub.href)}
-						<li><a class="menu-link" href={sub.href} onclick={go}>{sub.label}</a></li>
+						<li><a class="menu-link" href={sub.href} onclick={go}>{sub.key ? t(locale, sub.key) : sub.label}</a></li>
 					{/each}
 				</ul>
 			{/if}

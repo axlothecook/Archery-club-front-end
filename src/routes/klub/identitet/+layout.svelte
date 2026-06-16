@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { IDENTITY_TABS, identityHref } from '$lib/identity';
+	import { t } from '$lib/i18n';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
 
 	let { children } = $props();
+
+	const locale = $derived(page.data.locale);
 
 	const HERO_IMAGE =
 		'https://images.axlothecook.com/archery/identity/identity-page.jpg';
@@ -28,16 +31,16 @@
 			onload={() => (heroLoaded = true)}
 		/>
 		<div class="identity-hero-overlay"></div>
-		<h1 class="identity-hero-title">Identitet</h1>
+		<h1 class="identity-hero-title">{t(locale, 'id.heroTitle')}</h1>
 	</header>
 
 	<!-- Content: white surface on the page's navy bg. The tab bar sits INSIDE it,
 	     at the top (Barça layout: tabs + content share one white panel). -->
 	<div class="identity-content">
-		<nav class="identity-tabs" aria-label="Identitet kluba">
+		<nav class="identity-tabs" aria-label={t(locale, 'id.tabsAria')}>
 			{#each IDENTITY_TABS as tab (tab.apiSlug)}
 				{@const href = identityHref(tab)}
-				<a class="identity-tab" class:active={href === activeHref} {href}>{tab.label}</a>
+				<a class="identity-tab" class:active={href === activeHref} {href}>{t(locale, tab.key)}</a>
 			{/each}
 		</nav>
 

@@ -4,8 +4,10 @@
 	import { error } from '@sveltejs/kit';
 	import type { ClubHistoryPeriodResolved, ClubHistoryParagraph } from 'archery-contracts';
 	import { splitParagraphs } from '$lib/text';
+	import { t } from '$lib/i18n';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 
+	const locale = $derived(page.data.locale);
 	const periods = $derived((page.data.periods ?? []) as ClubHistoryPeriodResolved[]);
 	const slug = page.params.slug ?? '';
 
@@ -220,8 +222,8 @@
      X can't enter it). One continuous gold→blue fade; an auto-scrolling marquee of
      up to 8 related chapter cards that PAUSES on card-hover (hovered card scales). -->
 {#if related.length > 0}
-	<section class="related" aria-label="Povezano s ovim člankom">
-		<h2 class="related-heading"><strong>POVEZANO</strong> S OVIM ČLANKOM</h2>
+	<section class="related" aria-label={t(locale, 'chap.related')}>
+		<h2 class="related-heading"><strong>{t(locale, 'chap.relatedStrong')}</strong> {t(locale, 'chap.relatedRest')}</h2>
 
 		<div class="related-track-mask">
 			<div class="related-track">

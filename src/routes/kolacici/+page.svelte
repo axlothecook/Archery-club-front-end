@@ -1,27 +1,15 @@
 <script lang="ts">
 	import LegalPage from '$lib/components/LegalPage.svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
-	// Generic cookie-notice boilerplate (Croatian). Template text — not lawyer-reviewed.
-	const sections = [
-		{
-			heading: 'Što su kolačići',
-			body: [
-				'Kolačići (cookies) su male tekstualne datoteke koje web stranica pohranjuje na vaš uređaj kako bi stranica ispravno radila te kako bi se zapamtile vaše postavke prilikom posjeta.'
-			]
-		},
-		{
-			heading: 'Koje kolačiće koristimo',
-			body: [
-				'Ova stranica koristi prvenstveno nužne kolačiće potrebne za osnovno funkcioniranje (primjerice pamćenje sesije i postavki prikaza). Ne koristimo kolačiće za oglašavanje.'
-			]
-		},
-		{
-			heading: 'Upravljanje kolačićima',
-			body: [
-				'Kolačiće možete u svakom trenutku obrisati ili blokirati putem postavki svog web preglednika. Napominjemo da onemogućavanje nekih kolačića može utjecati na funkcionalnost stranice.'
-			]
-		}
-	];
+	// Generic cookie-notice boilerplate (i18n; template text — not lawyer-reviewed).
+	const locale = $derived(page.data.locale);
+	const sections = $derived([
+		{ heading: t(locale, 'legal.c1h'), body: [t(locale, 'legal.c1b')] },
+		{ heading: t(locale, 'legal.c2h'), body: [t(locale, 'legal.c2b')] },
+		{ heading: t(locale, 'legal.c3h'), body: [t(locale, 'legal.c3b')] }
+	]);
 </script>
 
-<LegalPage title="Kolačići" intro="Korištenje kolačića na ovoj web stranici." {sections} />
+<LegalPage title={t(locale, 'legal.cookiesTitle')} intro={t(locale, 'legal.cookiesIntro')} {sections} />

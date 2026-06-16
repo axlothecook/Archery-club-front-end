@@ -8,10 +8,14 @@
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
-	import { formatDateHr } from '$lib/date';
+	import { formatDate } from '$lib/date';
+	import { t } from '$lib/i18n';
+	import { page } from '$app/state';
 
-	let { articles, heading = 'NAJNOVIJE VIJESTI' }: { articles: ArticleCardData[]; heading?: string } =
-		$props();
+	let { articles, heading }: { articles: ArticleCardData[]; heading?: string } = $props();
+
+	const locale = $derived(page.data.locale);
+	const ariaHeading = $derived(heading ?? t(locale, 'nr.aria'));
 
 	const COUNT = 8;
 	const shown = $derived(articles.slice(0, COUNT));
@@ -33,8 +37,8 @@
 </script>
 
 {#if shown.length}
-	<section class="news-roster" aria-label={heading}>
-		<h2 class="nr-heading"><strong>Najnovije</strong> <span>vijesti</span></h2>
+	<section class="news-roster" aria-label={ariaHeading}>
+		<h2 class="nr-heading"><strong>{t(locale, 'nr.headingStrong')}</strong> <span>{t(locale, 'nr.headingRest')}</span></h2>
 
 		<!-- PHONE: PSG-style 2-up grid of ArticleCards (poster + category/title/date below).
 		     Hidden on desktop, where the overlay-card grid below is shown instead. -->
@@ -69,11 +73,11 @@
 							<div class="nr-meta">
 								<span class="nr-date">
 									<ClockIcon size={13} />
-									{formatDateHr(a.publishedAt)}
+									{formatDate(a.publishedAt, locale)}
 								</span>
 								<span class="nr-tag">
 									<span class="nr-tag-square" aria-hidden="true"></span>
-									Najnovije
+									{t(locale, 'nr.tag')}
 								</span>
 							</div>
 						</div>

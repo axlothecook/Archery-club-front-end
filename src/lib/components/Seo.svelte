@@ -4,16 +4,17 @@
 	// of any page:  <Seo title="Vijesti" description="..." />
 	// `title` is suffixed with the club name; pass a full title to override via `raw`.
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
-	const SITE = 'Varaždinski streličarski klub';
+	const locale = $derived(page.data.locale);
+	const SITE = $derived(t(locale, 'clubName'));
 	const ORIGIN = 'https://archery.axlothecook.com';
 	const DEFAULT_IMAGE = 'https://images.axlothecook.com/archery/identity/vsk-logo.png';
-	const DEFAULT_DESC =
-		'Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Vijesti, raspored natjecanja, momčad i postignuća.';
+	const DEFAULT_DESC = $derived(t(locale, 'meta.defaultDesc'));
 
 	let {
 		title,
-		description = DEFAULT_DESC,
+		description: descriptionProp,
 		image = DEFAULT_IMAGE,
 		/** Pass true if `title` is already the complete title (no " | club" suffix). */
 		raw = false,
@@ -27,8 +28,11 @@
 		type?: string;
 	} = $props();
 
+	// Fall back to the localized default description when a page doesn't pass one.
+	const description = $derived(descriptionProp ?? DEFAULT_DESC);
 	const fullTitle = $derived(!title ? SITE : raw ? title : `${title} | ${SITE}`);
 	const canonical = $derived(ORIGIN + page.url.pathname);
+	const ogLocale = $derived(locale === 'en' ? 'en_GB' : 'hr_HR');
 </script>
 
 <svelte:head>
@@ -43,7 +47,7 @@
 	<meta property="og:type" content={type} />
 	<meta property="og:url" content={canonical} />
 	<meta property="og:image" content={image} />
-	<meta property="og:locale" content="hr_HR" />
+	<meta property="og:locale" content={ogLocale} />
 
 	<!-- Twitter / X card -->
 	<meta name="twitter:card" content="summary_large_image" />

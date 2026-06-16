@@ -2,7 +2,10 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import { page } from '$app/state';
 	import { sectionByApiSlug } from '$lib/identity';
+	import { t } from '$lib/i18n';
 	import type { ClubIdentitySectionResolved } from 'archery-contracts';
+
+	const locale = $derived(page.data.locale);
 
 	// Values is the default identity section. Read it from the layout's already-
 	// loaded sections (no extra fetch).
@@ -10,8 +13,7 @@
 	const values = $derived(sectionByApiSlug(sections, 'values'));
 
 	// Lead quote — verbatim from the Olympic Charter (the club's values statement).
-	const QUOTE =
-		'Bavljenje sportom je ljudsko pravo. Svakom pojedincu mora biti omogućeno bavljenje sportom, bez diskriminacije bilo koje vrste i u olimpijskom duhu, što zahtijeva obostrano razumijevanje u duhu prijateljstva, solidarnosti i fair playa.';
+	const QUOTE = $derived(t(locale, 'id.quote'));
 
 	const OLYMPIC_IMG =
 		'https://images.axlothecook.com/archery/identity/olimpic-logo.jpg';
@@ -23,40 +25,28 @@
 	// flagged for the user to verify/correct.
 	// TODO: move this into the backend seed (club-identity) so it's data-driven,
 	// then read `values.content.blocks` again instead of this hardcode.
-	const VALUE_BLOCKS = [
-		{
-			header: 'Sport je ljudsko pravo',
-			body: 'Sport nije ničije vlasništvo. Bavljenje sportom je ljudsko pravo. Svakom pojedincu mora biti omogućeno kojom vrstom sporta se pojedinac želi baviti, odabir natjecanja na kojem želi sudjelovati, odabir kluba u kojem će trenirati, pravo na trenera s kojim on želi trenirati, pravo na tim čiji dio on želi biti. Pravo na prijatelje s kojima streličar želi dijeliti osmjehe nakon pobjede i koji će razumjeti zašto nakon takmičenja osoba plače.'
-		},
-		{
-			header: 'Bez diskriminacije',
-			// AGENT-COMPOSED (verify): user's line + translated Charter non-discrimination clause.
-			body: 'Bavljenje sportom mora biti omogućeno bez diskriminacije bilo koje vrste i u olimpijskom duhu, neovisno o rasi, boji kože, spolu, spolnoj orijentaciji, jeziku, vjeri, političkom ili drugom uvjerenju, nacionalnom ili socijalnom podrijetlu, imovini, rođenju ili drugom statusu.'
-		},
-		{
-			header: 'Prijateljstvo i solidarnost',
-			body: 'Olimpijski duh zahtijeva obostrano razumijevanje u duhu prijateljstva i solidarnosti. U sportu Vam nitko ne može nametati svoju volju. Nitko Vas ne može prisiliti ni da budete u njemu, ako osjećate nelagodu. Ako trenirate bez volje, ako se ne osjećate kao dio tima, ako Vas okružuju ljudi s kojima Vam nije ugodno, maknite se, promijenite sport, klub, okolinu, krenite ispočetka. Oslobodite se. Sport je samo Vaš izbor.'
-		},
-		{
-			header: 'Poštena igra',
-			// User-supplied copy (4 typos corrected with the user's OK: poštivanja,
-			// sportaša, vidljiva, poštovanje).
-			body: 'Bavljenje sportom zahtijeva obostrano razumijevanje u duhu poštene igre i natjecanje u kojem rezultat nikada nije važniji od poštivanja pravila i suparnika. Pobjedu cijenimo, ali poraz prihvaćamo s jednakim poštovanjem, jer je prava vrijednost sportaša vidljiva u načinu na koji se nosi s oboje. U našem klubu njegujemo iskrenost, čestitost i međusobno poštovanje, na liniji i izvan nje.'
-		}
-	];
+	const VALUE_BLOCKS = $derived([
+		{ header: t(locale, 'id.v1h'), body: t(locale, 'id.v1b') },
+		{ header: t(locale, 'id.v2h'), body: t(locale, 'id.v2b') },
+		{ header: t(locale, 'id.v3h'), body: t(locale, 'id.v3b') },
+		{ header: t(locale, 'id.v4h'), body: t(locale, 'id.v4b') }
+	]);
 </script>
 
-<Seo title="Identitet" description="Identitet i vrijednosti Varaždinskog streličarskog kluba." />
+<Seo title={t(locale, 'id.seoTitle')} description={t(locale, 'id.seoDesc')} />
 
 <article class="values">
-	<h1 class="values-title">{values?.title ?? 'Vrijednosti'}</h1>
+	<!-- Prefer the i18n label: the DB section title ("Vrijednosti") has no EN translation,
+	     and "Values" is a stable UI heading. Fall back to the DB title only if the key is
+	     somehow missing. -->
+	<h1 class="values-title">{locale === 'en' ? t(locale, 'id.valuesTitle') : (values?.title ?? t(locale, 'id.valuesTitle'))}</h1>
 
 	<figure class="values-quote">
 		<blockquote>{QUOTE}</blockquote>
-		<figcaption>Olimpijska povelja</figcaption>
+		<figcaption>{t(locale, 'id.charterCaption')}</figcaption>
 	</figure>
 
-	<img class="values-image" src={OLYMPIC_IMG} alt="Olimpijski duh" />
+	<img class="values-image" src={OLYMPIC_IMG} alt={t(locale, 'id.olympicAlt')} />
 
 	<div class="values-blocks">
 		{#each VALUE_BLOCKS as block (block.header)}

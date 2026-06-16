@@ -9,6 +9,9 @@
 //  • BOW_DEMO  — homepage-only INTRO sentence per type (a demo: a named club archer "uses"
 //                the model). The archer page builds its own intro per-archer instead.
 
+import { t } from '$lib/i18n';
+import type { Locale } from '$lib/locale';
+
 export type BowType = 'recurve' | 'compound' | 'barebow';
 
 // title = bow-type name (heading) · model = the specific demo bow model · body = that
@@ -120,3 +123,16 @@ export const BOW_DEMO: Record<BowType, { intro: string }> = {
 
 // Display order on the homepage (recurve, compound, barebow).
 export const BOW_HOME_ORDER: BowType[] = ['recurve', 'compound', 'barebow'];
+
+// ── Localized accessors ──────────────────────────────────────────────────────
+// BOW_INFO/BOW_DEMO above hold the hr SOURCE text (one place to edit). These read
+// the locale-specific value from the i18n dictionary, falling back to the hr source.
+export function bowTitle(bow: BowType, locale: Locale | string | undefined): string {
+	return t(locale, `bow.${bow}`);
+}
+export function bowBody(bow: BowType, locale: Locale | string | undefined): string {
+	return t(locale, `bow.body.${bow}`);
+}
+export function bowDemoIntro(bow: BowType, locale: Locale | string | undefined): string {
+	return t(locale, `bow.demo.${bow}`);
+}

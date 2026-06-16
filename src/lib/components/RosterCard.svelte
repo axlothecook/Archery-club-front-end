@@ -10,7 +10,8 @@
 	import type { ArcherCard, Bow } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
-	import { bowLabel } from '$lib/archer';
+	import { bowLabelI18n } from '$lib/archer';
+	import { page } from '$app/state';
 
 	let {
 		archer,
@@ -36,7 +37,7 @@
 	} = $props();
 
 	const photoUrl = $derived(photoOverride || archer.cardPhoto?.url || '');
-	const bow = $derived(bowLabel(archer.bowType));
+	const bow = $derived(archer.bowType[0] ? bowLabelI18n(archer.bowType[0], page.data.locale) : '');
 	// First name split into letters for the vertical watermark (one letter per line).
 	const firstLetters = $derived([...archer.firstName]);
 

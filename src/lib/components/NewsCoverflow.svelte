@@ -10,8 +10,12 @@
 
 	import type { ArticleCard as ArticleCardData } from 'archery-contracts';
 	import CoverflowArrowIcon from '$lib/components/icons/CoverflowArrowIcon.svelte';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
 	let { slides }: { slides: ArticleCardData[] } = $props();
+
+	const locale = $derived(page.data.locale);
 
 	let active = $state(0);
 
@@ -72,7 +76,7 @@
 
 <div class="cf" style="--side:{SIDE}">
 	<!-- Left arrow -->
-	<button class="cf-arrow cf-arrow-left" type="button" onclick={() => go(-1)} aria-label="Prethodna vijest">
+	<button class="cf-arrow cf-arrow-left" type="button" onclick={() => go(-1)} aria-label={t(locale, 'cf.prev')}>
 		<CoverflowArrowIcon direction="left" size={34} />
 	</button>
 
@@ -112,7 +116,7 @@
 	</div>
 
 	<!-- Right arrow -->
-	<button class="cf-arrow cf-arrow-right" type="button" onclick={() => go(1)} aria-label="Sljedeća vijest">
+	<button class="cf-arrow cf-arrow-right" type="button" onclick={() => go(1)} aria-label={t(locale, 'cf.next')}>
 		<CoverflowArrowIcon direction="right" size={34} />
 	</button>
 </div>

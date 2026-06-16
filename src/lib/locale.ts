@@ -17,6 +17,15 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 // Human label per locale for the switcher UI.
 export const LOCALE_LABEL: Record<Locale, string> = { hr: 'HR', en: 'EN' };
 
+// BCP-47 tag per locale, for Intl.DateTimeFormat / number formatting so dates,
+// month names and weekday headers render in the active language. en uses en-GB
+// (day-month-year order, matching the Croatian day-first convention).
+export const LOCALE_BCP47: Record<Locale, string> = { hr: 'hr-HR', en: 'en-GB' };
+
+export function localeTag(locale: Locale | string | undefined): string {
+	return LOCALE_BCP47[resolveLocale(locale)];
+}
+
 // The cookie the active locale is stored in (readable on the server for SSR loads
 // AND on the client). Set by the switcher; read by the root layout load.
 export const LOCALE_COOKIE = 'locale';

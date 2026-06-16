@@ -5,10 +5,13 @@
 	// honeypot field the spam guard expects. Closes on success / Esc / backdrop.
 
 	import { env } from '$env/dynamic/public';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	const API_BASE = env.PUBLIC_API_BASE_URL ?? 'http://localhost:3100';
+	const locale = $derived(page.data.locale);
 
 	// Form state.
 	let companyName = $state('');
@@ -66,12 +69,12 @@
 			});
 			if (!res.ok) {
 				const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-				throw new Error(body?.error?.message ?? 'Slanje nije uspjelo. Pokušajte ponovno.');
+				throw new Error(body?.error?.message ?? t(locale, 'k.sendFailed'));
 			}
 			status = 'success';
 		} catch (err) {
 			status = 'error';
-			errorMsg = err instanceof Error ? err.message : 'Slanje nije uspjelo. Pokušajte ponovno.';
+			errorMsg = err instanceof Error ? err.message : t(locale, 'k.sendFailed');
 		} finally {
 			submitting = false;
 		}
@@ -95,18 +98,18 @@
 		}}
 	>
 		<div class="modal" role="dialog" aria-modal="true" aria-labelledby="sponsor-modal-title">
-			<button class="modal-close" type="button" aria-label="Zatvori" onclick={close}>×</button>
+			<button class="modal-close" type="button" aria-label={t(locale, 'sm.close')} onclick={close}>×</button>
 
 			{#if status === 'success'}
 				<div class="modal-success">
-					<h2 id="sponsor-modal-title">Hvala vam!</h2>
-					<p>Vaš upit je zaprimljen. Javit ćemo vam se uskoro.</p>
-					<button class="btn-primary" type="button" onclick={close}>Zatvori</button>
+					<h2 id="sponsor-modal-title">{t(locale, 'k.successHeading')}</h2>
+					<p>{t(locale, 'k.successBody')}</p>
+					<button class="btn-primary" type="button" onclick={close}>{t(locale, 'sm.close')}</button>
 				</div>
 			{:else}
-				<h2 id="sponsor-modal-title" class="modal-title">Postanite naš partner</h2>
+				<h2 id="sponsor-modal-title" class="modal-title">{t(locale, 'sm.title')}</h2>
 				<p class="modal-sub">
-					Ostavite svoje podatke i naš tim će vas kontaktirati u vezi mogućnosti suradnje.
+					{t(locale, 'sm.sub')}
 				</p>
 
 				<form class="modal-form" onsubmit={submit}>
@@ -121,38 +124,38 @@
 					/>
 
 					<label>
-						<span>Naziv tvrtke<i>*</i></span>
+						<span>{t(locale, 'k.companyName')}<i>*</i></span>
 						<input type="text" required bind:value={companyName} />
 					</label>
 					<label>
-						<span>Ime i prezime<i>*</i></span>
+						<span>{t(locale, 'k.fullName')}<i>*</i></span>
 						<input type="text" required bind:value={contactName} />
 					</label>
 					<label>
-						<span>Email<i>*</i></span>
+						<span>{t(locale, 'k.fieldEmail')}<i>*</i></span>
 						<input type="email" required bind:value={email} />
 					</label>
 					<label>
-						<span>Telefon</span>
+						<span>{t(locale, 'k.fieldPhone')}</span>
 						<input type="tel" bind:value={phone} />
 					</label>
 					<label>
-						<span>Područje interesa</span>
+						<span>{t(locale, 'k.interest')}</span>
 						<input
 							type="text"
-							placeholder="npr. oprema, dresovi, sufinanciranje natjecanja"
+							placeholder={t(locale, 'sm.interestPlaceholder')}
 							bind:value={sponsorshipInterest}
 						/>
 					</label>
 					<label>
-						<span>Poruka</span>
+						<span>{t(locale, 'k.message')}</span>
 						<textarea rows="4" bind:value={message}></textarea>
 					</label>
 
 					<label class="consent">
 						<input type="checkbox" required bind:checked={consent} />
 						<span>
-							Slažem se da klub pohrani moje podatke radi odgovora na ovaj upit (GDPR).<i>*</i>
+							{t(locale, 'k.consent')}<i>*</i>
 						</span>
 					</label>
 
@@ -161,7 +164,7 @@
 					{/if}
 
 					<button class="btn-primary" type="submit" disabled={submitting}>
-						{submitting ? 'Šaljem…' : 'Pošalji upit'}
+						{submitting ? t(locale, 'k.sending') : t(locale, 'k.submit')}
 					</button>
 				</form>
 			{/if}

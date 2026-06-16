@@ -14,6 +14,8 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import HeroGlitchWords from '$lib/components/HeroGlitchWords.svelte';
 	import { reveal } from '$lib/actions/reveal';
+	import { t } from '$lib/i18n';
+	import { localeTag } from '$lib/locale';
 	import { dayKey, buildMonthGrid } from '$lib/calendar';
 	import type { Component } from 'svelte';
 	import { fade, scale, fly } from 'svelte/transition';
@@ -22,6 +24,11 @@
 	let { data } = $props();
 	// data.events  — ClubEventResolved[] (ordered by start date)
 	// data.levels  — EventLevelResolved[] legend (color + name)
+
+	// Active locale + its BCP-47 tag (drives the date/month/weekday formatters below,
+	// so the whole calendar localizes when the language switches).
+	const locale = $derived(data.locale);
+	const tag = $derived(localeTag(locale));
 
 	// Hero videos — our own clips in static/ (served from root). PSG-style TWO
 	// STACKED bands: video-1 on top (50%), video-2 on bottom (50%).
@@ -175,14 +182,16 @@
 		else prevMonth();
 	}
 
-	// Croatian month + weekday names from the platform (never hardcoded).
-	const MONTH_TITLE_FMT = new Intl.DateTimeFormat('hr-HR', { month: 'long', year: 'numeric' });
+	// Month + weekday names from the platform (never hardcoded), in the ACTIVE locale.
+	const MONTH_TITLE_FMT = $derived(new Intl.DateTimeFormat(tag, { month: 'long', year: 'numeric' }));
 	const monthTitle = $derived(MONTH_TITLE_FMT.format(new Date(Date.UTC(viewYear, viewMonth, 1))));
 	// Su–Sa short weekday labels (grid starts on Sunday, mirroring the reference).
-	const WEEKDAY_FMT = new Intl.DateTimeFormat('hr-HR', { weekday: 'short' });
-	const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
-		// 2024-01-07 was a Sunday → +i walks Su..Sa.
-		WEEKDAY_FMT.format(new Date(Date.UTC(2024, 0, 7 + i)))
+	const WEEKDAY_FMT = $derived(new Intl.DateTimeFormat(tag, { weekday: 'short' }));
+	const weekdayLabels = $derived(
+		Array.from({ length: 7 }, (_, i) =>
+			// 2024-01-07 was a Sunday → +i walks Su..Sa.
+			WEEKDAY_FMT.format(new Date(Date.UTC(2024, 0, 7 + i)))
+		)
 	);
 
 	// One grid cell.
@@ -215,7 +224,7 @@
 	});
 
 	// Year view: all 12 months as mini-grids (name + 6×7 weeks), for the data year.
-	const MONTH_NAME_FMT = new Intl.DateTimeFormat('hr-HR', { month: 'long' });
+	const MONTH_NAME_FMT = $derived(new Intl.DateTimeFormat(tag, { month: 'long' }));
 	const monthsOfYear = $derived(
 		Array.from({ length: 12 }, (_, m) => ({
 			month: m,
@@ -310,16 +319,16 @@
 	// highlight (distinct from today's `.today` marker).
 	const selectedKey = $derived(selectedDay?.key ?? null);
 
-	// Long Croatian date for the modal heading + card date rows.
-	const HR_LONG = new Intl.DateTimeFormat('hr-HR', { day: 'numeric', month: 'long', year: 'numeric' });
-	const HR_SHORT = new Intl.DateTimeFormat('hr-HR', { day: 'numeric', month: 'long' });
+	// Long/short date for the modal heading + card date rows, in the ACTIVE locale.
+	const LONG_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long', year: 'numeric' }));
+	const SHORT_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long' }));
 
 	// Event date label: "7. ožujka 2026." or, for a range, "7. – 8. ožujka 2026."
 	function eventDateLabel(ev: ClubEventResolved): string {
 		const from = new Date(ev.dateFrom);
-		if (!ev.dateTo) return HR_LONG.format(from);
+		if (!ev.dateTo) return LONG_FMT.format(from);
 		const to = new Date(ev.dateTo);
-		return `${HR_SHORT.format(from)} – ${HR_LONG.format(to)}`;
+		return `${SHORT_FMT.format(from)} – ${LONG_FMT.format(to)}`;
 	}
 
 	function openDay(cell: DayCell) {
@@ -333,7 +342,7 @@
 	}
 </script>
 
-<Seo title="Raspored" description="Raspored natjecanja na kojima nastupaju streličari Varaždinskog streličarskog kluba." />
+<Seo title={t(locale, 'nav.schedule')} description={t(locale, 'sched.seoDesc')} />
 
 <section class="schedule-hero">
 	<!-- PSG-style two stacked bands: top 50% + bottom 50%, each full-width. -->
@@ -357,13 +366,13 @@
 	<div class="schedule-hero-inner">
 		<img class="schedule-hero-logo" src={CLUB_LOGO_URL} alt="Varaždinski streličarski klub" />
 		<h1 class="schedule-hero-title">
-			<span class="thin">Raspored</span>
+			<span class="thin">{t(locale, 'nav.schedule')}</span>
 			<span class="bold">2026</span>
 		</h1>
-		<p class="schedule-hero-sub">Natjecanja na kojima nastupaju streličari kluba</p>
+		<p class="schedule-hero-sub">{t(locale, 'sched.heroSub')}</p>
 	</div>
 
-	<button class="schedule-hero-scroll" onclick={scrollToCalendar} aria-label="Pomakni na raspored">
+	<button class="schedule-hero-scroll" onclick={scrollToCalendar} aria-label={t(locale, 'sched.scrollTo')}>
 		<ChevronIcon direction="down" size={22} strokeWidth={1.5} />
 	</button>
 </section>
@@ -380,8 +389,8 @@
 		class="view-toggle"
 		class:in-calendar={inCalendar}
 		onclick={toggleView}
-		aria-label={viewMode === 'month' ? 'Godišnji prikaz' : 'Mjesečni prikaz'}
-		title={viewMode === 'month' ? 'Godišnji prikaz' : 'Mjesečni prikaz'}
+		aria-label={viewMode === 'month' ? t(locale, 'sched.viewYear') : t(locale, 'sched.viewMonth')}
+		title={viewMode === 'month' ? t(locale, 'sched.viewYear') : t(locale, 'sched.viewMonth')}
 	>
 		<!-- Show the icon for the view you'll switch TO. -->
 		{#if viewMode === 'month'}
@@ -403,12 +412,12 @@
 			class="month-arrow br-full"
 			onclick={prevMonth}
 			disabled={!canPrev}
-			aria-label="Prethodni mjesec"
+			aria-label={t(locale, 'sched.prevMonth')}
 		>
 			<ChevronIcon direction="left" size={20} />
 		</button>
 		<h2 class="month-title">{monthTitle}</h2>
-		<button class="month-arrow br-full" onclick={nextMonth} disabled={!canNext} aria-label="Sljedeći mjesec">
+		<button class="month-arrow br-full" onclick={nextMonth} disabled={!canNext} aria-label={t(locale, 'sched.nextMonth')}>
 			<ChevronIcon direction="right" size={20} />
 		</button>
 	</div>
@@ -465,7 +474,7 @@
 							{/each}
 
 							{#if overflow > 0}
-								<span class="event-more">+ {overflow} više</span>
+								<span class="event-more">+ {overflow} {t(locale, 'sched.more')}</span>
 							{/if}
 						</div>
 					</div>
@@ -544,8 +553,8 @@
 		<div class="side-events">
 			{#if selectedDay}
 				<div class="side-events-head">
-					<h3>{HR_LONG.format(selectedDay.date)}</h3>
-					<button class="modal-close br-full" onclick={closeModal} aria-label="Zatvori">
+					<h3>{LONG_FMT.format(selectedDay.date)}</h3>
+					<button class="modal-close br-full" onclick={closeModal} aria-label={t(locale, 'sched.close')}>
 						<CloseIcon size={18} />
 					</button>
 				</div>
@@ -555,7 +564,7 @@
 					{/each}
 				</div>
 			{:else}
-				<p class="side-events-hint">Odaberite dan za prikaz događaja.</p>
+				<p class="side-events-hint">{t(locale, 'sched.pickDay')}</p>
 			{/if}
 		</div>
 	</aside>
@@ -566,11 +575,11 @@
 <!-- NADOLAZEĆE — one shared title over both the week + month sub-sections -->
 <section class="events-block">
 	<div class="events-inner">
-		<h2 class="block-title" use:reveal>Nadolazeće</h2>
+		<h2 class="block-title" use:reveal>{t(locale, 'sched.upcoming')}</h2>
 
 		<!-- This week -->
 		<div class="events-sub">
-			<h3 class="sub-heading">Ovaj tjedan <span class="sub-dates">[{weekRangeLabel}]</span></h3>
+			<h3 class="sub-heading">{t(locale, 'sched.thisWeek')} <span class="sub-dates">[{weekRangeLabel}]</span></h3>
 			{#if weekEvents.length}
 				<div class="carousel">
 					<div class="carousel-track">
@@ -582,13 +591,13 @@
 					</div>
 				</div>
 			{:else}
-				<p class="events-empty">Nema događaja ovaj tjedan.</p>
+				<p class="events-empty">{t(locale, 'sched.noWeek')}</p>
 			{/if}
 		</div>
 
 		<!-- This month (carousel) -->
 		<div class="events-sub">
-			<h3 class="sub-heading month-heading">Ovaj mjesec</h3>
+			<h3 class="sub-heading month-heading">{t(locale, 'sched.thisMonth')}</h3>
 			{#if monthEvents.length}
 				<div class="carousel">
 					<div class="carousel-track">
@@ -600,7 +609,7 @@
 					</div>
 				</div>
 			{:else}
-				<p class="events-empty">Nema događaja ovaj mjesec.</p>
+				<p class="events-empty">{t(locale, 'sched.noMonth')}</p>
 			{/if}
 		</div>
 	</div>
@@ -626,17 +635,17 @@
 					<Scope size={84} />
 				</span>
 			{/if}
-			<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? 'Ostalo'}</span>
+			<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
 		</div>
 
 		<!-- White body -->
 		<div class="ev-card-body">
 			<p class="ev-cat">
-				Streličarstvo{ev.format ? ` · ${ev.format}` : ''}
+				{t(locale, 'sched.archery')}{ev.format ? ` · ${ev.format}` : ''}
 			</p>
 			<h4 class="ev-name">{ev.name}</h4>
 			{#if ev.isCancelled}
-				<p class="ev-cancelled-tag">Otkazano</p>
+				<p class="ev-cancelled-tag">{t(locale, 'sched.cancelled')}</p>
 			{/if}
 
 			<p class="ev-row">
@@ -655,10 +664,10 @@
 					<span>
 						{#if ev.attendees.length}
 							{ev.attendees.join(', ')}{ev.hasUnlistedClubAttendee
-								? ' i ostali članovi kluba'
+								? ` ${t(locale, 'sched.andOthers')}`
 								: ''}
 						{:else}
-							Članovi kluba
+							{t(locale, 'sched.clubMembers')}
 						{/if}
 					</span>
 				</p>
@@ -666,7 +675,7 @@
 
 			{#if ev.sourceUrl}
 				<a class="ev-more" href={ev.sourceUrl} target="_blank" rel="noopener">
-					Više <ChevronIcon direction="right" size={14} />
+					{t(locale, 'sched.moreLink')} <ChevronIcon direction="right" size={14} />
 				</a>
 			{/if}
 		</div>
@@ -680,7 +689,7 @@
 		class="modal-backdrop"
 		role="button"
 		tabindex="-1"
-		aria-label="Zatvori"
+		aria-label={t(locale, 'sched.close')}
 		onclick={closeModal}
 		onkeydown={(e) => e.key === 'Enter' && closeModal()}
 		transition:fade={{ duration: 200 }}
@@ -690,15 +699,15 @@
 			class="modal-panel"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Događaji"
+			aria-label={t(locale, 'sched.events')}
 			tabindex="-1"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={() => {}}
 			transition:scale={{ duration: 240, start: 0.92, opacity: 0, easing: cubicOut }}
 		>
 			<header class="modal-head">
-				<h3>{HR_LONG.format(selectedDay.date)}</h3>
-				<button class="modal-close br-full" onclick={closeModal} aria-label="Zatvori">
+				<h3>{LONG_FMT.format(selectedDay.date)}</h3>
+				<button class="modal-close br-full" onclick={closeModal} aria-label={t(locale, 'sched.close')}>
 					<CloseIcon size={20} />
 				</button>
 			</header>

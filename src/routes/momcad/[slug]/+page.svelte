@@ -23,7 +23,6 @@
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import {
-		BOW_LABEL,
 		BOW_LEFT,
 		FIG_SCALE,
 		PHONE_SCALE,
@@ -67,12 +66,16 @@
 			FIG_OFFSET[slug] ? `--photo-nudge:${FIG_OFFSET[slug]};` : '',
 			BOW_NUDGE[slug] ? `--bow-nudge:${BOW_NUDGE[slug]};` : ''
 		].join('');
-	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, type BowType } from '$lib/bow';
+	import { BOW_INFO, BOW_MODEL, BOW_CATEGORY_GENITIVE, bowTitle, bowBody, type BowType } from '$lib/bow';
 	import { splitParagraphs } from '$lib/text';
 	import { reveal } from '$lib/actions/reveal';
+	import { t } from '$lib/i18n';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// Active locale (cookie-driven, merged in from the root layout load).
+	const locale = $derived(data.locale);
 
 	// Gates the cover's echo slide-in. The page is now revealed by the global #1e1f1c
 	// wipe panel (the universal loader), not a per-page loader — so we flip `revealed`
@@ -278,7 +281,7 @@
 	};
 	const cover = $derived<Cover>({ ...COVER_DEFAULT, ...(COVER_OVERRIDE[a.slug] ?? {}) });
 
-	const bows = $derived(a.bowType.map((b) => BOW_LABEL[b]));
+	const bows = $derived(a.bowType.map((b) => t(locale, `bow.${b}`)));
 	const bioParas = $derived(a.bio ? splitParagraphs(a.bio) : []);
 	const waUrl = $derived(
 		a.worldArcheryId ? `https://worldarchery.sport/athletes/${a.worldArcheryId}` : null
@@ -314,10 +317,16 @@
 		ulWidth = el.offsetWidth;
 	});
 
-	const SCOPE_LABEL: Record<string, string> = { domestic: 'Domaće', global: 'Međunarodno' };
-	const TYPE_LABEL: Record<string, string> = {
-		outdoor: 'Vanjsko', indoor: 'Dvoransko', field: 'Terensko', '3d': '3D'
-	};
+	const SCOPE_LABEL = $derived<Record<string, string>>({
+		domestic: t(locale, 'pf.scopeDomestic'),
+		global: t(locale, 'pf.scopeGlobal')
+	});
+	const TYPE_LABEL = $derived<Record<string, string>>({
+		outdoor: t(locale, 'pf.typeOutdoor'),
+		indoor: t(locale, 'pf.typeIndoor'),
+		field: t(locale, 'pf.typeField'),
+		'3d': t(locale, 'pf.type3d')
+	});
 
 	// Sparkle layer for the achievement cards: a handful of gold 4-point stars that
 	// pop in, twinkle, and fade at varied spots/sizes/timings (staggered delays) so
@@ -341,7 +350,7 @@
 	// reads "Indoor World Series medalje") — mirroring how RECORD cards already end in
 	// "rekord" in their own title. Records are left as-is.
 	function honourLabel(h: { title: string; type: string }): string {
-		return h.type === 'record' ? h.title : `${h.title} medalje`;
+		return h.type === 'record' ? h.title : `${h.title} ${t(locale, 'pf.medalsSuffix')}`;
 	}
 
 	// ── Bow data (5th div) — the bow renders as a live 3D model via BowViewer; the model
@@ -358,13 +367,27 @@
 	//                   te također puca u kategoriji <other type, gen.>."
 	//  - a coach with no current bow (e.g. Zorman) shot in the PAST → past tense.
 	const fullName = $derived(`${a.firstName} ${a.lastName}`);
-	const bowIntro = $derived(
-		a.roles.includes('coach') && a.bowType.length === 0
-			? `${a.lastName} je tijekom svoje streličarske karijere pucao iz ${BOW_CATEGORY_GENITIVE[primaryBow]}.`
-			: secondBow
-				? `${fullName} primarno puca sa ${bowInfo.model} modelom ${BOW_CATEGORY_GENITIVE[primaryBow]}, te također puca u kategoriji ${BOW_CATEGORY_GENITIVE[secondBow]}.`
-				: `${fullName} puca sa ${bowInfo.model} lukom.`
-	);
+	// Per-archer intro sentence. hr uses grammatical genitive cases (BOW_CATEGORY_GENITIVE);
+	// en uses the plain bow-style label. Same three shapes (retired-coach / two-bow / one-bow).
+	const bowIntro = $derived.by(() => {
+		const retired = a.roles.includes('coach') && a.bowType.length === 0;
+		if (locale === 'en') {
+			const primLabel = t(locale, `bow.${primaryBow}`).toLowerCase();
+			if (retired)
+				return `${a.lastName} competed in the ${primLabel} category during their archery career.`;
+			if (secondBow) {
+				const secLabel = t(locale, `bow.${secondBow}`).toLowerCase();
+				return `${fullName} primarily shoots a ${bowInfo.model} ${primLabel}, and also competes in the ${secLabel} category.`;
+			}
+			return `${fullName} shoots a ${bowInfo.model} bow.`;
+		}
+		// hr (source)
+		if (retired)
+			return `${a.lastName} je tijekom svoje streličarske karijere pucao iz ${BOW_CATEGORY_GENITIVE[primaryBow]}.`;
+		if (secondBow)
+			return `${fullName} primarno puca sa ${bowInfo.model} modelom ${BOW_CATEGORY_GENITIVE[primaryBow]}, te također puca u kategoriji ${BOW_CATEGORY_GENITIVE[secondBow]}.`;
+		return `${fullName} puca sa ${bowInfo.model} lukom.`;
+	});
 
 	// ── Coaches / students (from the profile contract) ────────────────────────────
 	// `a.coaches` / `a.students` are lightweight refs (slug + name); resolve each to
@@ -384,7 +407,10 @@
 	// as "Primarna uloga" and any SECOND role as "Dodatne uloge". For an archer-primary
 	// person who also coaches, the only extra role is Trener (no "primarna" row, since
 	// being an archer is implicit from the rest of the profile).
-	const ROLE_LABEL: Record<string, string> = { coach: 'Trener', archer: 'Streličar' };
+	const ROLE_LABEL = $derived<Record<string, string>>({
+		coach: t(locale, 'pf.roleCoach'),
+		archer: t(locale, 'pf.roleArcher')
+	});
 	const primaryRole = $derived(a.roles[0] ?? 'archer');
 	const secondaryRoles = $derived(a.roles.slice(1));
 	// Show a "Primarna uloga" row only when the primary role is coach (archer-primary
@@ -394,12 +420,14 @@
 		showPrimaryRole ? secondaryRoles : a.roles.filter((r) => r !== 'archer')
 	);
 
-	// Croatian: gendered participle (female → "Trenirana", else "Treniran") + one
-	// coach → "trenerom", more than one → "trenerima".
+	// "Coached by" (en — no inflection). hr: gendered participle (female → "Trenirana",
+	// else "Treniran") + singular/plural "trenerom"/"trenerima".
 	const coachesTitle = $derived(
-		`${a.gender === 'female' ? 'Trenirana' : 'Treniran'} pod ovim ${
-			coachCards.length === 1 ? 'trenerom' : 'trenerima'
-		}`
+		locale === 'en'
+			? t(locale, 'pf.coachedBy')
+			: `${a.gender === 'female' ? 'Trenirana' : 'Treniran'} pod ovim ${
+					coachCards.length === 1 ? 'trenerom' : 'trenerima'
+				}`
 	);
 
 	// "Trenira" row pages 4 cards at a time; an arrow scrolls to the next page.
@@ -411,7 +439,9 @@
 
 <Seo
 	title={fullName}
-	description={`${fullName} — streličar/ica Varaždinskog streličarskog kluba. Profil, lukovi i postignuća.`}
+	description={locale === 'en'
+		? `${fullName}, an archer of Varaždin Archery Club. Profile, bows and achievements.`
+		: `${fullName}, streličar/ica Varaždinskog streličarskog kluba. Profil, lukovi i postignuća.`}
 	image={coverPhoto?.url}
 />
 
@@ -518,45 +548,45 @@
 		<!-- ── 2. DETAILS (left) + BIO (right) ──────────────────────────────────── -->
 		<section class="pf-block pf-intro">
 			<div class="pf-details" use:reveal>
-				<h2 class="pf-block-title">Osobni podaci</h2>
+				<h2 class="pf-block-title">{t(locale, 'pf.personalDetails')}</h2>
 				<dl class="pf-detail-list">
 					<div class="pf-detail">
-						<dt>Ime</dt>
+						<dt>{t(locale, 'pf.name')}</dt>
 						<dd>{a.firstName} {a.lastName}</dd>
 					</div>
 					{#if a.age !== null}
 						<div class="pf-detail">
-							<dt>Dob</dt>
-							<dd>{a.age} godina</dd>
+							<dt>{t(locale, 'pf.age')}</dt>
+							<dd>{a.age} {t(locale, 'pf.years')}</dd>
 						</div>
 					{/if}
 					{#if a.gender}
 						<div class="pf-detail">
-							<dt>Spol</dt>
-							<dd>{a.gender === 'male' ? 'Muški' : 'Ženski'}</dd>
+							<dt>{t(locale, 'pf.gender')}</dt>
+							<dd>{a.gender === 'male' ? t(locale, 'pf.male') : t(locale, 'pf.female')}</dd>
 						</div>
 					{/if}
 					{#if a.competitionCategories.length}
 						<div class="pf-detail">
-							<dt>Kategorija</dt>
+							<dt>{t(locale, 'pf.category')}</dt>
 							<dd>{a.competitionCategories.join(' · ')}</dd>
 						</div>
 					{/if}
 					{#if bows.length}
 						<div class="pf-detail">
-							<dt>Vrsta luka</dt>
+							<dt>{t(locale, 'pf.bowType')}</dt>
 							<dd>{bows.join(', ')}</dd>
 						</div>
 					{/if}
 					{#if showPrimaryRole}
 						<div class="pf-detail">
-							<dt>Primarna uloga</dt>
+							<dt>{t(locale, 'pf.primaryRole')}</dt>
 							<dd>{ROLE_LABEL[primaryRole]}</dd>
 						</div>
 					{/if}
 					{#if extraRoles.length}
 						<div class="pf-detail">
-							<dt>Dodatne uloge</dt>
+							<dt>{t(locale, 'pf.extraRoles')}</dt>
 							<dd>{extraRoles.map((r) => ROLE_LABEL[r]).join(' · ')}</dd>
 						</div>
 					{/if}
@@ -564,14 +594,14 @@
 
 				{#if waUrl}
 					<a class="pf-wa" href={waUrl} target="_blank" rel="noopener">
-						World Archery profil ↗
+						{t(locale, 'pf.waProfile')}
 					</a>
 				{/if}
 			</div>
 
 			{#if bioParas.length}
 				<div class="pf-bio" use:reveal={{ delay: 100 }}>
-					<h2 class="pf-block-title">Biografija</h2>
+					<h2 class="pf-block-title">{t(locale, 'pf.biography')}</h2>
 					<div class="pf-bio-scroll">
 						{#each bioParas as p, i (i)}
 							<p>{p}</p>
@@ -584,7 +614,7 @@
 		<!-- ── 3. ACHIEVEMENTS (honour cards) ───────────────────────────────────── -->
 		{#if honours.length}
 			<section class="pf-block" use:reveal>
-				<h2 class="pf-block-title">Postignuća</h2>
+				<h2 class="pf-block-title">{t(locale, 'pf.achievements')}</h2>
 				<div class="pf-honours-block">
 					<ul class="pf-honours">
 					{#each honours as h, hi (h.title + '|' + h.level + '|' + h.medal)}
@@ -634,7 +664,7 @@
 						class="pf-tabs"
 						data-active={activeTab}
 						bind:this={tabsEl}
-						aria-label="Statistika ili rezultati"
+						aria-label={t(locale, 'pf.statsOrResults')}
 					>
 						<button
 							class="pf-tab"
@@ -642,7 +672,7 @@
 							type="button"
 							onclick={() => (activeTab = 'stats')}
 						>
-							Statistika po godinama
+							{t(locale, 'pf.statsByYear')}
 						</button>
 						<button
 							class="pf-tab"
@@ -650,7 +680,7 @@
 							type="button"
 							onclick={() => (activeTab = 'results')}
 						>
-							Rezultati
+							{t(locale, 'pf.results')}
 						</button>
 						<!-- Single underline that SLIDES between the two tabs (instead of each
 						     tab growing/fading its own). Its left/width track the active tab. -->
@@ -663,7 +693,7 @@
 				{:else}
 					<!-- Single available table: a plain section heading, no tabs. -->
 					<h2 class="pf-block-title">
-						{hasStats ? 'Statistika po godinama' : 'Rezultati'}
+						{hasStats ? t(locale, 'pf.statsByYear') : t(locale, 'pf.results')}
 					</h2>
 				{/if}
 
@@ -672,8 +702,8 @@
 						<table class="pf-table">
 							<thead>
 								<tr>
-									<th>Godina</th><th>Disciplina</th><th>Prosjek</th>
-									<th>Pobjede</th><th>Porazi</th><th>Najbolji</th>
+									<th>{t(locale, 'pf.colYear')}</th><th>{t(locale, 'pf.colDiscipline')}</th><th>{t(locale, 'pf.colAverage')}</th>
+									<th>{t(locale, 'pf.colWins')}</th><th>{t(locale, 'pf.colLosses')}</th><th>{t(locale, 'pf.colBest')}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -693,8 +723,8 @@
 						<table class="pf-table">
 							<thead>
 								<tr>
-									<th>Datum</th><th>Natjecanje</th><th>Vrsta</th>
-									<th>Kategorije</th><th>Plasman</th><th>Bodovi</th>
+									<th>{t(locale, 'pf.colDate')}</th><th>{t(locale, 'pf.colCompetition')}</th><th>{t(locale, 'pf.colType')}</th>
+									<th>{t(locale, 'pf.colCategories')}</th><th>{t(locale, 'pf.colPlacing')}</th><th>{t(locale, 'pf.colPoints')}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -720,23 +750,23 @@
 
 		<!-- ── 5. BOW DATA (title above; interactive 3D model left, text right) ── -->
 		<section class="pf-block" use:reveal>
-			<h2 class="pf-block-title">Luk ovog streličara</h2>
+			<h2 class="pf-block-title">{a.gender === 'female' ? t(locale, 'pf.bowTitleFemale') : t(locale, 'pf.bowTitleMale')}</h2>
 			<div class="pf-bow">
 				<div class="pf-bow-media">
 					<BowViewer
 						url={bowModel.url}
-						alt={bowInfo.title}
+						alt={bowTitle(primaryBow, locale)}
 						fixRotation={bowModel.fixRotation}
 						yOffset={bowModel.yOffset}
 						spinDir={bowModel.spinDir}
 					/>
 				</div>
 				<div class="pf-bow-text">
-					<p>{bowIntro} {bowInfo.body}</p>
+					<p>{bowIntro} {bowBody(primaryBow, locale)}</p>
 					<!-- Required model-licence attribution (CC). -->
 					<p class="pf-bow-credit">
 						3D model: <a href={bowModel.credit.url} target="_blank" rel="noopener"
-							>{bowInfo.title} by {bowModel.credit.author}</a
+							>{bowTitle(primaryBow, locale)} by {bowModel.credit.author}</a
 						>
 						({bowModel.credit.license})
 					</p>
@@ -762,13 +792,13 @@
 		{#if isCoach && studentCards.length}
 			<section class="pf-block" use:reveal>
 				<div class="pf-row-head">
-					<h2 class="pf-block-title">Trenira</h2>
+					<h2 class="pf-block-title">{t(locale, 'pf.trains')}</h2>
 					{#if hasMoreTrainees}
 						<div class="pf-row-pager">
 							<button
 								class="pf-pager-btn"
 								type="button"
-								aria-label="Prethodni"
+								aria-label={t(locale, 'pf.prev')}
 								disabled={traineePage === 0}
 								onclick={() => (traineePage = Math.max(0, traineePage - 1))}
 							>
@@ -777,7 +807,7 @@
 							<button
 								class="pf-pager-btn"
 								type="button"
-								aria-label="Sljedeći"
+								aria-label={t(locale, 'pf.next')}
 								disabled={traineePage >= traineePageCount - 1}
 								onclick={() => (traineePage = Math.min(traineePageCount - 1, traineePage + 1))}
 							>
