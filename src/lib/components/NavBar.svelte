@@ -59,10 +59,8 @@
 	// reads on the bright video. Once scrolled, it reverts to the normal dark pill.
 	// '/' (homepage) + '/raspored' get the transparent-over-hero navbar (permanent).
 	// NB: `path` has its trailing slash stripped, so the homepage '/' becomes '' — match
-	// that, not '/'. '/hero-candidates' is a TEMPORARY review page (delete with that route).
-	const transparentTop = $derived(
-		(path === '' || path === '/raspored' || path === '/hero-candidates') && !scrolled
-	);
+	// that, not '/'.
+	const transparentTop = $derived((path === '' || path === '/raspored') && !scrolled);
 
 	// The current section link gets the gold underline — in the blue strip AND, once
 	// merged, in the pill (so the active page stays marked after scrolling).
