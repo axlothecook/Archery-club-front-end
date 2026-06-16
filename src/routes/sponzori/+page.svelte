@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SponsorResolved } from 'archery-contracts';
+	import Seo from '$lib/components/Seo.svelte';
 	import SponsorInquiryModal from '$lib/components/SponsorInquiryModal.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
@@ -42,9 +43,10 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Partneri | Varaždinski streličarski klub</title>
-</svelte:head>
+<Seo
+	title="Partneri"
+	description="Službeni partneri i sponzori Varaždinskog streličarskog kluba. Pridružite se i podržite naše streličare."
+/>
 
 <div class="sponsors">
 	<!-- ── Hero (Barça-inspired): photo + gold title + intro + CTA ─────────── -->

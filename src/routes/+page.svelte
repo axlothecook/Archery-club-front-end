@@ -14,6 +14,7 @@
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import EventCard from '$lib/components/EventCard.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import RightArrowIcon from '$lib/components/icons/RightArrowIcon.svelte';
@@ -370,6 +371,10 @@
 		setTimeout(() => (wordmarkDone = true), INTRO_DELAY + 1800);
 	}
 </script>
+
+<Seo
+	description="Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Pratite vijesti, raspored natjecanja, momčad i postignuća kluba."
+/>
 
 {#if freshLoad}
 	<PageLoader assets={heroAssets} onreveal={startIntro} />

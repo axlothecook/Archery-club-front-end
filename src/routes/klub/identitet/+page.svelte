@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import { page } from '$app/state';
 	import { sectionByApiSlug } from '$lib/identity';
 	import type { ClubIdentitySectionResolved } from 'archery-contracts';
@@ -44,6 +45,8 @@
 		}
 	];
 </script>
+
+<Seo title="Identitet" description="Identitet i vrijednosti Varaždinskog streličarskog kluba." />
 
 <article class="values">
 	<h1 class="values-title">{values?.title ?? 'Vrijednosti'}</h1>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
@@ -31,6 +32,8 @@
 	// (middot separator, PSG-style).
 	const yearsLine = (years: number[]) => years.join(' · ');
 </script>
+
+<Seo title="Postignuća" description="Postignuća Varaždinskog streličarskog kluba — svjetski, europski i državni naslovi i rekordi." />
 
 <div class="achievements">
 	<!-- Hero: poster image (fades in) with the gold section title overlaid. -->

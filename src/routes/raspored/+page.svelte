@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { ClubEventResolved, EventLevelResolved } from 'archery-contracts';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import GlobeRecordIcon from '$lib/components/icons/GlobeRecordIcon.svelte';
@@ -331,6 +332,8 @@
 		if (e.key === 'Escape') closeModal();
 	}
 </script>
+
+<Seo title="Raspored" description="Raspored natjecanja na kojima nastupaju streličari Varaždinskog streličarskog kluba." />
 
 <section class="schedule-hero">
 	<!-- PSG-style two stacked bands: top 50% + bottom 50%, each full-width. -->

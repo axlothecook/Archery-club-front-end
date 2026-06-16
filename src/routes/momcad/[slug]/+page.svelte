@@ -12,6 +12,7 @@
 	// everything else (achievements, coaches/students, news) is real backend data.
 	import type { ArcherProfile, ArcherCard, ArticleCard } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import GlobeRecordIcon from '$lib/components/icons/GlobeRecordIcon.svelte';
@@ -387,9 +388,11 @@
 	const hasMoreTrainees = $derived(studentCards.length > TRAINEES_PER_PAGE);
 </script>
 
-<svelte:head>
-	<title>{a.firstName} {a.lastName} | Momčad — VSK</title>
-</svelte:head>
+<Seo
+	title={fullName}
+	description={`${fullName} — streličar/ica Varaždinskog streličarskog kluba. Profil, lukovi i postignuća.`}
+	image={coverPhoto?.url}
+/>
 
 
 <div class="profile">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	// News feed ("Najnovije / Vijesti"). Mirrors the reference news.html, in bands:
 	//   1. a featured CAROUSEL of the 5 newest articles (NewsCarousel),
 	//   2. a row of 4 compact ArticleCards (next-newest highlights),
@@ -153,6 +154,8 @@
 		}
 	};
 </script>
+
+<Seo title="Vijesti" description="Najnovije vijesti Varaždinskog streličarskog kluba — rezultati, natjecanja i događanja." />
 
 <div class="news">
 	<header class="news-hero">

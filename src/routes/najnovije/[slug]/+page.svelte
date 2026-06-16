@@ -15,6 +15,7 @@
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
 	import ShareIcon from '$lib/components/icons/ShareIcon.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import { bowLabel } from '$lib/archer';
 
 	let { data } = $props();
@@ -229,6 +230,13 @@
 		copyResetTimer = setTimeout(() => (copied = false), 2000);
 	}
 </script>
+
+<Seo
+	title={article.title}
+	description={article.excerpt}
+	image={article.posterImage.url}
+	type="article"
+/>
 
 <article class="post">
 	<!-- Cover -->

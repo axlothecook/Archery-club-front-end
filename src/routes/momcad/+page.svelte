@@ -3,6 +3,7 @@
 	// categories above a grid of Real-Madrid-style cards. Selecting a bow shows only
 	// that group; "Svi" shows everyone. Data from `GET /team` (ordered by `order`).
 	import type { ArcherCard, Bow } from 'archery-contracts';
+	import Seo from '$lib/components/Seo.svelte';
 	import RosterCard from '$lib/components/RosterCard.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
@@ -98,9 +99,10 @@
 
 </script>
 
-<svelte:head>
-	<title>Momčad | Varaždinski streličarski klub</title>
-</svelte:head>
+<Seo
+	title="Momčad"
+	description="Streličari i treneri Varaždinskog streličarskog kluba — upoznajte našu momčad."
+/>
 
 <div class="team">
 	<!-- ── Hero band: arrow wave field + faded club crest watermark (right) ──── -->

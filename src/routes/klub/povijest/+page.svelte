@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import { page } from '$app/state';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import type { ClubHistoryPeriodResolved } from 'archery-contracts';
@@ -8,6 +9,8 @@
 		[...((page.data.periods ?? []) as ClubHistoryPeriodResolved[])].sort((a, b) => b.order - a.order)
 	);
 </script>
+
+<Seo title="Povijest" description="Povijest Varaždinskog streličarskog kluba kroz godine." />
 
 <h1 class="history-heading">Klub kroz godine</h1>
 
