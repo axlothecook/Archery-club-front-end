@@ -13,6 +13,7 @@
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
 	import HeroGlitchWords from '$lib/components/HeroGlitchWords.svelte';
 	import { reveal } from '$lib/actions/reveal';
+	import { dayKey, buildMonthGrid } from '$lib/calendar';
 	import type { Component } from 'svelte';
 	import { fade, scale, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -44,12 +45,8 @@
 	const NEUTRAL_COLOR = '#888888'; // level-less events ("Ostalo")
 	const MAX_VISIBLE = 3; // events shown in a cell before the "+N više" chip
 
-	// "YYYY-MM-DD" key in UTC — the join between an event's day(s) and a grid cell.
-	function dayKey(d: Date): string {
-		return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(
-			d.getUTCDate()
-		).padStart(2, '0')}`;
-	}
+	// `dayKey` (UTC "YYYY-MM-DD") is imported from $lib/calendar — the join between an
+	// event's day(s) and a grid cell. Shared with the unit-tested grid builder.
 
 	// Legend colour for an event: its resolved level colour, else neutral.
 	function eventColor(ev: ClubEventResolved): string {
@@ -199,26 +196,17 @@
 
 	const todayKey = dayKey(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())));
 
-	// Build the 6-week (42-cell) grid for a given month: leading days from the prev
-	// month back to Sunday, the month itself, trailing days to fill the last week —
-	// the greyed 31/01 spill the reference shows. Reused by the month + year views.
+	// Build the 6-week (42-cell) grid for a month, then DECORATE each cell with this
+	// page's runtime state (today + that day's events). The pure grid math lives in
+	// $lib/calendar (buildMonthGrid) and is unit-tested; here we only add events/today.
 	function buildWeeks(year: number, month: number): DayCell[][] {
-		const first = new Date(Date.UTC(year, month, 1));
-		const startOffset = first.getUTCDay(); // 0=Sun
-		const cells: DayCell[] = [];
-		for (let i = 0; i < 42; i++) {
-			const d = new Date(Date.UTC(year, month, 1 - startOffset + i));
-			const key = dayKey(d);
-			cells.push({
-				date: d,
-				key,
-				dayNum: d.getUTCDate(),
-				inMonth: d.getUTCMonth() === month,
-				isToday: key === todayKey,
-				events: eventsByDay.get(key) ?? []
-			});
-		}
-		return Array.from({ length: 6 }, (_, w) => cells.slice(w * 7, w * 7 + 7));
+		return buildMonthGrid(year, month).map((week) =>
+			week.map((cell) => ({
+				...cell,
+				isToday: cell.key === todayKey,
+				events: eventsByDay.get(cell.key) ?? []
+			}))
+		);
 	}
 
 	const weeks = $derived.by<DayCell[][]>(() => {
