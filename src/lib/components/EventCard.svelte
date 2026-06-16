@@ -2,11 +2,8 @@
 	// RM-style event card (navy header band with a scope icon + level name; white body
 	// with category, name, date, location, attendees, and a "Više" source link). Extracted
 	// from the schedule page so the homepage's "upcoming events" teaser can reuse it (DRY).
-	import type { ClubEventResolved, EventLevelResolved } from 'archery-contracts';
-	import type { Component } from 'svelte';
-	import GlobeRecordIcon from '$lib/components/icons/GlobeRecordIcon.svelte';
-	import EuropeRecordIcon from '$lib/components/icons/EuropeRecordIcon.svelte';
-	import CroatiaRecordIcon from '$lib/components/icons/CroatiaRecordIcon.svelte';
+	import type { ClubEventResolved } from 'archery-contracts';
+	import { scopeIcon } from '$lib/eventScope';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
 	import LocationIcon from '$lib/components/icons/LocationIcon.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
@@ -14,6 +11,7 @@
 	import { page } from '$app/state';
 	import { t } from '$lib/i18n';
 	import { localeTag } from '$lib/locale';
+	import { ensureReadable } from '$lib/contrast';
 
 	let { ev }: { ev: ClubEventResolved } = $props();
 
@@ -24,22 +22,9 @@
 
 	// Legend colour for an event: its resolved level colour, else neutral.
 	const eventColor = (e: ClubEventResolved): string => e.level?.color ?? NEUTRAL_COLOR;
-
-	// Scope icon by level (globe = world, Europe = european, Croatia = state/domestic).
-	function scopeIcon(level: EventLevelResolved | null): Component | null {
-		if (!level) return null;
-		switch (level.name) {
-			case 'Svjetski kup':
-				return GlobeRecordIcon;
-			case 'Europsko prvenstvo':
-				return EuropeRecordIcon;
-			case 'Državno':
-			case 'Domaće':
-				return CroatiaRecordIcon;
-			default:
-				return null;
-		}
-	}
+	// Same colour, but lightened if needed so the LEVEL TEXT meets WCAG contrast on
+	// the navy header (the icon keeps the raw colour — it has a white glow already).
+	const levelTextColor = (e: ClubEventResolved): string => ensureReadable(eventColor(e));
 
 	const LONG_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long', year: 'numeric' }));
 	const SHORT_FMT = $derived(new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'long' }));
@@ -63,7 +48,7 @@
 				<Scope size={84} />
 			</span>
 		{/if}
-		<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
+		<span class="ev-level" style="color: {levelTextColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
 	</div>
 
 	<!-- White body -->
@@ -71,7 +56,9 @@
 		<p class="ev-cat">
 			{t(locale, 'sched.archery')}{ev.format ? ` · ${ev.format}` : ''}
 		</p>
-		<h4 class="ev-name">{ev.name}</h4>
+		<!-- Card title as a styled <p> (not a heading): event cards repeat under a
+		     section <h2>, so an <h4> here skips a level + pollutes the doc outline. -->
+		<p class="ev-name">{ev.name}</p>
 		{#if ev.isCancelled}
 			<p class="ev-cancelled-tag">{t(locale, 'sched.cancelled')}</p>
 		{/if}

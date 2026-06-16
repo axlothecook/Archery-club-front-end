@@ -114,7 +114,7 @@
 		<div class="footer-columns">
 			{#each FOOTER_COLUMNS as col (col.heading)}
 				<div class="footer-col">
-					<h4>{t(locale, col.headingKey)}</h4>
+					<h3>{t(locale, col.headingKey)}</h3>
 					{#each col.links as link (link.label + link.href)}
 						<a href={link.href}>{link.key ? t(locale, link.key) : link.label}</a>
 					{/each}
@@ -315,7 +315,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem; // Barça links sit close (line-height carries the rhythm)
-		h4 {
+		h3 {
 			margin: 0 0 1.4rem; // gap to first link matches Barça (~30px)
 			font-size: 1.5rem; // 24px — larger column heading
 			font-weight: 700;

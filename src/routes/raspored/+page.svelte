@@ -1,10 +1,7 @@
 <script lang="ts">
 	import Seo from '$lib/components/Seo.svelte';
-	import type { ClubEventResolved, EventLevelResolved } from 'archery-contracts';
+	import type { ClubEventResolved } from 'archery-contracts';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
-	import GlobeRecordIcon from '$lib/components/icons/GlobeRecordIcon.svelte';
-	import EuropeRecordIcon from '$lib/components/icons/EuropeRecordIcon.svelte';
-	import CroatiaRecordIcon from '$lib/components/icons/CroatiaRecordIcon.svelte';
 	import CalendarIcon from '$lib/components/icons/CalendarIcon.svelte';
 	import LocationIcon from '$lib/components/icons/LocationIcon.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
@@ -16,8 +13,9 @@
 	import { reveal } from '$lib/actions/reveal';
 	import { t } from '$lib/i18n';
 	import { localeTag } from '$lib/locale';
+	import { ensureReadable } from '$lib/contrast';
+	import { scopeIcon } from '$lib/eventScope';
 	import { dayKey, buildMonthGrid } from '$lib/calendar';
-	import type { Component } from 'svelte';
 	import { fade, scale, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
@@ -57,9 +55,12 @@
 	// event's day(s) and a grid cell. Shared with the unit-tested grid builder.
 
 	// Legend colour for an event: its resolved level colour, else neutral.
+	// (levelTextColor lightens it if needed so the level NAME meets WCAG contrast on
+	// the navy card header — the icon/dot keep the raw colour.)
 	function eventColor(ev: ClubEventResolved): string {
 		return ev.level?.color ?? NEUTRAL_COLOR;
 	}
+	const levelTextColor = (ev: ClubEventResolved): string => ensureReadable(eventColor(ev));
 
 	// Month vs year view.
 	let viewMode = $state<'month' | 'year'>('month');
@@ -93,24 +94,8 @@
 		return `background:conic-gradient(${stops})`;
 	}
 
-	// Scope icon for a level (shown in the event card, RM-logo position): the level
-	// name maps to a geographic SCOPE — world / Europe / Croatia — and the icon is
-	// tinted with the level's own colour (yellow / blue / red / purple). Level-less
-	// events get no scope icon (null).
-	function scopeIcon(level: EventLevelResolved | null): Component | null {
-		if (!level) return null;
-		switch (level.name) {
-			case 'Svjetski kup':
-				return GlobeRecordIcon;
-			case 'Europsko prvenstvo':
-				return EuropeRecordIcon;
-			case 'Državno':
-			case 'Domaće':
-				return CroatiaRecordIcon;
-			default:
-				return null;
-		}
-	}
+	// Scope icon (globe / Europe / Croatia) — shared helper in $lib/eventScope keys
+	// off the level COLOUR (locale-independent), since level.name is translated.
 
 	// Bucket every event under EACH day it spans (dateFrom..dateTo inclusive), so a
 	// multi-day competition shows on all of its days. Built once from the data.
@@ -635,7 +620,7 @@
 					<Scope size={84} />
 				</span>
 			{/if}
-			<span class="ev-level" style="color: {eventColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
+			<span class="ev-level" style="color: {levelTextColor(ev)}">{ev.level?.name ?? t(locale, 'sched.levelOther')}</span>
 		</div>
 
 		<!-- White body -->
@@ -643,7 +628,7 @@
 			<p class="ev-cat">
 				{t(locale, 'sched.archery')}{ev.format ? ` · ${ev.format}` : ''}
 			</p>
-			<h4 class="ev-name">{ev.name}</h4>
+			<p class="ev-name">{ev.name}</p>
 			{#if ev.isCancelled}
 				<p class="ev-cancelled-tag">{t(locale, 'sched.cancelled')}</p>
 			{/if}

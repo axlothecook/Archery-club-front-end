@@ -660,10 +660,14 @@
 			<h2 class="home-join-title">{t(locale, 'home.joinTitlePre')} <span class="home-join-gold">{t(locale, 'home.joinTitleAccent')}</span></h2>
 			<p class="home-join-sub">
 				{t(locale, 'home.joinSub')}
+				<!-- Screen readers get the phrase from the visually-hidden span; the animated
+				     typewriter span is decorative (aria-hidden) — avoids aria-label on a
+				     roleless element (a11y) without inventing a role. -->
+				<span class="sr-only">{t(locale, 'home.joinType')}</span>
 				<span
 					class="home-join-type"
+					aria-hidden="true"
 					use:typewriter={{ text: t(locale, 'home.joinType'), cycle: 7000 }}
-					aria-label={t(locale, 'home.joinType')}
 				></span>
 			</p>
 			<a class="home-join-btn" href="/kontakt">{t(locale, 'home.joinBtn')}</a>
