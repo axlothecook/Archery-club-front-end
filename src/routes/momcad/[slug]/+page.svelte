@@ -38,13 +38,16 @@
 	// PAGE ONLY (the /momcad grid keeps the shared FIG_SCALE untouched). Per request:
 	//   • Mance — a bit BIGGER.
 	//   • Ela, Vrbešić, Karmen, Leo — left as-is (no override).
+	//   • Leda, Nikola — smaller MORE than the rest.
 	//   • everyone else — a bit SMALLER.
 	const CARD_FIG_KEEP = new Set(['ela-drozdek', 'mila-vrbesic', 'karmen-ahmetovic', 'leo-sulik']);
+	const CARD_FIG_EXTRA_SMALL = new Set(['leda-crncec', 'nikola-portner-pavicevic']);
 	const CARD_FIG_DEFAULT = 1.3; // the card's built-in default when no FIG_SCALE entry
 	function cardFigScale(slug: string): number | null {
 		if (CARD_FIG_KEEP.has(slug)) return null; // unchanged
 		const base = FIG_SCALE[slug] ?? CARD_FIG_DEFAULT;
 		if (slug === 'mija-mance') return base + 0.15; // bigger
+		if (CARD_FIG_EXTRA_SMALL.has(slug)) return base - 0.3; // smaller still
 		return base - 0.15; // everyone else: smaller
 	}
 
