@@ -59,6 +59,22 @@
 	// Month vs year view.
 	let viewMode = $state<'month' | 'year'>('month');
 
+	// Phone: the view toggle floats as a sticky bottom-right button, but ONLY while the
+	// calendar section is on screen — so it never floats over the Nadolazeće/news block
+	// below. An IntersectionObserver on the calendar section flips this.
+	let kalendarEl: HTMLElement | undefined = $state();
+	let inCalendar = $state(false);
+	$effect(() => {
+		const el = kalendarEl;
+		if (!el) return;
+		const io = new IntersectionObserver(([e]) => (inCalendar = e.isIntersecting), {
+			// Hide it a bit before the section fully leaves, so it doesn't overlap the next block.
+			rootMargin: '0px 0px -15% 0px'
+		});
+		io.observe(el);
+		return () => io.disconnect();
+	});
+
 	// Year-view day dot: a CSS background for a day with events. One event = a solid
 	// colour; multiple = a CONIC gradient split into EQUAL slices, one per event's
 	// colour (2 events → half/half, 3 → thirds, …). Order = the events' order.
@@ -135,6 +151,30 @@
 			slideDir = 1;
 			viewMonth += 1;
 		}
+	}
+
+	// Swipe (phone): drag the calendar horizontally to page months. A left swipe goes to
+	// the NEXT month, a right swipe to the PREVIOUS — like flicking a paper calendar. Uses
+	// pointer events (no dep); only a mostly-horizontal drag past the threshold commits.
+	const SWIPE_MIN = 45; // px horizontal travel to trigger a month change
+	let swipeX = 0;
+	let swipeY = 0;
+	let swiping = false;
+	function onCalPointerDown(e: PointerEvent) {
+		if (e.pointerType === 'mouse') return; // touch/pen only — don't hijack mouse drags
+		swiping = true;
+		swipeX = e.clientX;
+		swipeY = e.clientY;
+	}
+	function onCalPointerUp(e: PointerEvent) {
+		if (!swiping) return;
+		swiping = false;
+		const dx = e.clientX - swipeX;
+		const dy = e.clientY - swipeY;
+		// horizontal intent only (ignore vertical scrolls)
+		if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
+		if (dx < 0) nextMonth();
+		else prevMonth();
 	}
 
 	// Croatian month + weekday names from the platform (never hardcoded).
@@ -253,31 +293,8 @@
 		data.events.filter((ev) => eventDayKeys(ev).some((k) => k.startsWith(thisMonthPrefix)))
 	);
 
-	// "This month" carousel: arrows page by ~one viewport (the 4 visible cards).
-	// `canScrollLeft/Right` track whether more cards exist in each direction, so the
-	// arrows hide at the start/end.
-	let monthCarousel: HTMLElement | undefined = $state();
-	let canScrollLeft = $state(false);
-	let canScrollRight = $state(false);
-	function updateCarouselArrows() {
-		const el = monthCarousel;
-		if (!el) return;
-		canScrollLeft = el.scrollLeft > 1;
-		canScrollRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
-	}
-	function scrollCarousel(dir: -1 | 1) {
-		const by = monthCarousel ? monthCarousel.clientWidth * 0.9 : 360;
-		monthCarousel?.scrollBy({ left: dir * by, behavior: 'smooth' });
-	}
-	// Initialise the arrow visibility once the track is mounted + on resize.
-	$effect(() => {
-		const el = monthCarousel;
-		if (!el) return;
-		updateCarouselArrows();
-		const ro = new ResizeObserver(updateCarouselArrows);
-		ro.observe(el);
-		return () => ro.disconnect();
-	});
+	// "Ovaj tjedan" / "Ovaj mjesec" cards are now arrow-free horizontal swipe carousels
+	// (one card per swipe via CSS scroll-snap), so the old arrow paging logic is gone.
 
 	// Legend rows = the backend levels, plus a neutral "Ostalo" entry IF any event
 	// currently has no level (true for all events until the importer assigns them).
@@ -360,7 +377,7 @@
 	</button>
 </section>
 
-<section id="raspored-kalendar" class="kalendar">
+<section id="raspored-kalendar" class="kalendar" bind:this={kalendarEl}>
 	<div class="kalendar-inner" use:reveal={{ threshold: 0.02 }}>
 	<div class="kalendar-layout">
 	<!-- LEFT: month nav + calendar grid -->
@@ -370,6 +387,7 @@
 	     (Icon SVGs to be supplied by the user; placeholder labels for now.) -->
 	<button
 		class="view-toggle"
+		class:in-calendar={inCalendar}
 		onclick={toggleView}
 		aria-label={viewMode === 'month' ? 'Godišnji prikaz' : 'Mjesečni prikaz'}
 		title={viewMode === 'month' ? 'Godišnji prikaz' : 'Mjesečni prikaz'}
@@ -415,7 +433,13 @@
 
 		<!-- Week rows — keyed on the viewed month so changing months re-creates the
 		     block and the directional slide (next ← / prev →) plays. -->
-		<div class="weeks-viewport">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="weeks-viewport"
+			onpointerdown={onCalPointerDown}
+			onpointerup={onCalPointerUp}
+			onpointercancel={() => (swiping = false)}
+		>
 		{#key viewMonth}
 			<div
 				class="weeks"
@@ -557,12 +581,14 @@
 		<div class="events-sub">
 			<h3 class="sub-heading">Ovaj tjedan <span class="sub-dates">[{weekRangeLabel}]</span></h3>
 			{#if weekEvents.length}
-				<div class="events-row">
-					{#each weekEvents as ev, i (ev.id)}
-						<div class="reveal-item" use:reveal={{ delay: i * 90 }}>
-							{@render eventCard(ev)}
-						</div>
-					{/each}
+				<div class="carousel">
+					<div class="carousel-track">
+						{#each weekEvents as ev, i (ev.id)}
+							<div class="carousel-item reveal-item" use:reveal={{ delay: (i % 4) * 90 }}>
+								{@render eventCard(ev)}
+							</div>
+						{/each}
+					</div>
 				</div>
 			{:else}
 				<p class="events-empty">Nema događaja ovaj tjedan.</p>
@@ -574,31 +600,13 @@
 			<h3 class="sub-heading month-heading">Ovaj mjesec</h3>
 			{#if monthEvents.length}
 				<div class="carousel">
-					{#if canScrollLeft}
-						<button
-							class="carousel-arrow left br-full"
-							onclick={() => scrollCarousel(-1)}
-							aria-label="Prethodno"
-						>
-							<ChevronIcon direction="left" size={22} />
-						</button>
-					{/if}
-					<div class="carousel-track" bind:this={monthCarousel} onscroll={updateCarouselArrows}>
+					<div class="carousel-track">
 						{#each monthEvents as ev, i (ev.id)}
 							<div class="carousel-item reveal-item" use:reveal={{ delay: (i % 4) * 90 }}>
 								{@render eventCard(ev)}
 							</div>
 						{/each}
 					</div>
-					{#if canScrollRight}
-						<button
-							class="carousel-arrow right br-full"
-							onclick={() => scrollCarousel(1)}
-							aria-label="Sljedeće"
-						>
-							<ChevronIcon direction="right" size={22} />
-						</button>
-					{/if}
 				</div>
 			{:else}
 				<p class="events-empty">Nema događaja ovaj mjesec.</p>
@@ -826,6 +834,7 @@
 		border: 1.5px solid rgba(255, 255, 255, 0.85);
 		cursor: pointer;
 		color: #fff;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		animation: hero-bob 2s ease-in-out infinite;
 		transition: background-color 0.2s ease;
 	}
@@ -1003,6 +1012,7 @@
 		background: #fff;
 		color: $navy;
 		cursor: pointer;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		transition:
 			background-color 0.15s ease,
 			border-color 0.15s ease,
@@ -1383,6 +1393,7 @@
 		font-size: 0.75rem;
 		font-weight: 700;
 		cursor: pointer;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		transition:
 			background-color 0.15s ease,
 			border-color 0.15s ease;
@@ -1485,8 +1496,35 @@
 		}
 	}
 	@media (max-width: 560px) {
+		// Let the month grid receive horizontal swipe gestures (for month paging) while
+		// vertical gestures still scroll the page. Without pan-y the browser claimed the
+		// whole gesture and the swipe handler never saw a clean horizontal drag.
+		.weeks-viewport {
+			touch-action: pan-y;
+		}
+		// Year view on phone: a HORIZONTAL one-per-swipe carousel of the 12 mini-months
+		// (same scroll-snap behaviour as the Ovaj tjedan / Ovaj mjesec card carousels),
+		// instead of a tall stacked column. Swipe left/right to page through the months.
 		.year-grid {
-			grid-template-columns: 1fr;
+			display: flex;
+			grid-template-columns: none;
+			gap: 1rem;
+			overflow-x: auto;
+			overflow-y: hidden; // no internal vertical scroll
+			// No `touch-action: pan-x` — that would block vertical PAGE scroll over the months.
+			// Default lets horizontal drag page the carousel + vertical drag scroll the page.
+			scroll-snap-type: x mandatory;
+			-webkit-overflow-scrolling: touch;
+			padding-bottom: 0.5rem;
+			scrollbar-width: none;
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
+		.mini-month {
+			flex: 0 0 85%; // ~one month per view
+			scroll-snap-align: start;
+			scroll-snap-stop: always; // one month per swipe
 		}
 	}
 
@@ -1533,16 +1571,6 @@
 		font-weight: 300;
 	}
 
-	// "Upcoming" — a simple wrapping row of cards.
-	.events-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1.5rem;
-	}
-	.events-row > .reveal-item {
-		width: 348px;
-		max-width: 100%;
-	}
 	// Card fills its reveal-item wrapper (row + carousel). The fade/slide itself comes
 	// from the shared global `.reveal`/`.reveal--in` (src/lib/actions/reveal.ts +
 	// index.scss); `.reveal-item` here is only a layout hook.
@@ -1558,9 +1586,15 @@
 		display: flex;
 		gap: 1.5rem;
 		overflow-x: auto;
+		overflow-y: hidden; // no stray vertical scroll INSIDE the track (cards don't scroll up/down)
+		// NB: do NOT set `touch-action: pan-x` here — that blocks VERTICAL page scrolling when
+		// the finger starts on the cards. Default `touch-action` lets the browser do both: a
+		// horizontal drag pages the cards, a vertical drag scrolls the page. `overflow-y:hidden`
+		// already prevents any internal vertical scroll.
 		scroll-snap-type: x mandatory;
+		-webkit-overflow-scrolling: touch;
 		padding: 0.5rem 0 1rem;
-		scrollbar-width: none; // hide native bar; arrows drive it
+		scrollbar-width: none; // hide native bar; swipe drives it (no arrows)
 		&::-webkit-scrollbar {
 			display: none;
 		}
@@ -1570,28 +1604,7 @@
 		flex: 0 0 calc((100% - 3 * 1.5rem) / 4);
 		scroll-snap-align: start;
 	}
-	.carousel-arrow {
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		z-index: 10; // stay above the cards (incl. on card hover)
-		display: grid;
-		place-items: center;
-		width: 46px;
-		height: 46px;
-		border: 1px solid rgba(16, 46, 102, 0.2);
-		background: #fff;
-		color: $navy;
-		cursor: pointer;
-		box-shadow: 0 4px 14px rgba(16, 46, 102, 0.12);
-		// No hover style change (per request).
-	}
-	.carousel-arrow.left {
-		left: -1.25rem;
-	}
-	.carousel-arrow.right {
-		right: -1.25rem;
-	}
+	// (Carousel arrow buttons removed — the card carousels are swipe-only now.)
 	// Fewer cards per view on smaller screens.
 	@media (max-width: 1024px) {
 		.carousel-item {
@@ -1601,6 +1614,40 @@
 	@media (max-width: 600px) {
 		.carousel-item {
 			flex-basis: 85%; // ~1 per view
+			scroll-snap-stop: always; // one card per swipe (like the Postignuća carousel)
+		}
+		// Shorter day fields on phone — the desktop 116px tiles are too tall for a phone
+		// month grid; cut them down so more of the month fits without scrolling.
+		.cell {
+			min-height: 74px;
+			padding: 0.3rem 0.35rem 0.4rem;
+		}
+		// View toggle becomes a FLOATING sticky button in the bottom-right corner (instead of
+		// pinned to the calendar's left edge, which is off-screen on a narrow phone). It's
+		// fixed to the viewport but only VISIBLE while the calendar section is in view
+		// (`.in-calendar`), so it never floats over the Nadolazeće/news block below.
+		.view-toggle {
+			position: fixed;
+			right: 1rem;
+			bottom: 1rem;
+			top: auto;
+			left: auto;
+			transform: none;
+			width: 52px;
+			height: 52px;
+			z-index: 40;
+			background: #fff; // SOLID white (opaque) — never see-through over the calendar
+			border-color: rgba(16, 46, 102, 0.35);
+			box-shadow: 0 6px 20px rgba(16, 46, 102, 0.28);
+			// Show/hide WITHOUT fading the button's own opacity (which made it look
+			// translucent). Toggle visibility only; the bg stays fully opaque white.
+			visibility: hidden;
+			pointer-events: none;
+			transition: visibility 0.2s ease;
+		}
+		.view-toggle.in-calendar {
+			visibility: visible;
+			pointer-events: auto;
 		}
 	}
 
