@@ -403,6 +403,7 @@
 	.logo {
 		flex: 0 0 auto;
 		display: inline-flex;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		img {
 			height: 44px;
 			width: auto;
