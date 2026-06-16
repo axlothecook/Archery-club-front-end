@@ -213,9 +213,10 @@
 			background-color: color.change($navy, $alpha: 0.3);
 		}
 		:global(.carousel-dots .carousel-dot.current) {
-			width: 2.2rem;
-			height: 0.3rem;
-			border-radius: 20px;
+			// Active dot is a CIRCLE (same size as the others), not an elongated pill.
+			width: 0.5rem;
+			height: 0.5rem;
+			border-radius: 50%;
 			background-color: color.change($gold, $alpha: 0.3);
 		}
 		:global(.carousel-dots .carousel-dot-progress) {

@@ -14,6 +14,7 @@
 	import YouTubeIcon from '$lib/components/icons/YouTubeIcon.svelte';
 	import ClockIcon from '$lib/components/icons/ClockIcon.svelte';
 	import ChevronIcon from '$lib/components/icons/ChevronIcon.svelte';
+	import ShareIcon from '$lib/components/icons/ShareIcon.svelte';
 	import { bowLabel } from '$lib/archer';
 
 	let { data } = $props();
@@ -30,7 +31,59 @@
 
 	// Split the body on blank lines into readable paragraphs (FB text stores breaks
 	// as "\n\n"). Extra `images` (beyond the poster) render below the prose.
-	const paragraphs = $derived(splitParagraphs(article.body));
+	const rawParagraphs = $derived(splitParagraphs(article.body));
+
+	// Classify each paragraph so result listings render as readable ROWS under a bold
+	// section title (the body used to hold markdown tables; the backend now stores them
+	// as "Name - placement, result" lines, one per archer):
+	//   • 'rows'  — a results block: one or more lines like "Alen Remar - 1. mjesto, 576"
+	//               (contains " - "). Each line becomes its own row.
+	//   • 'title' — a short section heading (e.g. "Kvalifikacije", "Recurve muškarci
+	//               U21"): a single line, no " - ", not ending in sentence punctuation.
+	//               Rendered bold + tight to the rows below it.
+	//   • 'prose' — everything else (normal article paragraphs).
+	// `colorMedals` on a rows block = whether to medal-colour its placements. Only the
+	// FINAL results get coloured (Eliminacije, finals, team standings) — NOT the
+	// Kvalifikacije (where "1. mjesto" is a qualifying rank, not a medal). We track the
+	// nearest preceding section title: if any title up the chain says "kvalifikacij",
+	// that block is qualifications → no colour.
+	type Block = { kind: 'rows' | 'title' | 'team' | 'prose'; text: string; colorMedals?: boolean };
+	const blocks = $derived<Block[]>(
+		(() => {
+			let inQualifiers = false; // set by a "Kvalifikacije" heading, cleared by a finals heading
+			return rawParagraphs.map((p): Block => {
+				const lines = p.split('\n').filter((l) => l.trim() !== '');
+				const isRows = lines.length > 0 && lines.every((l) => l.includes(' - '));
+				if (isRows) return { kind: 'rows', text: p, colorMedals: !inQualifiers };
+				// Team result: a 2-line block whose first line is a heading ending in a
+				// placement/score "(NNNN)" and whose second line lists the team members.
+				// Render it as a tight title + member row (same spacing as other results).
+				if (lines.length === 2 && /\(\s*\d+\s*\)\s*$/.test(lines[0]) && /[123]\.\s*mjesto/.test(lines[0])) {
+					return { kind: 'team', text: p, colorMedals: !inQualifiers };
+				}
+				const single = lines.length === 1 ? lines[0].trim() : '';
+				const isTitle =
+					single !== '' &&
+					single.length <= 44 &&
+					!single.includes(' - ') &&
+					!/[.!?:]$/.test(single) &&
+					!single.startsWith('#');
+				if (isTitle) {
+					const t = single.toLowerCase();
+					// A top-level section heading switches the qualifications flag. Sub-headings
+					// (category names like "Recurve muškarci") don't mention either word, so they
+					// leave the current mode unchanged.
+					if (t.includes('kvalifikacij')) inQualifiers = true;
+					else if (t.includes('eliminacij') || t.includes('ekipni') || t.includes('finale') || t.includes('konačni') || t.includes('konacni') || t.includes('poredak'))
+						inQualifiers = false;
+					// colorMedals on a title = a team-result heading like "Recurve muškarci,
+					// 1. mjesto (1699)" should colour its placement (finals context only).
+					return { kind: 'title', text: p, colorMedals: !inQualifiers };
+				}
+				return { kind: 'prose', text: p };
+			});
+		})()
+	);
 	// Gallery images, ordered, with duplicate URLs removed (some posts repeat the
 	// same photo — show each only once).
 	const extraImages = $derived.by(() => {
@@ -67,6 +120,54 @@
 		return html;
 	}
 
+	// Medal colour for a result row's placement: 1st/zlato/pobjeda → gold,
+	// 2nd/srebro → silver, 3rd/bronca → bronze; anything else uncoloured.
+	function medalClass(result: string): string {
+		const r = result.toLowerCase();
+		if (/(^|\s)1\.\s*mjesto/.test(r) || r.includes('zlato') || r.includes('pobjeda')) return 'medal-gold';
+		if (/(^|\s)2\.\s*mjesto/.test(r) || r.includes('srebro')) return 'medal-silver';
+		if (/(^|\s)3\.\s*mjesto/.test(r) || r.includes('bronca') || r.includes('bronca')) return 'medal-bronze';
+		return '';
+	}
+
+	// A section title. For team-result headings (finals context, colorMedals=true) that
+	// embed a placement — e.g. "Recurve muškarci, 1. mjesto (1699)" — medal-colour the
+	// "N. mjesto" word; plain otherwise. Escaped first (own data), only our span added.
+	function renderTitle(text: string, colorMedals: boolean): string {
+		const esc = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		if (!colorMedals) return esc;
+		return esc.replace(/(\b[123]\.\s*mjesto)/g, (m) => {
+			const cls = medalClass(m);
+			return cls ? `<span class="result-place ${cls}">${m}</span>` : m;
+		});
+	}
+
+	// A results block: render each "\n" line as its own <span class="result-row">, so
+	// every archer gets a row (the rows stay tight together via the .post-rows styles).
+	// The part AFTER " - " is the placement (+ value); colour it by medal where the
+	// archer placed 1st/2nd/3rd.
+	function renderRows(text: string, colorMedals: boolean): string {
+		return text
+			.split('\n')
+			.map((l) => l.trim())
+			.filter((l) => l !== '')
+			.map((l) => {
+				const sep = l.indexOf(' - ');
+				if (sep === -1) return `<span class="result-row">${renderPara(l)}</span>`;
+				const name = l.slice(0, sep);
+				const rest = l.slice(sep + 3); // after " - "
+				const cls = colorMedals ? medalClass(rest) : '';
+				const restHtml = cls
+					? `<span class="result-place ${cls}">${renderPara(rest)}</span>`
+					: renderPara(rest);
+				return `<span class="result-row">${renderPara(name)} - ${restHtml}</span>`;
+			})
+			.join('');
+	}
+
 	// Reveal each gallery image as it scrolls into view — it "flies" up into place
 	// (as if it had fallen off and the action were reverted). Triggers when 10% of
 	// the figure is visible (IntersectionObserver threshold 0.1), one-shot.
@@ -84,6 +185,49 @@
 		return { destroy: () => io.disconnect() };
 	}
 
+	// PHONE: images are woven BETWEEN paragraphs (one after each prose paragraph, in
+	// order) instead of a side column. Map block index → the gallery image to show
+	// after it: only prose paragraphs get one, consuming `extraImages` in order; once
+	// the images run out the remaining paragraphs just have none (paragraph–img–
+	// paragraph pattern, extra paragraphs kept). Hidden on desktop (the aside shows).
+	const inlineImageAfter = $derived.by(() => {
+		const map: Record<number, (typeof extraImages)[number]> = {};
+		let next = 0;
+		blocks.forEach((b, i) => {
+			if (b.kind === 'prose' && next < extraImages.length) {
+				map[i] = extraImages[next];
+				next++;
+			}
+		});
+		return map;
+	});
+
+	// ── Share: a modal showing the article link + a "Kopiraj" copy button ───────────
+	let shareOpen = $state(false);
+	let copied = $state(false);
+	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
+	const shareUrl = $derived(page.url.href);
+
+	function openShare() {
+		shareOpen = true;
+		copied = false;
+	}
+	function closeShare() {
+		shareOpen = false;
+	}
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+		} catch {
+			// Fallback for older browsers / non-secure contexts: select the input text.
+			const input = document.getElementById('share-url-input') as HTMLInputElement | null;
+			input?.select();
+			document.execCommand?.('copy');
+		}
+		copied = true;
+		clearTimeout(copyResetTimer);
+		copyResetTimer = setTimeout(() => (copied = false), 2000);
+	}
 </script>
 
 <article class="post">
@@ -128,34 +272,62 @@
 		<!-- Thin divider spanning both columns, below the meta row. -->
 		<hr class="post-divider" />
 
-		<!-- Social icons below the divider, with a gap before the columns. -->
-		{#if socials.length}
-			<div class="post-socials">
-				{#each socials as soc (soc.platform)}
-					{#if SOCIAL_ICON[soc.platform]}
-						{@const Icon = SOCIAL_ICON[soc.platform]}
-						<a
-							class="post-social"
-							href={soc.url}
-							target="_blank"
-							rel="noopener"
-							aria-label={soc.platform}
-						>
-							<Icon size={34} />
-						</a>
-					{/if}
-				{/each}
-			</div>
-		{/if}
+		<!-- Social icons below the divider, with a gap before the columns. The SHARE
+		     button (opens the copy-link modal) sits next to them, on both desktop + phone. -->
+		<div class="post-socials">
+			{#each socials as soc (soc.platform)}
+				{#if SOCIAL_ICON[soc.platform]}
+					{@const Icon = SOCIAL_ICON[soc.platform]}
+					<a
+						class="post-social"
+						href={soc.url}
+						target="_blank"
+						rel="noopener"
+						aria-label={soc.platform}
+					>
+						<Icon size={34} />
+					</a>
+				{/if}
+			{/each}
+			<button class="post-social post-share-btn" type="button" onclick={openShare} aria-label="Podijeli članak">
+				<ShareIcon size={34} />
+			</button>
+		</div>
 
 		<!-- Two columns: prose (+ FB) on the left; the gallery images stacked in a
 		     column on the right, with the "U ovom članku" archer cards beneath them. -->
 		<div class="post-columns" class:has-aside={extraImages.length > 0 || mentionedCards.length > 0}>
 			<div class="post-main">
-				<!-- Prose: markdown links → gold <a>, #hashtags coloured (via renderPara → {@html}). -->
-				{#each paragraphs as para}
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					<p class="post-para">{@html renderPara(para)}</p>
+				<!-- Body blocks: prose paragraphs, bold section titles, and results rendered
+				     as tight rows (one archer per row). markdown links → gold <a>,
+				     #hashtags coloured (via renderPara → {@html}). -->
+				{#each blocks as block, bi}
+					{#if block.kind === 'rows'}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<div class="post-rows">{@html renderRows(block.text, block.colorMedals ?? false)}</div>
+					{:else if block.kind === 'title'}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<p class="post-section-title">{@html renderTitle(block.text, block.colorMedals ?? false)}</p>
+					{:else if block.kind === 'team'}
+						{@const tl = block.text.split('\n').filter((l) => l.trim() !== '')}
+						<div class="post-team">
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							<p class="post-team-head">{@html renderTitle(tl[0], block.colorMedals ?? false)}</p>
+							<p class="post-team-members">{tl[1]}</p>
+						</div>
+					{:else}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<p class="post-para">{@html renderPara(block.text)}</p>
+					{/if}
+
+					<!-- PHONE only: an interleaved gallery image after this paragraph (the
+					     desktop aside shows the same photos in its right column instead).
+					     Shares .post-figure so it gets the same clip-path + fly-in animation. -->
+					{#if inlineImageAfter[bi]}
+						<figure class="post-figure post-figure-inline" use:flyIn>
+							<ImageWithLoader src={inlineImageAfter[bi].url} alt={inlineImageAfter[bi].alt} fit="cover" />
+						</figure>
+					{/if}
 				{/each}
 
 				<!-- View on Facebook (FB-sourced posts only) -->
@@ -214,6 +386,45 @@
 		<div class="post-end"><Flourish /></div>
 	</div>
 </article>
+
+<!-- Share modal: slightly-darkened backdrop + a white, rounded, wider-than-tall panel
+     holding the article link (contact-form input style) and a "Kopiraj" copy button. -->
+{#if shareOpen}
+	<div
+		class="share-overlay"
+		role="button"
+		tabindex="-1"
+		aria-label="Zatvori"
+		onclick={closeShare}
+		onkeydown={(e) => e.key === 'Escape' && closeShare()}
+	>
+		<div
+			class="share-modal"
+			role="dialog"
+			tabindex="-1"
+			aria-modal="true"
+			aria-label="Podijeli članak"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={() => {}}
+		>
+			<h2 class="share-title">Podijeli članak</h2>
+			<div class="share-row">
+				<input
+					id="share-url-input"
+					class="share-input"
+					type="text"
+					readonly
+					value={shareUrl}
+					aria-label="Poveznica na članak"
+					onfocus={(e) => e.currentTarget.select()}
+				/>
+				<button class="share-copy" type="button" onclick={copyLink}>
+					{copied ? 'Kopirano!' : 'Kopiraj'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	@use 'axlothecook-sass-library/sass-library/variables' as lib;
@@ -388,7 +599,7 @@
 		margin: 0 0 ($sp * 1.3);
 		font-size: 1.15rem;
 		font-weight: 300;
-		line-height: 1.8;
+		line-height: 1.6; // standard paragraph line spacing (was a loose 1.8)
 	}
 	// Drop cap: enlarge the first letter of the opening paragraph.
 	.post-para:first-of-type::first-letter {
@@ -399,6 +610,63 @@
 		line-height: 0.8;
 		color: $gold;
 	}
+	// Section title (e.g. "Kvalifikacije", "Recurve muškarci U21"): bolder than prose,
+	// sits TIGHT above its rows (small bottom margin) with clear space above it.
+	.post-section-title {
+		margin: ($sp * 2) 0 ($sp * 0.4);
+		font-size: 1.2rem;
+		font-weight: 800;
+		color: $white;
+		line-height: 1.3;
+	}
+	// Results block: each archer ("Name - placement, result") on its OWN row, rows
+	// kept close together and close to the title above (small top margin).
+	.post-rows {
+		margin: 0 0 ($sp * 1.3);
+		font-size: 1.05rem;
+		font-weight: 300;
+		line-height: 1.5;
+	}
+	.post-rows :global(.result-row) {
+		display: block;
+	}
+	// Team result: a bold head line (with coloured placement) + the member row right
+	// beneath it. Same tight rhythm as the Kvalifikacije title→rows (small gap within,
+	// modest gap between team blocks — matching the other results' row spacing).
+	.post-team {
+		margin: 0 0 ($sp * 0.9);
+	}
+	.post-team-head {
+		margin: 0 0 ($sp * 0.2);
+		font-size: 1.05rem;
+		font-weight: 800;
+		color: $white;
+		line-height: 1.4;
+	}
+	.post-team-members {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 300;
+		line-height: 1.5;
+	}
+
+	// Medal-coloured placement (FINAL results only — qualifications stay uncoloured).
+	.post-rows :global(.result-place.medal-gold),
+	.post-team-head :global(.result-place.medal-gold) {
+		color: $gold;
+		font-weight: 600;
+	}
+	.post-rows :global(.result-place.medal-silver),
+	.post-team-head :global(.result-place.medal-silver) {
+		color: #9aa6b2; // darker metallic silver — clearly distinct from the white text
+		font-weight: 600;
+	}
+	.post-rows :global(.result-place.medal-bronze),
+	.post-team-head :global(.result-place.medal-bronze) {
+		color: #cd8e54;
+		font-weight: 600;
+	}
+
 	// #hashtags in the prose — supermarket blue. :global because the {@html} content
 	// gets no scope class.
 	.post-para :global(.hashtag) {
@@ -598,6 +866,91 @@
 		margin: ($sp * 11) 0 ($sp * 4); // big gap above + lower the flourish down the page
 	}
 
+	// PHONE-only interleaved gallery image (between paragraphs). Hidden on desktop,
+	// where the same photos live in the right-column aside instead.
+	.post-figure-inline {
+		display: none;
+	}
+
+	// ── Share button (sits in the social-icon row) + share modal ────────────────
+	// It reuses .post-social (colour, hover, glyph box) but is a <button>, so reset the
+	// button chrome and let it sit inline with the social links.
+	.post-share-btn {
+		padding: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+	// Slightly-darkened backdrop over the whole page.
+	.share-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: grid;
+		place-items: center;
+		padding: ($sp * 1.5);
+		background: rgba(0, 0, 0, 0.45);
+	}
+	// White panel: wider than tall, rounded, inner padding, bordered.
+	.share-modal {
+		width: min(560px, calc(100vw - 3rem)); // never exceed the viewport (overlay pad)
+		max-width: 100%;
+		box-sizing: border-box;
+		background: $white;
+		color: $navy;
+		border-radius: 14px;
+		border: 1px solid rgb(204, 217, 226);
+		padding: ($sp * 1.75) ($sp * 2);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+	}
+	.share-title {
+		margin: 0 0 ($sp * 1.25);
+		font-size: 1.2rem;
+		font-weight: 800;
+		color: $navy;
+	}
+	.share-row {
+		display: flex;
+		gap: ($sp * 0.75);
+		align-items: stretch;
+	}
+	// Link input — mirrors the contact-form field style (padded, bordered, rounded).
+	.share-input {
+		flex: 1 1 auto;
+		min-width: 0;
+		padding: ($sp * 0.7) ($sp * 0.9);
+		font: inherit;
+		font-weight: 400;
+		color: $navy;
+		background: $white;
+		border: 1px solid rgb(204, 217, 226);
+		border-radius: 8px;
+		&:focus {
+			outline: none;
+			border-color: $blue;
+		}
+	}
+	.share-copy {
+		flex: 0 0 auto;
+		// Sized to the WIDER "Kopirano!" state so the button doesn't grow when the word
+		// swaps on click — only the label changes, the box stays put.
+		min-width: 141px;
+		padding: 0 ($sp * 1.5);
+		font: inherit;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: #000;
+		background: $gold;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+		&:hover {
+			background: color.adjust($gold, $lightness: 6%);
+		}
+	}
+
 	// Below this width the two columns stack: prose, then the aside underneath.
 	@media (max-width: 820px) {
 		.post-columns.has-aside {
@@ -611,9 +964,46 @@
 			}
 		}
 	}
+	// PHONE: weave the gallery images BETWEEN paragraphs (one after each) instead of
+	// the side column — so hide the aside's gallery and reveal the inline figures.
+	@media (max-width: 720px) {
+		// Hide the aside's photo gallery on phone (images now appear inline between
+		// paragraphs). The "U ovom članku" archer cards in the aside stay.
+		.post-gallery {
+			display: none;
+		}
+		// Show the interleaved images (full content width, with vertical breathing room).
+		.post-figure-inline {
+			display: block;
+			width: 100%;
+			margin: ($sp * 1.75) 0;
+		}
+	}
 	@media (max-width: 600px) {
 		.post-title {
-			font-size: 1.9rem;
+			font-size: 1.4rem; // smaller still on phone
+		}
+		// Tighter side padding for the title block on phone (was 2rem sides); smaller
+		// bottom padding brings the title LOWER on the cover.
+		.post-hero-inner {
+			padding-left: $sp;
+			padding-right: $sp;
+			padding-bottom: ($sp * 1.5);
+		}
+		// Body content lines up with the title (same 1rem side gutter, was 2rem).
+		.post-body {
+			padding-left: $sp;
+			padding-right: $sp;
+		}
+		// Stack the timestamp BELOW the date, both left-aligned to the same edge.
+		.post-meta-left {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: ($sp * 0.4);
+		}
+		// Longer divider above the social icons.
+		.post-divider {
+			width: 55%;
 		}
 		.post-gallery .post-figure {
 			flex-basis: 100%;
