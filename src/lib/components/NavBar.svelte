@@ -319,17 +319,12 @@
 		border-radius: 999px;
 		border-color: rgba(255, 255, 255, 0.12);
 		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-		// Frosted glass, tuned for scroll PERFORMANCE. `backdrop-filter` re-samples +
-		// re-blurs the content behind the pill on EVERY scroll frame; cost scales with
-		// the blur radius AND the busy-ness of the pixels behind it, so over the image-
-		// heavy top sections a 20px blur janked the scroll (forced reflow each frame,
-		// confirmed in a Chrome perf trace). Fix (verified to remove the forced reflow
-		// while keeping the glass look): a SMALLER blur (8px) with a HEAVIER semi-opaque
-		// tint doing the depth work, and no `saturate()` (it was a 2nd filter pass on the
-		// same backdrop). Reads as the same Apple #globalnav glass, but smooth.
-		background-color: rgba(29, 29, 31, 0.92);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+		// Apple #globalnav frosted glass (verified live). The blur was NOT the scroll-lag
+		// cause (that was JS forced-reflow + the achievement/typewriter timers, since fixed),
+		// so we keep the original full glass look.
+		background-color: rgba(29, 29, 31, 0.8);
+		backdrop-filter: saturate(180%) blur(20px);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
 	}
 	.navbar.scrolled.section .pill {
 		gap: 2.5rem; // tighter centre gap when the 4 section links are docked in

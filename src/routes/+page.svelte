@@ -260,16 +260,19 @@
 	const POOL = [
 		// 2026-06-13: swapped together-2 ↔ amanda-17, then dropped the first 6 — these 6 remain.
 		// `credit` = the photo's source, shown bottom-left with a © mark.
-		{ file: 'amanda-21.jpg', pos: 'center 35%', credit: 'World Archery' }, // 1
-		{ file: 'alen-3.jpg', pos: 'center 35%', credit: 'World Archery' }, // 2
+		// `posPhone` (optional) overrides object-position on phone only. Images 1/2/5 are
+		// shifted left (smaller X%) so more of their LEFT side shows on a narrow screen.
+		{ file: 'amanda-21.jpg', pos: 'center 35%', posPhone: '28% 35%', credit: 'World Archery' }, // 1
+		{ file: 'alen-3.jpg', pos: 'center 35%', posPhone: '28% 35%', credit: 'World Archery' }, // 2
 		{ file: 'leo-3.jpg', pos: 'center 35%', credit: 'Freyja Benedikts' }, // 3
 		{ file: 'alen-6.jpg', pos: 'center 35%', credit: 'World Archery' }, // 4
-		{ file: 'amanda-17.jpg', pos: 'center 35%', credit: 'Roman Sputo' }, // 5
+		{ file: 'amanda-17.jpg', pos: 'center 35%', posPhone: '28% 35%', credit: 'Roman Sputo' }, // 5
 		{ file: 'alen-12.jpg', pos: 'center 35%', credit: 'World Archery' } // 6
 	].map((x) => ({
 		url: BASE + x.file,
 		name: x.file.replace(/\.jpg$/, ''),
 		pos: x.pos,
+		posPhone: 'posPhone' in x ? (x as { posPhone: string }).posPhone : x.pos,
 		credit: x.credit,
 		rotate: 'rotate' in x ? (x as { rotate: number }).rotate : 0
 	}));
@@ -389,7 +392,7 @@
 			class:show={i === active}
 			src={img.url}
 			alt=""
-			style={`object-position:${img.pos}${img.rotate ? `;transform:rotate(${img.rotate}deg)` : ''}`}
+			style={`--pos:${img.pos};--pos-phone:${img.posPhone}${img.rotate ? `;transform:rotate(${img.rotate}deg)` : ''}`}
 			loading={i < 3 ? 'eager' : 'lazy'}
 		/>
 	{/each}
@@ -429,7 +432,7 @@
 
 	<!-- Subtext, bottom-centre. -->
 	<p class="hero-tagline" class:in={introIn}>
-		A Croatian archery club from Varaždin, shooting for the world since 2014.
+		Hrvatski streličarski klub iz Varaždina, koji puca za svijet od 2014.
 	</p>
 
 	<!-- Intro curtain: covers the hero, then wipes off to the left to reveal it. -->
@@ -683,14 +686,16 @@
 		background: #000;
 	}
 
-	/* Every image covers the WHOLE screen; crossfade between them. object-position is set
-	   per image (inline) so the crop keeps the subject. */
+	/* Every image covers the WHOLE screen; crossfade between them. object-position comes
+	   from the per-image inline --pos (desktop); phone uses --pos-phone (a few images are
+	   shifted left there). Defaults to center 35% if a var is somehow unset. */
 	.hero-img {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		object-position: var(--pos, center 35%);
 		opacity: 0;
 		transition: opacity 0.7s cubic-bezier(0.26, 1.04, 0.54, 1);
 		will-change: opacity;
@@ -856,6 +861,8 @@
 		   pure compositor memory pressure during scroll. Drop the hint on phone. */
 		.hero-img {
 			will-change: auto;
+			/* Phone uses the per-image --pos-phone focal point (some images shifted left). */
+			object-position: var(--pos-phone, var(--pos, center 35%));
 		}
 		/* ── SIMPLIFIED PHONE INTRO ─────────────────────────────────────────────────
 		   On phone the cover intro is ONE cheap opacity fade instead of separately
