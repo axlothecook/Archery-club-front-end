@@ -63,11 +63,11 @@ const RECURVE_MODEL: BowModel = {
 		url: 'https://sketchfab.com/3d-models/recurve-bow-800fb9f4eb224cedb1c8e0b9847bd00c',
 		license: 'CC BY 4.0'
 	},
-	// Same pose as the barebow model (which renders correctly): a quarter-turn about Y
-	// turns the bow to FACE the camera, plus a quarter-turn about Z stands the handle
-	// VERTICAL — so it shows its full side profile (limbs up/down) instead of the flat
-	// horizontal/top-down line. The spinner then rotates it about Y in place.
-	fixRotation: [0, Math.PI / 2, Math.PI / 2],
+	// This model is ALREADY authored upright + facing the camera: raw bounding box is
+	// y=4.57 (limbs, tallest) × x=3.68 × z=0.21 (paper-thin flat face). So NO fixRotation —
+	// limbs already lie on Y, the spin axis, so it stands vertical and turns its face in
+	// place. (Earlier rotations tipped it onto its side → the horizontal spin bug.)
+	fixRotation: [0, 0, 0],
 	// Spin clockwise (opposite the compound).
 	spinDir: -1
 };
