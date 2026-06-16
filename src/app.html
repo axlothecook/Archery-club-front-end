@@ -4,13 +4,10 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
-		<!-- Default title/description — overridden per-page by the <Seo> component. Kept
-		     here so a page without explicit meta still has a sensible title/snippet. -->
-		<title>Varaždinski streličarski klub</title>
-		<meta
-			name="description"
-			content="Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Vijesti, raspored natjecanja, momčad i postignuća."
-		/>
+		<!-- Default <title>/description live in +layout.svelte's <svelte:head> (NOT here):
+		     a static title in app.html is NOT replaced by <svelte:head>, it duplicates, and
+		     browsers/crawlers read the FIRST <title> — so a page-specific title would lose.
+		     SvelteKit dedupes titles set via <svelte:head> (child page overrides layout). -->
 		<style>
 			/* First-paint background. On a COLD first visit (no cached CSS yet) the browser
 			   would otherwise paint a default/unstyled frame before index.scss loads — which

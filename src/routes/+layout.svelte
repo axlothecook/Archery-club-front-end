@@ -125,6 +125,14 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<!-- Site-wide DEFAULT title + description. Pages set their own via the <Seo>
+	     component; SvelteKit dedupes <svelte:head> titles so the page value wins. This
+	     fallback covers any page without an explicit <Seo>. -->
+	<title>Varaždinski streličarski klub</title>
+	<meta
+		name="description"
+		content="Varaždinski streličarski klub (VSK) — natjecateljski streličarski klub iz Varaždina. Vijesti, raspored natjecanja, momčad i postignuća."
+	/>
 </svelte:head>
 
 <div class="app-shell">
