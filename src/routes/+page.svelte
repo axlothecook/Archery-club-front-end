@@ -35,6 +35,20 @@
 	const phoneNewsHero = $derived(data.news[0]);
 	const phoneNewsCards = $derived(data.news.slice(1, 7));
 
+	// Phone flag. The desktop 3D NewsCoverflow (8 cards, each with permanent
+	// `will-change:transform` + a `-webkit-box-reflect` mirror + `preserve-3d`) is heavy:
+	// CSS `display:none` still leaves those nodes in the DOM incurring style-recalc + layer
+	// churn, which measurably janked the phone Vijesti scroll. So we DON'T RENDER it on
+	// phone at all (`{#if !isPhone}` below) — the phone uses the light hero+grid instead.
+	let isPhone = $state(false);
+	onMount(() => {
+		const mq = window.matchMedia('(max-width: 720px)');
+		const sync = () => (isPhone = mq.matches);
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+
 	// ── Bows: one panel, click-through tabs (like the archer page's stats/results tabs) ──
 	// The user clicks a bow-type tab; the single panel below shows that bow. A sliding
 	// underline glides to the active tab.
@@ -90,8 +104,28 @@
 		if (achCount === 0) return;
 		achIndex = ((next % achCount) + achCount) % achCount;
 	}
+	// Only auto-advance while the achievements section is actually ON SCREEN. The advance
+	// swaps the {#key achIndex} slide with `fly` transitions (which read layout) + runs the
+	// count-up — a forced-reflow burst. Left running unconditionally (the old behaviour), it
+	// fired every 5s even while the user was scrolling a DIFFERENT section, stuttering that
+	// scroll. Gating on visibility means the bursts only happen when the section is in view
+	// (where they're the point) and never interfere with scrolling elsewhere.
+	let achSectionEl: HTMLElement | undefined = $state();
+	let achInView = $state(false);
 	$effect(() => {
-		if (achCount <= 1) return;
+		const el = achSectionEl;
+		if (!el) return;
+		const io = new IntersectionObserver(([e]) => (achInView = e.isIntersecting), {
+			// Only count as "in view" once the section is well into the viewport (matches the
+			// later reveal trigger), so the rotator's fly-in + count-up don't run while the
+			// user is still scrolling toward it.
+			rootMargin: '0px 0px -35% 0px'
+		});
+		io.observe(el);
+		return () => io.disconnect();
+	});
+	$effect(() => {
+		if (achCount <= 1 || !achInView) return;
 		achTimer = setInterval(() => achGo(achIndex + 1), ACH_INTERVAL);
 		return () => clearInterval(achTimer);
 	});
@@ -182,11 +216,26 @@
 				timers.push(setTimeout(() => (node.textContent = text.slice(0, i + 1)), i * TYPE_MS));
 			}
 		};
-		runOnce();
-		const loop = setInterval(runOnce, cycle); // type → (stays) → re-type every `cycle`
+		// Only run the loop while the line is ON SCREEN. Left running unconditionally, the
+		// 7s re-type loop fired its char-by-char DOM mutations even while the user was
+		// scrolling a different section, causing a periodic hitch (~every few scroll passes).
+		// IntersectionObserver pauses it off-screen → no interference with scrolling elsewhere.
+		let loop: ReturnType<typeof setInterval> | undefined;
+		const io = new IntersectionObserver(([e]) => {
+			if (e.isIntersecting && !loop) {
+				runOnce();
+				loop = setInterval(runOnce, cycle);
+			} else if (!e.isIntersecting && loop) {
+				clearInterval(loop);
+				loop = undefined;
+				clearAll();
+			}
+		});
+		io.observe(node);
 		return {
 			destroy: () => {
-				clearInterval(loop);
+				io.disconnect();
+				if (loop) clearInterval(loop);
 				clearAll();
 			}
 		};
@@ -283,6 +332,9 @@
 	let revealed = $state(!freshLoad);
 	let curtainGone = $state(!freshLoad);
 	let introIn = $state(!freshLoad);
+	// True once the wordmark's intro letter-animation has finished — drops the temporary
+	// `will-change` promotion on the letters so they don't keep a compositor layer for life.
+	let wordmarkDone = $state(!freshLoad);
 
 	// The hero image URLs the loader waits on (so the % tracks the real hero images).
 	const heroAssets = IMAGES.map((img) => img.url);
@@ -313,6 +365,9 @@
 		setTimeout(() => (introIn = true), INTRO_DELAY);
 		// Navbar links slide down into place (alongside the VSK reveal beat).
 		setTimeout(() => document.documentElement.removeAttribute('data-nav-intro'), INTRO_DELAY);
+		// After the wordmark letters finish their 1.4s fade-in (+ the 0.15-0.31s stagger),
+		// drop the temporary will-change layer promotion (intro is over; text is now static).
+		setTimeout(() => (wordmarkDone = true), INTRO_DELAY + 1800);
 	}
 </script>
 
@@ -356,7 +411,12 @@
 	{/if}
 
 	<!-- Big centred wordmark (numbered.com style) — letters rise/fade in on reveal. -->
-	<h1 class="hero-wordmark" class:in={introIn} aria-label="Varaždinski streličarski klub">
+	<h1
+		class="hero-wordmark"
+		class:in={introIn}
+		class:done={wordmarkDone}
+		aria-label="Varaždinski streličarski klub"
+	>
 		{#each ['V', 'S', 'K'] as letter, i}
 			<span class="wm-letter" style={`transition-delay:${0.15 + i * 0.08}s`}>{letter}</span>
 		{/each}
@@ -379,7 +439,7 @@
 <div class="home-sections">
 	<!-- Section 1: Latest news — 3D coverflow on a black band (navy fades in at top/bottom). -->
 	{#if data.news.length > 0}
-		<section class="home-news" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
+		<section class="home-news" use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 			<!-- "VIJESTI / Sve vijesti ›" — title, slash, then the all-link inline (left). -->
 			<header class="home-sec-head">
 				<h2 class="home-sec-title">Vijesti</h2>
@@ -388,20 +448,31 @@
 					Sve vijesti <RightArrowIcon size={11} />
 				</a>
 			</header>
-			<!-- DESKTOP: full-bleed 3D coverflow (edge to edge). -->
-			<div class="home-news-coverflow">
-				<NewsCoverflow slides={data.news} />
-			</div>
+			<!-- DESKTOP: full-bleed 3D coverflow (edge to edge). NOT rendered on phone (heavy
+			     3D/reflection layers janked the phone scroll even while display:none). -->
+			{#if !isPhone}
+				<div class="home-news-coverflow">
+					<NewsCoverflow slides={data.news} />
+				</div>
+			{/if}
 
-			<!-- PHONE (PSG style): one big hero square + a 2-up grid of ArticleCards. -->
+			<!-- PHONE (PSG style): one big hero square + a 2-up grid of ArticleCards. Each
+			     card fades+slides in individually AS it scrolls into view (per-card reveal,
+			     lightly staggered) rather than the whole section at once — matches the PSG
+			     news layout's scroll-in. `content-visibility: auto` (in the phone CSS) also
+			     lets off-screen cards skip rendering until they near the viewport. -->
 			<div class="home-news-phone">
 				{#if phoneNewsHero}
-					<NewsHero article={phoneNewsHero} />
+					<div use:reveal={{ rootMargin: '0px 0px -10% 0px' }}>
+						<NewsHero article={phoneNewsHero} />
+					</div>
 				{/if}
 				{#if phoneNewsCards.length}
 					<ul class="home-news-phone-grid">
-						{#each phoneNewsCards as a (a.slug)}
-							<li><ArticleCard article={a} /></li>
+						{#each phoneNewsCards as a, i (a.slug)}
+							<li class="cv-card" use:reveal={{ rootMargin: '0px 0px -8% 0px', delay: (i % 2) * 90 }}>
+								<ArticleCard article={a} />
+							</li>
 						{/each}
 					</ul>
 				{/if}
@@ -411,7 +482,7 @@
 
 	<!-- Section 2: Upcoming events teaser (horizontal scroll of RM-style EventCards). -->
 	{#if upcomingTeaser.length > 0}
-		<section class="home-events" use:reveal={{ rootMargin: '0px 0px -30% 0px' }}>
+		<section class="home-events">
 			<header class="home-sec-head">
 				<h2 class="home-sec-title home-events-title">Nadolazeće</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
@@ -451,7 +522,11 @@
 	     slides exit left + enter from right; auto-advances every 5s, no visible timer). -->
 	{#if data.achievements.length > 0}
 		{@const ach = data.achievements[achIndex]}
-		<section class="home-ach" use:reveal>
+		<!-- Achievements reveal LATER than the other sections: a negative bottom rootMargin
+		     means it only fires once the user has scrolled ~35% INTO the section (almost in
+		     position), not when its top edge first peeks in. Keeps its fly-in + count-up off
+		     the main thread until the user is actually arriving at it. -->
+		<section class="home-ach" bind:this={achSectionEl} use:reveal={{ rootMargin: '0px 0px -35% 0px' }}>
 			<header class="home-sec-head">
 				<h2 class="home-sec-title home-ach-honour-title">Ponos hrvatskog streličarstva</h2>
 				<span class="home-sec-slash" aria-hidden="true">/</span>
@@ -462,21 +537,23 @@
 
 			<a class="home-ach-stage" href="/postignuca" aria-label="Postignuća kluba">
 				{#key achIndex}
-					<div class="home-ach-slide">
+					<!-- ONE shared fly transition on the whole slide so the image + text move
+					     together as a single unit (was two separate fly transitions — image with
+					     no delay, text with a 60ms delay — which read as two animations). -->
+					<div
+						class="home-ach-slide"
+						in:fly={{ x: 260, duration: 650, easing: cubicInOut }}
+						out:fly={{ x: -260, duration: 650, easing: cubicInOut }}
+					>
 						<div
 							class="home-ach-media"
-							in:fly={{ x: 260, duration: 650, easing: cubicInOut }}
-							out:fly={{ x: -260, duration: 650, easing: cubicInOut }}
+							class:ach-shift-left={ach.slot === 'europeanRecords'}
 						>
 							{#if ach.image}
 								<ImageWithLoader src={ach.image.url} alt={ach.image.alt} />
 							{/if}
 						</div>
-						<div
-							class="home-ach-text"
-							in:fly={{ x: 260, duration: 650, delay: 60, easing: cubicInOut }}
-							out:fly={{ x: -260, duration: 650, easing: cubicInOut }}
-						>
+						<div class="home-ach-text">
 							<span class="home-ach-count" use:countUp={{ index: achIndex, target: ach.count }}
 							>{ach.count}</span
 						>
@@ -492,7 +569,7 @@
 	     (Klasični / Složeni / Goli), like the archer page's stats/results tabs. The selected
 	     bow shows its live 3D model (BowViewer) + a demo intro + the shared model description.
 	-->
-	<section class="home-bows" use:reveal>
+	<section class="home-bows" use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 		<header class="home-sec-head">
 			<h2 class="home-sec-title home-bows-title">Lukovi najboljih streličara</h2>
 		</header>
@@ -552,7 +629,7 @@
 
 	<!-- Section 4: Join / contact invite — full-bleed looping video with a dark fade,
 	     centered text on top, "Registriraj se" button → /kontakt (Učlanjenje). -->
-	<section class="home-join" use:reveal>
+	<section class="home-join" use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 		<!-- Two clips, crossfading A→B→A→B for a seamless loop. Only `joinActive` is shown. -->
 		{#each JOIN_CLIPS as clip, i}
 			<video
@@ -586,7 +663,7 @@
 
 	<!-- Section 5: Explore the club — the shared golden "MOŽDA ĆE VAM SE SVIDJETI" block
 	     with 4 cover-photo nav cards (Povijest / Identitet / Postignuća / Sponzori). -->
-	<div use:reveal>
+	<div use:reveal={{ rootMargin: '0px 0px 20% 0px' }}>
 		<SectionExplore />
 	</div>
 </div>
@@ -632,6 +709,7 @@
 		background: transparent;
 		cursor: pointer;
 		appearance: none;
+		-webkit-tap-highlight-color: transparent; /* no blue tap-flash on the cover */
 	}
 
 	/* Photo-source credit, bottom-left: © mark + source name. A bit smaller than the old
@@ -682,7 +760,10 @@
 		font-size: clamp(5rem, 22vw, 20rem);
 		line-height: 1;
 		letter-spacing: 0.02em;
-		text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+		/* Smaller shadow blur: a 40px blur on this huge wordmark is a very large per-frame
+		   paint while the letters animate in (cover-intro jank). 18px still reads as a soft
+		   glow but costs far less to rasterise. */
+		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
 		pointer-events: none;
 		user-select: none;
 	}
@@ -693,10 +774,20 @@
 		transition:
 			opacity 1.4s ease,
 			transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+		/* During the 1.4s intro the letters fade+rise while carrying the wordmark's big
+		   blurred text-shadow — repainting that shadow every frame is what made the cover
+		   text animation jank. Promote each letter to its own layer for the animation so the
+		   shadow rasterises ONCE and only the layer is moved/faded by the compositor. The
+		   layer is dropped after the intro finishes (cleared by `.hero-wordmark.in.done`). */
+		will-change: opacity, transform;
 	}
 	.hero-wordmark.in .wm-letter {
 		opacity: 1;
 		transform: translateY(0);
+	}
+	/* After the intro completes, drop the promotion (no permanent layer for static text). */
+	.hero-wordmark.done .wm-letter {
+		will-change: auto;
 	}
 
 	/* ── Tagline, bottom-centre ─────────────────────────────────────────────────── */
@@ -748,6 +839,86 @@
 		}
 		.hero-curtain {
 			transition-duration: 0.2s;
+		}
+	}
+
+	/* ── PHONE hero tweaks ───────────────────────────────────────────────────────── */
+	@media (max-width: 720px) {
+		/* The hero crossfade only fires on HOVER/focus (the vertical zones) — which phones
+		   don't have, so the active image never changes here. The base `will-change: opacity`
+		   would otherwise keep all 5 FULL-SCREEN hero images permanently promoted to their own
+		   GPU layers (large textures at high DPR) for an animation that never runs on phone —
+		   pure compositor memory pressure during scroll. Drop the hint on phone. */
+		.hero-img {
+			will-change: auto;
+		}
+		/* ── SIMPLIFIED PHONE INTRO ─────────────────────────────────────────────────
+		   On phone the cover intro is ONE cheap opacity fade instead of separately
+		   animating the VSK letters (translateY), tagline (translateX/Y), and credit. Moving
+		   several large, shadowed elements at once janked low-end phones; a pure opacity fade
+		   composites cheaply. Desktop keeps the full staggered intro. */
+		.wm-letter {
+			transform: none !important; /* no per-letter rise */
+			transition: opacity 0.6s ease !important; /* fade only, no stagger delay */
+			will-change: auto !important; /* no need to promote for a plain fade */
+		}
+		.hero-wordmark.in .wm-letter {
+			transform: none !important;
+		}
+		.hero-tagline {
+			/* The phone tagline is full-width (left:0;right:0; centred by text-align), NOT
+			   left:50%, so it must NOT carry translateX(-50%) — that shoved it off-screen left.
+			   Just drop the translateY rise and fade. */
+			transform: none !important;
+			transition: opacity 0.6s ease 0.3s !important;
+		}
+		.hero-tagline.in {
+			transform: none !important;
+		}
+		.hero-credit {
+			transform: none !important;
+			transition: opacity 0.6s ease 0.3s !important;
+		}
+		.hero-credit.in {
+			transform: none !important;
+		}
+		/* Fade the hero photo into the navy sections below (like desktop's cover→body
+		   blend). A bottom gradient transparent→navy sits above the zones/text but the
+		   wordmark/tagline (z-index 3) stay readable on top. */
+		.hero::after {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: 38%;
+			z-index: 1; /* above the images (0), below the wordmark/tagline/credit (3) */
+			pointer-events: none;
+			background: linear-gradient(to bottom, transparent 0%, var(--color-footer) 100%);
+		}
+		/* Bigger VSK wordmark on phone. */
+		.hero-wordmark {
+			font-size: clamp(7rem, 34vw, 14rem);
+		}
+		/* Tagline: allow it to WRAP (was nowrap, which overflowed/clipped) with side
+		   padding so it never touches the screen edges. Span full width + centre the
+		   text instead of the left:50%/translateX centring (which a wide box breaks). */
+		.hero-tagline {
+			left: 0;
+			right: 0;
+			transform: translateY(0.6em); /* keep only the vertical intro offset */
+			white-space: normal;
+			max-width: 100%;
+			padding: 0 1.25rem;
+			box-sizing: border-box;
+		}
+		.hero-tagline.in {
+			transform: translateY(0);
+		}
+		/* Photo credit lower toward the bottom-left corner (clear of the tagline). */
+		.hero-credit {
+			left: 1rem;
+			bottom: 0.6rem;
 		}
 	}
 
@@ -830,10 +1001,7 @@
 	}
 
 	/* ── Section 2: Upcoming events (padding handled by the shared rhythm rule above) ── */
-	/* "Nadolazeće" sized to match the achievements honorary title. */
-	.home-events-title {
-		font-size: clamp(1.4rem, 3vw, 2.4rem);
-	}
+	/* "Nadolazeće" uses the full .home-sec-title size (mirrors "Vijesti"). */
 	/* Carousel wrapper — centered/constrained, holds the track + side arrows. */
 	.home-events-carousel {
 		position: relative;
@@ -894,18 +1062,67 @@
 		}
 	}
 	@media (max-width: 720px) {
+		/* Match Vijesti's 1.25rem side gutter across every section inside the navy
+		   container (headers + each section's content), so the whole page lines up. */
+		.home-sec-head,
+		.home-bow-tabs,
+		.home-bow,
+		.home-join-inner {
+			padding-left: 1.25rem;
+			padding-right: 1.25rem;
+		}
+		/* The section header (TITLE / link) is nowrap by default; at the bigger phone
+		   title size the "/ link" can overflow the right edge. Allow it to WRAP. For the
+		   LONGER titles (Nadolazeće/Ponos/Lukovi) force the title onto its own line so the
+		   slash + link drop to the next line TOGETHER (dash beside the link). VIJESTI is
+		   short — it keeps "/ Sve vijesti" on the SAME row (no forced wrap). */
+		.home-sec-head {
+			flex-wrap: wrap;
+		}
+		.home-events .home-sec-title,
+		.home-ach .home-sec-title,
+		.home-bows .home-sec-title {
+			flex-basis: 100%;
+		}
+		/* A touch more space between wrapped title rows (e.g. the long Ponos title). */
+		.home-sec-title {
+			line-height: 1.18;
+		}
+		/* UNIFORM visual gap (~100px) between sections on phone (Vijesti→Nadolazeće→
+		   Ponos→Lukovi→Join). The per-section padding-top is tuned to compensate for the
+		   differing bottom whitespace of each section's content, so the gaps READ equal:
+		   events lands ~100 at 5rem; ach needs a bit more, bows a bit less.
+		   EXEMPT: cover→Vijesti (.home-news padding-top) + Join→Explore (golden block). */
+		.home-events {
+			padding-top: 5rem; /* → ~100px gap above Nadolazeće (the reference) */
+		}
+		.home-ach {
+			padding-top: 6.25rem; /* +20px so the gap above Ponos matches (~100px) */
+		}
+		.home-bows {
+			padding-top: 4.5rem; /* -8px so the gap above Lukovi matches (~100px) */
+			padding-bottom: 5rem; /* Lukovi → Join gap */
+		}
 		.home-events-item {
 			flex-basis: 82%; /* ~1 per view on phone */
+			scroll-snap-stop: always; /* one card per swipe (like the Postignuća carousel) */
+		}
+		/* PHONE: no arrows — swipe only (arrows stay on desktop). */
+		.home-events-arrow {
+			display: none;
+		}
+		/* A touch of inner gutter so the next card peeks, hinting the swipe. */
+		.home-events-carousel {
+			padding: 0 1.25rem;
 		}
 	}
 
 	/* ── Section 3: Achievements rotator (RM-style) ──────────────────────────────── */
 	/* (.home-ach padding handled by the shared rhythm rule above) */
-	/* Honorary title takes the section-title slot, kept GOLD + a bit smaller than the
-	   other section titles (it's a longer phrase, not a single word). */
+	/* Honorary title takes the section-title slot, kept GOLD; uses the full
+	   .home-sec-title size (mirrors "Vijesti"). */
 	.home-ach-honour-title {
 		color: var(--color-accent);
-		font-size: clamp(1.4rem, 3vw, 2.4rem);
 	}
 	/* Stage clips the flying slides; the slide overlays in/out copies during the swap. */
 	.home-ach-stage {
@@ -937,6 +1154,7 @@
 		border-radius: 12px;
 		overflow: hidden;
 		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+		will-change: transform; /* promote to its own layer so the slide fly is smooth */
 	}
 	/* Number + label on the SAME row, small gap, baseline-aligned. */
 	.home-ach-text {
@@ -945,6 +1163,7 @@
 		align-items: flex-end; /* number + label share the same bottom line */
 		gap: 0.75rem; /* small gap between number and its label */
 		color: var(--color-ink);
+		will-change: transform; /* smooth fly on slide switch */
 	}
 	.home-ach-count {
 		flex: none;
@@ -967,19 +1186,61 @@
 		white-space: nowrap; /* keep the label on ONE row beside the number, every slide */
 	}
 	@media (max-width: 720px) {
+		/* PHONE: the text sits ON the image (overlaid), not in a column beside/under it.
+		   The image fills the slide and is TALLER; the count + label overlay the bottom
+		   with a dark scrim for legibility. The count animation is unchanged. */
+		.home-ach-stage {
+			height: clamp(420px, 60vh, 560px); /* taller image area */
+			padding: 0 1.25rem; /* match the other phone sections' side gutter */
+		}
 		.home-ach-slide {
-			grid-template-columns: 1fr; /* stack: image over text */
-			gap: 1rem;
+			display: block; /* single layer; the media fills it, text overlays */
+			padding: 0 1.25rem;
 		}
 		.home-ach-media {
-			height: 55%;
+			position: absolute;
+			inset: 0 1.25rem; /* fill the slide (minus the side gutter) */
+			height: auto;
+			max-width: none;
+			border-radius: 0; /* square corners on phone (no curved image corners) */
+		}
+		.home-ach-media :global(img) {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+		/* Only the "Europskih rekorda" slide shows more of its LEFT side. */
+		.home-ach-media.ach-shift-left :global(img) {
+			object-position: 20% center;
+		}
+		/* Dark gradient scrim at the bottom so the overlaid text is readable. */
+		.home-ach-media::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: 0; /* match the square image corners on phone */
+			background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 45%);
+			pointer-events: none;
+		}
+		.home-ach-text {
+			position: absolute;
+			left: 2.25rem; /* 1.25rem stage gutter + 1rem inset from the image edge */
+			right: 2.25rem;
+			bottom: 2.25rem; /* lifted 1rem up from the image bottom edge */
+			z-index: 1; /* above the image + scrim */
+		}
+		/* Bigger count + label on the phone card (the label keeps nowrap, so this is
+		   sized to stay on one row for the longest labels). */
+		.home-ach-count {
+			font-size: 4.2rem;
+		}
+		.home-ach-label {
+			font-size: 1.4rem;
 		}
 	}
 
 	/* ── Section 3.5: Bows the club's best archers use (tabbed, single panel) ─────── */
-	.home-bows-title {
-		font-size: clamp(1.4rem, 3vw, 2.4rem);
-	}
+	/* "Lukovi najboljih streličara" uses the full .home-sec-title size (mirrors "Vijesti"). */
 	/* Tabs (Klasični / Složeni / Goli) with a sliding gold underline — same pattern as
 	   the archer page's stats/results tabs. */
 	.home-bow-tabs {
@@ -1189,19 +1450,29 @@
 
 	/* Phone: swap the 3D coverflow for the PSG hero + 2-up ArticleCard grid. */
 	@media (max-width: 720px) {
+		/* "Postani dio kluba" on ONE row, sized to fit the phone width (this block is
+		   AFTER the base .home-join-title rule, so it wins). */
+		.home-join-title {
+			font-size: 1.7rem;
+			white-space: nowrap;
+		}
 		.home-news-coverflow {
 			display: none;
 		}
 		.home-news-phone {
 			display: block;
 			padding: 0 1.25rem;
-			margin-top: 1.5rem;
+			/* No extra top gap — the section's shared .home-sec-head bottom margin already
+			   provides the title→content gap, so Vijesti now matches every other section. */
+			margin-top: 0;
 		}
-		/* The desktop top padding (clamp 20–32rem) leaves a huge black void above the
-		   heading on a phone — trim it right down here. */
+		/* PHONE: the news section is plain NAVY (no black band, no edge-fades) — the
+		   permanent section navy that runs through the whole page. The hero photo fades
+		   into this navy via the .hero::after below. Bigger top gap from the hero. */
 		.home-news {
-			padding-top: 3rem;
+			padding-top: clamp(6rem, 14vh, 10rem);
 			padding-bottom: 3rem;
+			background: none; /* drop the black + navy-edge gradient → show the navy bg */
 		}
 		.home-news-phone-grid {
 			list-style: none;
@@ -1210,6 +1481,14 @@
 			display: grid;
 			grid-template-columns: repeat(2, 1fr);
 			gap: 1.5rem 1.25rem;
+		}
+		/* Off-screen news cards skip rendering (style/layout/paint) until they near the
+		   viewport — the browser only does that work as the card scrolls in. Cuts the paint
+		   cost of the whole grid during scroll. `contain-intrinsic-size` reserves an estimated
+		   box so the page height / scrollbar don't jump as cards render in (web.dev guidance). */
+		.cv-card {
+			content-visibility: auto;
+			contain-intrinsic-size: auto 220px;
 		}
 		/* The news band is BLACK, so the ArticleCards' default navy title / grey date are
 		   unreadable here — lighten them to white on this page only. */

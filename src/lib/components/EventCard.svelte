@@ -118,6 +118,7 @@
 		// gradient/grid stay scoped (utilities can't express them).
 		box-shadow: 0 0 16px rgba(16, 46, 102, 0.12);
 		cursor: pointer;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		// Column so the body can stretch to equal heights across a row/carousel.
 		display: flex;
 		flex-direction: column;

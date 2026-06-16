@@ -52,6 +52,7 @@ export const load = async ({ fetch }) => {
 	// missing image so a slot without a stat photo never renders a broken slide).
 	const achievements = summary
 		? ACH_SLOTS.map(({ slot, label }) => ({
+				slot,
 				label,
 				count: summary.stats[slot] ?? 0,
 				image: summary.statImages[slot] ?? null

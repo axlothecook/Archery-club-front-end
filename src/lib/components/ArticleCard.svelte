@@ -52,6 +52,7 @@
 		width: 100%;
 		height: 100%;
 		text-decoration: none;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		&:hover .article-card-media :global(img) {
 			transform: scale(1.05);
 		}

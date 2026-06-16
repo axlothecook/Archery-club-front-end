@@ -39,6 +39,13 @@ $text: #f3f5f8; // ink (body text) — light, for the dark bg
 // ---------------------------------------------------------------------------
 // Base page styling on top of the library base.
 // ---------------------------------------------------------------------------
+// IMPORTANT: the library's `_base.scss` sets `:root { background-color: $primary }` and
+// $primary defaults to #7f011f (dark RED). `:root` has HIGHER specificity than `html`, so a
+// plain `html,body { background }` rule does NOT override it (source order can't win against
+// higher specificity) — which is why the red kept flashing. Override on `:root` itself.
+:root {
+	background-color: var(--color-bg);
+}
 html,
 body {
 	margin: 0;
@@ -82,6 +89,15 @@ a {
 		opacity 0.6s ease,
 		transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 	transition-delay: var(--reveal-delay, 0ms);
+	/* NB: NO permanent `will-change` here. Leaving it on keeps EVERY revealed section on
+	   its own GPU compositor layer forever — dozens of permanent layers that jank scrolling
+	   on phones (MDN/web.dev: will-change must be added JIT + removed after, not baked into
+	   a static class). The reveal action adds `.reveal--arm` only for the brief animation
+	   window, then clears it on transitionend. `opacity`+`transform` are already
+	   compositor-friendly, so they animate smoothly without a permanent hint. */
+}
+/* Armed by the reveal action right before `.reveal--in`; cleared on transitionend. */
+.reveal--arm {
 	will-change: opacity, transform;
 }
 .reveal--in {

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	// Club crest favicon (served from /static). Replaces the default Svelte-logo SVG (whose
+	// orange-red also contributed to the cold-load colour flash).
+	const favicon = '/favicon.png';
 
 	// Global theme: the Inter font (self-hosted via @fontsource) + the SCSS entry
 	// (library + palette control panel). Imported once here at the root.

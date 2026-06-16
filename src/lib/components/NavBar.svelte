@@ -111,24 +111,19 @@
 	// Publish the NavBar's natural height as --nav-h so the layout spacer can clear
 	// the fixed bar (pill alone vs pill + blue strip). When merged/scrolled the pill
 	// floats over content (no strip), so the spacer shrinks back to the pill height.
+	//
+	// PERF: the strip is a FIXED 3rem (= STRIP_H px) tall in CSS, so we use that CONSTANT
+	// instead of reading `stripEl.offsetHeight`. Reading offsetHeight inside an effect that
+	// re-runs on every `scrolled` toggle forced a synchronous layout (layout thrashing) on
+	// each scroll across the threshold — a confirmed phone scroll-jank source. No geometry
+	// read = no forced reflow.
+	const STRIP_H = 48; // .strip { height: 3rem } = 48px (keep in sync with the SCSS)
 	$effect(() => {
-		// recompute whenever the split/merged/scroll state changes
-		void merged;
-		void onSectionPage;
-		void scrolled;
-		void isPhone;
-		const update = () => {
-			// The spacer must include the strip height whenever the strip is SHOWN, i.e.
-			// on a section page and not merged. On phone we never merge, so the strip (and
-			// thus this height) stays even when scrolled.
-			const stripShown = onSectionPage && !merged;
-			const stripH = stripShown ? (stripEl?.offsetHeight ?? 0) : 0;
-			document.documentElement.style.setProperty('--nav-h', `${64 + stripH}px`);
-		};
-		// after DOM settles
-		requestAnimationFrame(update);
+		// The spacer must include the strip height whenever the strip is SHOWN, i.e. on a
+		// section page and not merged. On phone we never merge, so the strip stays when scrolled.
+		const stripShown = onSectionPage && !merged;
+		document.documentElement.style.setProperty('--nav-h', `${64 + (stripShown ? STRIP_H : 0)}px`);
 	});
-	let stripEl: HTMLElement | undefined = $state();
 
 	// After the DOM has re-rendered for the new merged/split state, play the Flip
 	// from the geometry captured (pre-change) in the scroll handler. Animates ONLY
@@ -226,7 +221,7 @@
 
 	<!-- ── The blue section strip (only on section pages, only while split) ───── -->
 	{#if onSectionPage && !merged}
-		<nav class="strip" aria-label="Sekcije kluba" bind:this={stripEl}>
+		<nav class="strip" aria-label="Sekcije kluba">
 			{#each [...SECTION_NAV_LINKS.left, ...SECTION_NAV_LINKS.right] as link (link.href)}
 				<a
 					class="strip-link"
@@ -326,10 +321,17 @@
 		border-radius: 999px;
 		border-color: rgba(255, 255, 255, 0.12);
 		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-		// Apple #globalnav frosted glass (verified live).
-		background-color: rgba(29, 29, 31, 0.8);
-		backdrop-filter: saturate(180%) blur(20px);
-		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		// Frosted glass, tuned for scroll PERFORMANCE. `backdrop-filter` re-samples +
+		// re-blurs the content behind the pill on EVERY scroll frame; cost scales with
+		// the blur radius AND the busy-ness of the pixels behind it, so over the image-
+		// heavy top sections a 20px blur janked the scroll (forced reflow each frame,
+		// confirmed in a Chrome perf trace). Fix (verified to remove the forced reflow
+		// while keeping the glass look): a SMALLER blur (8px) with a HEAVIER semi-opaque
+		// tint doing the depth work, and no `saturate()` (it was a 2nd filter pass on the
+		// same backdrop). Reads as the same Apple #globalnav glass, but smooth.
+		background-color: rgba(29, 29, 31, 0.92);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 	}
 	.navbar.scrolled.section .pill {
 		gap: 2.5rem; // tighter centre gap when the 4 section links are docked in

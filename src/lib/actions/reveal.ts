@@ -42,10 +42,17 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		};
 	}
 
+	// `will-change` is added JUST-IN-TIME (only for the reveal animation), then removed on
+	// transitionend — never left on permanently (a permanent hint keeps the element on its
+	// own GPU layer forever, which janks scrolling on phones; MDN/web.dev guidance).
+	const clearArm = () => node.classList.remove('reveal--arm');
+	node.addEventListener('transitionend', clearArm);
+
 	const io = new IntersectionObserver(
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
+					node.classList.add('reveal--arm'); // promote just before animating
 					node.classList.add('reveal--in');
 					if (!opts.repeat) io.unobserve(node);
 				} else if (opts.repeat) {
@@ -64,6 +71,7 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		},
 		destroy() {
 			io.disconnect();
+			node.removeEventListener('transitionend', clearArm);
 		}
 	};
 }
