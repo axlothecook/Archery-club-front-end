@@ -8,7 +8,7 @@
 	const sponsors = $derived((data.sponsors ?? []) as SponsorResolved[]);
 
 	const HERO_IMAGE =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/achivements/sponsors-cover.jpg';
+		'https://images.axlothecook.com/archery/achivements/sponsors-cover.jpg';
 
 	let heroLoaded = $state(false);
 	let inquiryOpen = $state(false);

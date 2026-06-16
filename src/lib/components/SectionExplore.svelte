@@ -11,7 +11,7 @@
 	// Povijest → the latest chapter's cover; Identitet → the Olympic image.
 	// NOTE: distinct images for Sponzori/Postignuća don't exist yet — they reuse a
 	// placeholder for now; swap to real ones when available.
-	const BASE = 'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public';
+	const BASE = 'https://images.axlothecook.com/archery';
 	const OLYMPIC_IMG = `${BASE}/identity/olimpic-logo.jpg`;
 	const LATEST_CHAPTER_IMG = `${BASE}/history/ch-9.jpg`; // 2024 "Novo doba kluba" cover
 	const ACHIEVEMENTS_IMG = `${BASE}/achivements/achivements-cover-2.jpg`; // Postignuća cover

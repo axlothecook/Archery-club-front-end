@@ -44,14 +44,14 @@
 	// own compound photo as a special case.
 	const BOW_IMG: Record<Bow, string> = {
 		recurve:
-			'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/stock-bow-photos/recurve-bow.png',
+			'https://images.axlothecook.com/archery/stock-bow-photos/recurve-bow.png',
 		compound:
-			'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/stock-bow-photos/compound.png',
+			'https://images.axlothecook.com/archery/stock-bow-photos/compound.png',
 		barebow:
-			'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/stock-bow-photos/barebow.png'
+			'https://images.axlothecook.com/archery/stock-bow-photos/barebow.png'
 	};
 	const AMANDA_BOW =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/stock-bow-photos/amanda-compound.png';
+		'https://images.axlothecook.com/archery/stock-bow-photos/amanda-compound.png';
 	const bowImg = $derived(
 		archer.slug === 'amanda-mlinaric' ? AMANDA_BOW : (BOW_IMG[archer.bowType?.[0]] ?? '')
 	);

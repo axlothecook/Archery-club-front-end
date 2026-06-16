@@ -18,7 +18,7 @@
 	gsap.registerPlugin(Flip);
 
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// Scroll state drives the pill morph (full bar ↔ rounded glass pill).
 	// Initialise from the pre-paint marker set by the inline script in app.html (which

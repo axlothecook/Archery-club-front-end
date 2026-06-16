@@ -23,7 +23,7 @@
 	);
 
 	const HERO_IMAGE =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/achivements/achivements-cover-2.jpg';
+		'https://images.axlothecook.com/archery/achivements/achivements-cover-2.jpg';
 
 	let heroLoaded = $state(false);
 

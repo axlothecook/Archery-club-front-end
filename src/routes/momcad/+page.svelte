@@ -34,7 +34,7 @@
 
 	// Faded club crest watermark (Real-Madrid style) on the hero's right side.
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// Hero arrow field: a grid of archery arrows that pulse in a diagonal WAVE (blue →
 	// gold). Each arrow's animation-delay is its (row + col) so the colour sweep

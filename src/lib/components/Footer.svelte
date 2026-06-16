@@ -14,7 +14,7 @@
 	// site. The icon component is kept in ./icons/ to restore that line later.
 
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// Site-wide data from +layout.ts (sponsors + clubInfo socials).
 	const sponsors = $derived((page.data.sponsors ?? []) as SponsorResolved[]);

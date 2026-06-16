@@ -78,9 +78,9 @@
 	// slug; falls back to the backend profile/card photo. Remove once seeded server-side.
 	const COVER_PHOTO_OVERRIDE: Record<string, string> = {
 		'amanda-mlinaric':
-			'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/amanda-profile.png',
+			'https://images.axlothecook.com/archery/roster-bigger-photos/amanda-profile.png',
 		'leo-sulik':
-			'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/leo-profile.png'
+			'https://images.axlothecook.com/archery/roster-bigger-photos/leo-profile.png'
 	};
 	const coverPhoto = $derived.by(() => {
 		const override = COVER_PHOTO_OVERRIDE[a.slug];
@@ -144,7 +144,7 @@
 			imgScale: 1.6,
 			imgRise: '48%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/mia-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/mia-bow-help.png',
 			phoneX: '0%',
 			phoneZoom: 1.5,
 			phoneY: '12%',
@@ -158,7 +158,7 @@
 			imgScale: 2.15,
 			imgRise: '86%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/aurelia-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/aurelia-bow-help.png',
 			phoneX: '18%',
 			phoneZoom: 2.05,
 			phoneY: '20%'
@@ -168,7 +168,7 @@
 			imgScale: 1.42,
 			imgRise: '12%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/ela-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/ela-bow-help.png',
 			phoneX: '6%',
 			phoneZoom: 1.4,
 			phoneY: '-6%'
@@ -176,7 +176,7 @@
 		'filip-bistricic': {
 			imgShift: '-18%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/filip-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/filip-bow-help.png',
 			phoneX: '0%',
 			phoneZoom: 1.2,
 			phoneY: '-5%',
@@ -188,7 +188,7 @@
 			imgScale: 1.55,
 			imgRise: '18%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/crnicki-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/crnicki-bow-help.png',
 			phoneX: '0%',
 			phoneZoom: 1.5,
 			phoneY: '-10%',
@@ -199,7 +199,7 @@
 			imgScale: 1.6,
 			imgRise: '30%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/bojan-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/bojan-bow-help.png',
 			phoneZoom: 1.5,
 			phoneY: '2%'
 		},
@@ -208,7 +208,7 @@
 			imgShift: '-12%',
 			imgRise: '11%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/luka-bow-type.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/luka-bow-type.png',
 			phoneZoom: 0.98,
 			phoneY: '8%',
 			phoneTx: '-6%'
@@ -219,7 +219,7 @@
 			imgScale: 1.5,
 			imgRise: '54%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/leda-bow-type.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/leda-bow-type.png',
 			phoneX: '10%',
 			phoneZoom: 1.5,
 			phoneY: '36%'
@@ -230,7 +230,7 @@
 			imgScale: 1.25,
 			imgRise: '0%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/nikola-bow-help.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/nikola-bow-help.png',
 			phoneX: '18%',
 			phoneZoom: 1.25,
 			phoneY: '-14%'
@@ -240,7 +240,7 @@
 			imgScale: 1.25,
 			imgRise: '12%',
 			bowPng:
-				'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/roster-bigger-photos/rafael-bow-type.png',
+				'https://images.axlothecook.com/archery/roster-bigger-photos/rafael-bow-type.png',
 			phoneZoom: 1.25,
 			phoneTx: '-14%'
 		},

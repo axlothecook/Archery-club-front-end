@@ -22,7 +22,7 @@
 	let { data } = $props();
 
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// The newest articles split into three bands (mirrors the reference news.html):
 	//   • FEATURED        — headline the carousel

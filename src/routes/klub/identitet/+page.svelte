@@ -13,7 +13,7 @@
 		'Bavljenje sportom je ljudsko pravo. Svakom pojedincu mora biti omogućeno bavljenje sportom, bez diskriminacije bilo koje vrste i u olimpijskom duhu, što zahtijeva obostrano razumijevanje u duhu prijateljstva, solidarnosti i fair playa.';
 
 	const OLYMPIC_IMG =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/olimpic-logo.jpg';
+		'https://images.axlothecook.com/archery/identity/olimpic-logo.jpg';
 
 	// The four club values. Text supplied by the user (verbatim) for values 1 & 3;
 	// values 2 & 4 expand the user's short text with the official Olympic Charter

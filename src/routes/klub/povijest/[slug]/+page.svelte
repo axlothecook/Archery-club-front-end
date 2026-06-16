@@ -61,7 +61,7 @@
 	// "Deset godina kluba" 10-year-anniversary photo.
 	const SECTION_IMAGES: Record<string, { url: string; alt: string }> = {
 		'2024-novo-doba-kluba|Deset godina kluba': {
-			url: 'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/history/anni-25.jpg',
+			url: 'https://images.axlothecook.com/archery/history/anni-25.jpg',
 			alt: 'Proslava deset godina Varaždinskog streličarskog kluba'
 		}
 	};
@@ -71,7 +71,7 @@
 
 	// The club crest for the end-of-article flourish (same as the topbar crest).
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// "Povezano s ovim člankom" — up to 8 related chapters. Rule (newer-first, then
 	// wrap to fill 8): take the chapters NEWER than this one (higher `order`), then

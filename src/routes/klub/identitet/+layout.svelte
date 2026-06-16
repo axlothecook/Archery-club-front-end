@@ -7,7 +7,7 @@
 	let { children } = $props();
 
 	const HERO_IMAGE =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/identity-page.jpg';
+		'https://images.axlothecook.com/archery/identity/identity-page.jpg';
 
 	// The active tab = the one whose href matches the current path. The base
 	// /klub/identitet (no slug) is Vrijednosti.

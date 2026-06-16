@@ -7,7 +7,7 @@
 
 	// Same hero photo as the identity page (reused per the design).
 	const HERO_IMAGE =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/identity-page.jpg';
+		'https://images.axlothecook.com/archery/identity/identity-page.jpg';
 
 	let heroLoaded = $state(false);
 

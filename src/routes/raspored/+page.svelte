@@ -30,7 +30,7 @@
 	// Club crest — same source NavBar/Footer use (a Supabase URL already on the
 	// Day-6 R2 migration sweep list, so no new debt).
 	const CLUB_LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// Scroll arrow → reveal the calendar below the full-screen hero.
 	function scrollToCalendar() {

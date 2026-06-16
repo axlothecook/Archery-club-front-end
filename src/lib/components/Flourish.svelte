@@ -7,7 +7,7 @@
 
 	// The club crest (same as the topbar / chapter-article crest).
 	const LOGO_URL =
-		'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/identity/vsk-logo.png';
+		'https://images.axlothecook.com/archery/identity/vsk-logo.png';
 
 	// Reveal once the flourish scrolls into view, then disconnect — a one-shot
 	// entrance. Uses a slight negative bottom margin so it triggers a touch before

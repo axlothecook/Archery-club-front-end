@@ -241,7 +241,7 @@
 		};
 	}
 
-	const BASE = 'https://rsjqguihhwunvpjsybtw.supabase.co/storage/v1/object/public/front%20page/';
+	const BASE = 'https://images.axlothecook.com/archery/front-page/';
 
 	// pos = object-position (where to anchor the crop). Default 'center 35%' keeps heads
 	// (most action shots have the subject in the upper-middle). Tuned per image below.
