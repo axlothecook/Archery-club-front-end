@@ -5,6 +5,16 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
 		<style>
+			/* First-paint background. On a COLD first visit (no cached CSS yet) the browser
+			   would otherwise paint a default/unstyled frame before index.scss loads — which
+			   showed as a flash (the only colour available pre-CSS, incl. the orange-red of the
+			   default favicon/UA defaults). Setting the page background HERE, in the inline head
+			   <style>, guarantees the very first frame is the site navy on every visit. */
+			html,
+			body {
+				margin: 0;
+				background-color: #102e66; /* = --color-bg (navy); keep in sync with index.scss */
+			}
 			/* Pre-paint cover: while the homepage intro is armed (data-prepaint, set
 			   synchronously below BEFORE first paint), paint a full-screen #1e1f1c layer. This
 			   guarantees the dark loader colour is on screen from the very first frame — no

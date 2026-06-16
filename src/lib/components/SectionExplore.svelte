@@ -208,6 +208,10 @@
 				clip-path: polygon(0 #{$slant}, 100% 0, 100% 100%, 0 100%);
 			}
 		}
+		// Lower the cover image a touch within each banner (show a lower slice).
+		.explore-card-img {
+			object-position: center 68%;
+		}
 		.explore-card-label {
 			font-size: 1.4rem; // larger name now the banners are full width
 		}

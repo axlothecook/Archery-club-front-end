@@ -63,9 +63,10 @@ const RECURVE_MODEL: BowModel = {
 		url: 'https://sketchfab.com/3d-models/recurve-bow-800fb9f4eb224cedb1c8e0b9847bd00c',
 		license: 'CC BY 4.0'
 	},
-	// Start flat-on: present the full side-profile to the camera at spin-start (Y=0 is
-	// the flat face; Y=π/2 was edge-on, making the bow look like a thin top-down line).
-	fixRotation: [0, 0, 0],
+	// This model ships lying FLAT (top-down view). A quarter-turn about X stands it upright
+	// so it presents its side/front profile to the camera like the compound + barebow,
+	// rather than the thin top-down silhouette.
+	fixRotation: [Math.PI / 2, 0, 0],
 	// Spin clockwise (opposite the compound).
 	spinDir: -1
 };

@@ -43,8 +43,9 @@
 		width: 100%;
 		aspect-ratio: 1 / 1; // big square (PSG hero)
 		overflow: hidden;
-		border-radius: 12px;
+		border-radius: 0; // square corners (no curved image corners)
 		text-decoration: none;
+		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 	}
 	.news-hero-img {
 		position: absolute;

@@ -327,6 +327,7 @@
 			// Shorter carousel on phone: cut ~20rem off the 680px desktop height.
 			height: 360px;
 			aspect-ratio: auto;
+			border-radius: 0; // square corners on phone (no curved image corners)
 		}
 		.slide-text {
 			max-width: 100%;
