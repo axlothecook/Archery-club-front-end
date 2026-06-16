@@ -266,6 +266,19 @@ Features that only make sense once the club actively maintains the site; skip un
   (2026-06-10): the SUBSCRIBE button is inert (no POST). Making it real needs a mailing-list backend (list
   storage + double opt-in + an email provider e.g. Brevo) the club would have to run. When adopted: add a
   `POST /newsletter/subscribe` endpoint + DB table + provider, then wire the form's button to it.
+- [ ] **Individual article page — gallery image handling (when articles regularly carry 4+ photos).**
+  File: `src/routes/najnovije/[slug]/+page.svelte` (the `.post-aside` / `.post-gallery` column).
+  - **Desktop:** cap the right-hand image column to ~4 images visible, then `overflow-y: scroll` on the
+    gallery (with a max-height ≈ 4 cards). Currently the column simply stacks every image, so an article with
+    4+ photos prolongs that column to an uncomfortable length next to the prose. Add the cap + scroll so the
+    aside stays a reasonable height regardless of photo count.
+  - **Phone:** move ALL gallery images out of the inline flow into a single horizontal-SWIPE strip placed
+    AFTER all the article text (below the prose, before the flourish). Reuse the Postignuća scrollable
+    carousel mechanics: `overflow-x: auto; scroll-snap-type: x mandatory` + `scroll-snap-stop: always` on each
+    slide so it's exactly ONE image per swipe (no skipping), with side gutters + a peeking next card.
+  - Keep the existing scroll-into-view fly-in animation on the images in both layouts.
+  (Deferred 2026-06-16: today's responsive pass left the desktop aside stacking + the phone images inline;
+  this only bites once articles habitually have many photos.)
 
 ## Backlog (added 2026-06-08, do AFTER the menu)
 - [ ] **Import a custom font (down the line)** — the whole site currently uses Inter (`--font-primary` in

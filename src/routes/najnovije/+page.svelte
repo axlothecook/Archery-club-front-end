@@ -39,14 +39,7 @@
 	let loading = $state(false);
 	let loadError = $state(false);
 
-	// Articles to hide from the "Više vijesti" grid ON PHONE ONLY (by slug). They still
-	// show on desktop; this just trims the phone grid per the editor's request.
-	const PHONE_HIDE = new Set([
-		'velike-najave-amande-mlinaric-u-prilogu-hrt-sporta',
-		'sest-nastupa-sest-medalja-strelicari-vsk-a-uspjesni-u-sisku',
-		'zlato-za-tenu-mikolaj-i-zorana-velagica-na-sisackoj-zimi'
-	]);
-	// Reactive phone flag (<=720px) so the grid filter updates if the viewport changes.
+	// Reactive phone flag (<=720px) so the grid cap below updates if the viewport changes.
 	let isPhone = $state(
 		typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
 	);
@@ -57,30 +50,81 @@
 		return () => mq.removeEventListener('change', sync);
 	});
 
+	// How many grid cards to SHOW initially: a full 4×3 (12) on desktop, 8 on phone.
+	const GRID_INIT_DESKTOP = 12;
+	const GRID_INIT_PHONE = 8;
+	// `gridShown` is the cap on how many of the loaded `rest` cards render; it starts at
+	// the per-viewport initial count and grows by a page on each "Više" click. Initialised
+	// from the current viewport (svelte-ignore: read once for the initial value only).
+	// svelte-ignore state_referenced_locally
+	let gridShown = $state(isPhone ? GRID_INIT_PHONE : GRID_INIT_DESKTOP);
+	// On a breakpoint change, raise the cap to that viewport's initial count if it's
+	// currently lower — but never SHRINK (don't collapse a grid the user has expanded,
+	// and don't drop a desktop 12 down to 8 just because the window narrowed).
+	$effect(() => {
+		const target = isPhone ? GRID_INIT_PHONE : GRID_INIT_DESKTOP;
+		if (gridShown < target) gridShown = target;
+	});
+
 	const featured = $derived(items.slice(0, FEATURED));
 	const highlights = $derived(items.slice(FEATURED, FEATURED + HIGHLIGHTS));
-	const rest = $derived(
-		items
-			.slice(FEATURED + HIGHLIGHTS)
-			.filter((a) => !(isPhone && PHONE_HIDE.has(a.slug)))
-	);
-	const hasMore = $derived(cursor !== null);
+	const allRest = $derived(items.slice(FEATURED + HIGHLIGHTS));
+	// The grid renders at most `gridShown` of the loaded older articles.
+	const rest = $derived(allRest.slice(0, gridShown));
+	// "Više" is available while more cards are loaded-but-hidden OR more exist to fetch.
+	const hasMore = $derived(allRest.length > gridShown || cursor !== null);
 
-	// "Više vijesti" loads the next page of older articles into the grid (one click =
-	// one page). The page size is RESPONSIVE: 9 on desktop, 6 on phone (<=720px),
-	// resolved at click time so it adapts if the viewport changes. nextCursor goes
-	// null when there are no more, hiding the button.
+	// One "Više vijesti" click reveals the next page of older articles: it raises the
+	// grid cap by a page (9 on desktop, 6 on phone), fetching more from the API only
+	// when the already-loaded buffer runs short. nextCursor goes null when there are no
+	// more to fetch; the button hides once everything loaded is shown and the cursor is
+	// exhausted (see `hasMore`).
 	const PAGE_DESKTOP = 9;
 	const PAGE_PHONE = 6;
 	function pageSize(): number {
-		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches)
-			return PAGE_PHONE;
-		return PAGE_DESKTOP;
+		return isPhone ? PAGE_PHONE : PAGE_DESKTOP;
 	}
 	async function loadOlder() {
+		if (loading) return;
+		const step = pageSize();
+		// Fetch more from the API if revealing `step` more would exceed what's loaded.
+		if (gridShown + step > allRest.length && cursor) {
+			loading = true;
+			loadError = false;
+			try {
+				const next = await apiFetch<ArticleFeedPage>('/articles', {
+					locale: DEFAULT_LOCALE,
+					query: { before: cursor, limit: step }
+				});
+				items = [...items, ...next.items];
+				cursor = next.nextCursor;
+			} catch {
+				loadError = true;
+				return;
+			} finally {
+				loading = false;
+			}
+		}
+		gridShown += step; // reveal the next page of cards
+	}
+
+	// Ensure the grid starts FILLED to its initial count (12 desktop / 8 phone): if the
+	// seeded page (or a restored snapshot) loaded fewer older articles than that, top up
+	// from the cursor on mount. Runs client-side only; stops when filled or no more.
+	onMount(async () => {
+		const target = isPhone ? GRID_INIT_PHONE : GRID_INIT_DESKTOP;
+		while (allRest.length < target && cursor && !loading) {
+			const before = items.length;
+			await fetchMore();
+			if (items.length === before) break; // no progress → stop
+		}
+	});
+
+	// Low-level fetch of one cursor page (used by the mount top-up; does NOT touch the
+	// grid cap).
+	async function fetchMore() {
 		if (loading || !cursor) return;
 		loading = true;
-		loadError = false;
 		try {
 			const next = await apiFetch<ArticleFeedPage>('/articles', {
 				locale: DEFAULT_LOCALE,
@@ -94,19 +138,6 @@
 			loading = false;
 		}
 	}
-
-	// Ensure the "Više vijesti" grid starts FILLED: the desktop grid is 4 columns, so
-	// we want at least 12 cards (a full 4×3) in `rest` on first paint. If the seeded
-	// page (or a restored snapshot) has fewer, top up from the cursor on mount. Guards:
-	// only runs client-side, only when short AND more pages exist.
-	const GRID_TARGET = 12; // 4 columns × 3 rows
-	onMount(async () => {
-		while (rest.length < GRID_TARGET && cursor && !loading) {
-			const before = items.length;
-			await loadOlder();
-			if (items.length === before) break; // no progress (e.g. error) → stop
-		}
-	});
 
 	// ── Feed-state restore ───────────────────────────────────────────────────────
 	// Snapshot the loaded items + cursor when leaving the feed (e.g. opening an
@@ -153,19 +184,36 @@
 		     adopted"). Mirrors the reference news.html subscribe band. -->
 		<section class="news-signup" aria-label="Pretplata na vijesti">
 			<div class="signup-inner">
-				<div class="signup-envelope" aria-hidden="true">
-					<MailIcon size={104} />
-					<img class="signup-crest" src={LOGO_URL} alt="" />
+				<!-- Envelope + "Bilten" title. On phone they sit on ONE row at the top of the
+				     card; on desktop the title is hidden and the envelope sits left of the bar. -->
+				<div class="signup-head">
+					<div class="signup-envelope" aria-hidden="true">
+						<MailIcon size={104} />
+						<img class="signup-crest" src={LOGO_URL} alt="" />
+					</div>
+					<h3 class="signup-title">Pretplati se na vijesti</h3>
 				</div>
 				<form
 					class="signup-form"
 					onsubmit={(e) => e.preventDefault()}
 					aria-describedby="signup-disclaimer"
 				>
+					<!-- DESKTOP: one inline bar (the .signup-fields flex group). PHONE: the same
+					     fields become kontakt-style labelled rows (email row, then phone + postal
+					     row, then the button row) via the media block below. -->
 					<div class="signup-fields">
-						<input type="email" placeholder="Unesite e-mail" aria-label="E-mail" />
-						<input type="tel" placeholder="Telefon (neobavezno)" aria-label="Telefon" />
-						<input type="text" placeholder="Poštanski broj" aria-label="Poštanski broj" />
+						<label class="signup-field signup-field--email">
+							<span class="signup-label">E-mail</span>
+							<input type="email" placeholder="Unesite e-mail" aria-label="E-mail" />
+						</label>
+						<label class="signup-field signup-field--phone">
+							<span class="signup-label">Telefon (neobavezno)</span>
+							<input type="tel" placeholder="Telefon" aria-label="Telefon" />
+						</label>
+						<label class="signup-field signup-field--zip">
+							<span class="signup-label">Poštanski broj</span>
+							<input type="text" placeholder="Poštanski broj" aria-label="Poštanski broj" />
+						</label>
 						<button type="submit" class="signup-btn">
 							<MailIcon size={16} /><span>Pretplati se</span>
 						</button>
@@ -328,6 +376,14 @@
 		min-width: 0;
 		max-width: 100%;
 	}
+	// DESKTOP: the heading + field labels are for the PHONE layout only — hidden here,
+	// where the fields form one inline 851 × 46 bar (the reference look).
+	.signup-title {
+		display: none;
+	}
+	.signup-label {
+		display: none;
+	}
 	// The entire input bar (3 fields + SUBSCRIBE button) is a fixed 851 × 46.
 	.signup-fields {
 		width: 851px;
@@ -339,32 +395,36 @@
 		border-radius: 8px;
 		overflow: hidden;
 		border: 2px solid $gold; // gold border around the whole input group
-		input {
-			border: none;
-			border-right: 1px solid map.get(lib.$colors, 'heather');
-			padding: 0 ($sp); // height fixed by the bar; horizontal padding only
-			font: inherit;
-			font-weight: 400;
-			color: $navy;
-			background: $white;
-			// email (1st) widest; phone (2nd) and zip (3rd) close in width, phone a
-			// touch wider than zip.
-			&:nth-child(1) {
-				flex: 4;
-				min-width: 0;
+		// Each field label is just a flex cell wrapping its input on desktop.
+		.signup-field {
+			display: flex;
+			min-width: 0;
+			input {
+				width: 100%;
+				border: none;
+				border-right: 1px solid map.get(lib.$colors, 'heather');
+				padding: 0 ($sp); // height fixed by the bar; horizontal padding only
+				font: inherit;
+				font-weight: 400;
+				color: $navy;
+				background: $white;
+				&:focus {
+					outline: none;
+					background: map.get(lib.$colors, 'white-smoke');
+				}
 			}
-			&:nth-child(2) {
-				flex: 3;
-				min-width: 0;
-			}
-			&:nth-child(3) {
-				flex: 2.5;
-				min-width: 0;
+		}
+		// email widest; phone + zip close, phone a touch wider than zip.
+		.signup-field--email {
+			flex: 4;
+		}
+		.signup-field--phone {
+			flex: 3;
+		}
+		.signup-field--zip {
+			flex: 2.5;
+			input {
 				border-right: none; // no grey divider between the last input and the button
-			}
-			&:focus {
-				outline: none;
-				background: map.get(lib.$colors, 'white-smoke');
 			}
 		}
 	}
@@ -496,32 +556,114 @@
 		.card-row {
 			grid-template-columns: repeat(2, 1fr);
 		}
-		// PHONE: keep the envelope BESIDE the form (row) but small, and tighten padding
-		// so the box height fits the content instead of running tall.
-		.signup-inner {
-			flex-direction: row;
-			align-items: center;
-			gap: ($sp * 1.25);
-			padding: ($sp * 1.25) ($sp * 1.5); // less side padding than desktop's 5rem
+	}
+	// ── PHONE newsletter ("Bilten"): a kontakt-style stacked form ────────────────
+	// Layout (top→bottom, with gaps): [small envelope + "Bilten" title] · email row ·
+	// [phone + postal code side-by-side] · subscribe button. Inputs use the kontakt
+	// look: a label ABOVE each field, padding inside the input.
+	@media (max-width: 720px) {
+		// Match every band's side gutter to the carousel so the whole page lines up at
+		// the same width edge-to-edge on phone.
+		.news-featured,
+		.news-hero,
+		.news-highlights,
+		.news-signup,
+		.news-body {
+			padding-left: $sp;
+			padding-right: $sp;
 		}
-		// Shrink the big envelope SVG so the inputs fit next to it.
+		.signup-inner {
+			flex-direction: column;
+			align-items: stretch;
+			gap: ($sp * 1.25);
+			padding: ($sp * 1.5) ($sp * 1.1); // slightly tighter inner padding on phone
+		}
+		// Envelope + title share one row at the top.
+		.signup-head {
+			display: flex;
+			align-items: center;
+			gap: ($sp * 0.9);
+		}
 		.signup-envelope :global(svg) {
-			width: 56px;
-			height: 56px;
+			width: 40px; // small envelope so the title sits beside it
+			height: 40px;
 		}
 		.signup-crest {
-			width: 26px;
-			top: -6px;
-			right: -8px;
+			width: 20px;
+			top: -5px;
+			right: -6px;
+		}
+		.signup-title {
+			display: block;
+			margin: 0;
+			color: $navy;
+			// Longer phrase ("Pretplati se na vijesti") — sized + nowrap so it stays on
+			// ONE row beside the envelope on a narrow phone.
+			font-size: 1.05rem;
+			font-weight: 800;
+			letter-spacing: 0.01em;
+			white-space: nowrap;
 		}
 		.signup-form {
-			flex: 1 1 auto;
-			width: auto;
+			flex: none;
+			width: 100%;
+		}
+		// The field group becomes a 2-column GRID (no fixed-height bar / borders):
+		//   row 1: email (spans both columns)
+		//   row 2: phone | postal code (one each, with the grid gap between them)
+		//   row 3: button (spans both columns)
+		.signup-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: ($sp * 1); // gaps between rows AND between phone|zip
+			width: 100%;
+			height: auto;
+			border: none;
+			border-radius: 0;
+			overflow: visible;
+		}
+		.signup-field--email {
+			grid-column: 1 / -1; // email spans the full width on its own row
+		}
+		// (phone is column 1, zip is column 2 by source order — they share row 2.)
+		// Kontakt-style field: label above, padded input.
+		.signup-field {
+			display: flex;
+			flex-direction: column;
+			gap: 0.4rem;
+			flex: none;
+			min-width: 0;
+		}
+		.signup-label {
+			display: block;
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: $navy;
+		}
+		.signup-fields .signup-field input {
+			width: 100%;
+			padding: ($sp * 0.7) ($sp * 0.9);
+			border: 1px solid map.get(lib.$colors, 'heather');
+			border-radius: 8px;
+			background: $white;
+			font: inherit;
+			font-weight: 400;
+			color: $navy;
+			&:focus {
+				outline: none;
+				border-color: map.get(lib.$colors, 'blue-dress');
+			}
+		}
+		// Button row below, spanning both columns, full width.
+		.signup-btn {
+			grid-column: 1 / -1;
+			width: 100%;
+			height: 46px;
+			justify-content: center;
+			border-radius: 8px;
 		}
 	}
 	@media (max-width: 600px) {
-		// (Više vijesti stays 2 columns here, matching the highlights .card-row — the
-		// old 1-column override was removed so the two layouts match on phones.)
 		.news-hero-title {
 			font-size: 2.6rem;
 		}
@@ -529,28 +671,6 @@
 		.news-featured {
 			padding-left: $sp;
 			padding-right: $sp;
-		}
-		// Inputs stack in the bar; the SUBSCRIBE button drops BELOW the input group.
-		.signup-fields {
-			flex-direction: column;
-			height: auto; // fit the stacked inputs (the 46px fixed bar would clip them)
-			input,
-			.signup-btn {
-				border-right: none;
-				width: 100%;
-				justify-content: center;
-			}
-			input {
-				height: 42px;
-			}
-			input:not(:last-of-type) {
-				border-bottom: 1px solid map.get(lib.$colors, 'heather');
-			}
-			// Button below the inputs, separated from the input group.
-			.signup-btn {
-				height: 44px;
-				border-top: 1px solid map.get(lib.$colors, 'heather');
-			}
 		}
 	}
 </style>
