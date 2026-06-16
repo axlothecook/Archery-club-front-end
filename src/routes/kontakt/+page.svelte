@@ -628,4 +628,54 @@
 			grid-template-columns: 1fr;
 		}
 	}
+
+	// ── Phone (≤600px) ────────────────────────────────────────────────────────────
+	@media (max-width: 600px) {
+		// Tighter side padding across the whole page (hero/info + form body) so content
+		// uses more of the narrow screen.
+		.kontakt-hero {
+			padding-left: $sp;
+			padding-right: $sp;
+			padding-top: ($sp * 2.5); // raise the title (was $sp*5) higher up the screen
+		}
+		// Keep the subtitle where it was — push it back down by the amount the title rose,
+		// so only the KONTAKT title moves up, not its subtext.
+		.kontakt-sub {
+			margin-top: ($sp * 3);
+		}
+		.kontakt-body {
+			padding-left: $sp;
+			padding-right: $sp;
+		}
+		// All THREE form-type tabs (Učlanjenje / Sponzorstvo / Donacija) fit on ONE row,
+		// CLOSE together (centred cluster, small gap) rather than spread edge-to-edge.
+		.form-tabs {
+			gap: ($sp * 0.75);
+			justify-content: center;
+		}
+		.form-tab {
+			padding: ($sp * 0.7) ($sp * 0.4);
+			font-size: 0.72rem;
+			letter-spacing: 0;
+			-webkit-tap-highlight-color: transparent;
+		}
+		// Each form's one-line intro: single row + centred, with more space below it before
+		// the first field.
+		.form-intro {
+			font-size: 0.9rem;
+			line-height: 1.3;
+			text-align: center;
+			margin-bottom: ($sp * 1.75);
+		}
+		// Give the GDPR consent checkbox plenty of breathing room from the inputs above AND
+		// the submit button below (the uniform form gap was too tight around it on phone).
+		.consent {
+			margin-top: ($sp * 3);
+			margin-bottom: ($sp * 3);
+		}
+		// Center the submit button on phone (was left-aligned).
+		.btn-primary {
+			align-self: center;
+		}
+	}
 </style>
