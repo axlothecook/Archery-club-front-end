@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+.env.*
+.svelte-kit
+build
+*.log
+.vscode
+**/*.test.ts
+**/*.spec.ts
+playwright
