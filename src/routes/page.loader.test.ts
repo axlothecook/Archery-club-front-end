@@ -14,6 +14,10 @@ import { load } from './+page';
 
 const img = { url: 'https://images.axlothecook.com/archery/x.jpg', alt: 'x' };
 
+// The loader reads the active locale via `await parent()`; supply a mock.
+const loadArgs = () =>
+	({ fetch: undefined, parent: async () => ({ locale: 'hr' }) }) as never;
+
 beforeEach(() => {
 	for (const k of Object.keys(responses)) delete responses[k];
 });
@@ -27,7 +31,7 @@ describe('homepage load()', () => {
 			statImages: { worldTitles: img, nationalRecords: img /* europeanTitles has count 0 */ }
 		};
 
-		const data = await load({ fetch: undefined as never } as never);
+		const data = await load(loadArgs());
 
 		// worldTitles (count+image) and nationalRecords (count+image) qualify;
 		// europeanTitles is dropped (count 0); slots with no image are dropped.
@@ -43,7 +47,7 @@ describe('homepage load()', () => {
 			stats: { worldTitles: 6 },
 			statImages: {} // no image for worldTitles
 		};
-		const data = await load({ fetch: undefined as never } as never);
+		const data = await load(loadArgs());
 		expect(data.achievements).toEqual([]);
 	});
 
@@ -57,14 +61,14 @@ describe('homepage load()', () => {
 			{ id: 'b', dateFrom: past, dateTo: null, isCancelled: false }, // past → dropped
 			{ id: 'c', dateFrom: future, dateTo: null, isCancelled: true } // cancelled → dropped
 		];
-		const data = await load({ fetch: undefined as never } as never);
+		const data = await load(loadArgs());
 		expect(data.upcoming.map((e: { id: string }) => e.id)).toEqual(['a']);
 	});
 
 	it('fails soft: a down endpoint yields empty data, not a thrown error', async () => {
 		// Only /articles resolves; /events and /achievements/summary reject.
 		responses['/articles'] = { items: [{ slug: 'x' }], nextCursor: null };
-		const data = await load({ fetch: undefined as never } as never);
+		const data = await load(loadArgs());
 		expect(data.news).toHaveLength(1);
 		expect(data.upcoming).toEqual([]);
 		expect(data.achievements).toEqual([]);

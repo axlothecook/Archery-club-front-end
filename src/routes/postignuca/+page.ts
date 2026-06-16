@@ -1,5 +1,4 @@
 import { apiFetch } from '$lib/api';
-import { DEFAULT_LOCALE } from '$lib/locale';
 import type { ImageRef } from 'archery-contracts';
 
 // One honour CARD on the achievements page (PSG style): every achievement row
@@ -28,10 +27,11 @@ type AchievementSummary = {
 };
 
 // Load the grouped honour cards for the Postignuća page.
-export const load = async ({ fetch }) => {
+export const load = async ({ fetch, parent }) => {
+	const { locale } = await parent();
 	const summary = await apiFetch<AchievementSummary>('/achievements/summary', {
 		fetch,
-		locale: DEFAULT_LOCALE
+		locale: locale
 	}).catch(() => null);
 
 	// Hide specific honour groups from the public list (display-only — the rows

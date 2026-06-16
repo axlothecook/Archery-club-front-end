@@ -10,7 +10,7 @@
 	// Both card bands reuse the shared ArticleCard component (image + title).
 
 	import { apiFetch } from '$lib/api';
-	import { DEFAULT_LOCALE } from '$lib/locale';
+	import { readLocaleCookieClient } from '$lib/locale';
 	import { onMount } from 'svelte';
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
 	import NewsCarousel from '$lib/components/NewsCarousel.svelte';
@@ -93,7 +93,7 @@
 			loadError = false;
 			try {
 				const next = await apiFetch<ArticleFeedPage>('/articles', {
-					locale: DEFAULT_LOCALE,
+					locale: readLocaleCookieClient(),
 					query: { before: cursor, limit: step }
 				});
 				items = [...items, ...next.items];
@@ -127,7 +127,7 @@
 		loading = true;
 		try {
 			const next = await apiFetch<ArticleFeedPage>('/articles', {
-				locale: DEFAULT_LOCALE,
+				locale: readLocaleCookieClient(),
 				query: { before: cursor, limit: pageSize() }
 			});
 			items = [...items, ...next.items];

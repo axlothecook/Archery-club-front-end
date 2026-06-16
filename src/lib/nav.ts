@@ -127,8 +127,7 @@ export const LOCALE_FLAGS: {
 	label: string;
 }[] = [
 	{ locale: 'hr', country: 'hr', short: 'HR', label: 'Hrvatski' },
-	{ locale: 'en', country: 'gb', short: 'EN', label: 'English' },
-	{ locale: 'de', country: 'de', short: 'DE', label: 'Deutsch' },
-	{ locale: 'it', country: 'it', short: 'IT', label: 'Italiano' },
-	{ locale: 'sl', country: 'si', short: 'SL', label: 'Slovenščina' }
+	{ locale: 'en', country: 'gb', short: 'EN', label: 'English' }
+	// Only hr (source) + en (translated) ship in the switcher. Add rows here if the
+	// backend translate pipeline is extended to more locales.
 ];

@@ -1,6 +1,5 @@
 import { error } from '@sveltejs/kit';
 import { apiFetch, ApiError } from '$lib/api';
-import { DEFAULT_LOCALE } from '$lib/locale';
 import type { ArcherProfile, ArcherCard, ArticleCard } from 'archery-contracts';
 
 // Feed shape from `GET /articles` (cursor-paginated newest-first).
@@ -10,16 +9,17 @@ type ArticleFeedPage = { items: ArticleCard[]; nextCursor: string | null };
 // (for the "related archers" strip) and a batch of recent articles (for the
 // "related articles" strip). 404s through SvelteKit's error() when the slug
 // doesn't resolve. Roster/articles fail soft so the page still renders.
-export const load = async ({ params, fetch }) => {
+export const load = async ({ params, fetch, parent }) => {
+	const { locale } = await parent();
 	try {
 		const [archer, roster, related] = await Promise.all([
-			apiFetch<ArcherProfile>(`/team/${params.slug}`, { fetch, locale: DEFAULT_LOCALE }),
+			apiFetch<ArcherProfile>(`/team/${params.slug}`, { fetch, locale: locale }),
 			apiFetch<ArcherCard[]>('/team', { fetch }).catch(() => [] as ArcherCard[]),
 			// Articles that MENTION this archer (related news). Falls back to the newest
 			// articles below if the archer isn't tagged in any.
 			apiFetch<ArticleFeedPage>('/articles', {
 				fetch,
-				locale: DEFAULT_LOCALE,
+				locale: locale,
 				query: { limit: 8, mentions: params.slug }
 			}).catch(() => ({ items: [], nextCursor: null }) as ArticleFeedPage)
 		]);
@@ -32,7 +32,7 @@ export const load = async ({ params, fetch }) => {
 		if (articles.length < TARGET) {
 			const feed = await apiFetch<ArticleFeedPage>('/articles', {
 				fetch,
-				locale: DEFAULT_LOCALE,
+				locale: locale,
 				query: { limit: TARGET }
 			}).catch(() => ({ items: [], nextCursor: null }) as ArticleFeedPage);
 			const seen = new Set(articles.map((a) => a.slug));

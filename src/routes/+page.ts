@@ -1,5 +1,4 @@
 import { apiFetch } from '$lib/api';
-import { DEFAULT_LOCALE } from '$lib/locale';
 import type { ArticleCard, ClubEventResolved, ImageRef } from 'archery-contracts';
 
 // Homepage data. Loads the content the homepage sections tease, each fail-soft so a
@@ -31,19 +30,20 @@ const ACH_SLOTS: { slot: string; label: string }[] = [
 	{ slot: 'nationalRecords', label: 'Državnih rekorda' }
 ];
 
-export const load = async ({ fetch }) => {
+export const load = async ({ fetch, parent }) => {
+	const { locale } = await parent();
 	const [news, events, summary] = await Promise.all([
 		apiFetch<ArticleFeedPage>('/articles', {
 			fetch,
-			locale: DEFAULT_LOCALE,
+			locale,
 			query: { limit: NEWS_COUNT }
 		})
 			.then((feed) => feed.items)
 			.catch(() => [] as ArticleCard[]),
-		apiFetch<ClubEventResolved[]>('/events', { fetch, locale: DEFAULT_LOCALE }).catch(
+		apiFetch<ClubEventResolved[]>('/events', { fetch, locale }).catch(
 			() => [] as ClubEventResolved[]
 		),
-		apiFetch<AchievementSummary>('/achievements/summary', { fetch, locale: DEFAULT_LOCALE }).catch(
+		apiFetch<AchievementSummary>('/achievements/summary', { fetch, locale }).catch(
 			() => null
 		)
 	]);

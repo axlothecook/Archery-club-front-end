@@ -1,5 +1,4 @@
 import { apiFetch } from '$lib/api';
-import { DEFAULT_LOCALE } from '$lib/locale';
 import type { ArticleCard } from 'archery-contracts';
 
 // The news feed's first page. The backend cursor-paginates `/articles` newest
@@ -13,10 +12,11 @@ export type ArticleFeedPage = { items: ArticleCard[]; nextCursor: string | null 
 // Subsequent "Više vijesti" clicks load 9 (desktop) / 6 (phone) at a time.
 const FIRST_PAGE = 21;
 
-export const load = async ({ fetch }) => {
+export const load = async ({ fetch, parent }) => {
+	const { locale } = await parent();
 	const feed = await apiFetch<ArticleFeedPage>('/articles', {
 		fetch,
-		locale: DEFAULT_LOCALE,
+		locale: locale,
 		query: { limit: FIRST_PAGE }
 	}).catch(() => ({ items: [], nextCursor: null }) as ArticleFeedPage);
 
