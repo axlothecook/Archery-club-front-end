@@ -255,6 +255,10 @@
 		// Composite the photo on its own GPU layer so the hover slide/scale is smooth.
 		will-change: transform;
 		backface-visibility: hidden;
+		// Clip the figure to the card's SIDES + BOTTOM (so the hover scale can't spill the
+		// image out the left/right/bottom of the card) while leaving the TOP unbounded — the
+		// head is meant to poke out the top. inset() with a hugely-negative top = no top clip.
+		clip-path: inset(-9999px 0 0 0);
 	}
 	.rc-photo :global(.img-loader),
 	.rc-photo :global(.img-loader-fallback) {
