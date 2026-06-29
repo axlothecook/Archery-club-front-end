@@ -73,8 +73,8 @@ export const MENU_CONTACT: NavLink = { label: 'Kontakt', href: '/kontakt', key: 
 
 // Smallest-tier utility links shown beneath the main menu links. Email/phone are
 // rendered separately (email from ClubInfo; phone hardcoded until ClubInfo gains
-// a phone field). Prijava (Log In) points to the dashboard — placeholder until deploy.
-export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '#', key: 'nav.login' }];
+// a phone field). Prijava (Log In) opens the admin dashboard login.
+export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '/prijava', key: 'nav.login' }];
 
 // Footer columns (RM-style spacing). The social links + sponsor logos render
 // separately (sponsors fetched from the API; socials from ClubInfo).

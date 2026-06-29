@@ -4,6 +4,21 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	// Dev-only same-origin API proxy. The browser talks to /api on the Vite origin
+	// (localhost:5173 on PC, 192.168.50.112:5173 on a phone), and Vite forwards to
+	// the backend on :3100 with the /api prefix stripped. This keeps the session
+	// cookie FIRST-PARTY on whatever host serves the page (mirrors the prod nginx
+	// /api topology), fixing the cross-host cookie drop that broke /prijava login.
+	server: {
+		host: true, // bind 0.0.0.0 so a phone on the same Wi-Fi can reach the dev server
+		proxy: {
+			'/api': {
+				target: 'http://localhost:3100',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api/, '')
+			}
+		}
+	},
 	// rolldown-vite (Vite 8) defaults to the lightningcss CSS transformer/minifier,
 	// which rejects the bleeding-edge customizable-<select> selectors used by the
 	// sass-library's _select.scss (::picker(select):popover-open,
