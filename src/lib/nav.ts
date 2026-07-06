@@ -73,8 +73,14 @@ export const MENU_CONTACT: NavLink = { label: 'Kontakt', href: '/kontakt', key: 
 
 // Smallest-tier utility links shown beneath the main menu links. Email/phone are
 // rendered separately (email from ClubInfo; phone hardcoded until ClubInfo gains
-// a phone field). Prijava (Log In) opens the admin dashboard login.
-export const MENU_UTILITY: NavLink[] = [{ label: 'Prijava', href: '/prijava', key: 'nav.login' }];
+// a phone field). Prijava (Log In) opens the admin DASHBOARD, which is a SEPARATE
+// app. In PROD it's served same-origin (nginx routes /prijava → dashboard), so a
+// plain '/prijava' works. In DEV the dashboard is a separate Vite server on :5174
+// (two SvelteKit dev servers can't share one origin), so point there directly.
+const DASHBOARD_LOGIN = import.meta.env.DEV ? 'http://localhost:5174/prijava' : '/prijava';
+export const MENU_UTILITY: NavLink[] = [
+	{ label: 'Prijava', href: DASHBOARD_LOGIN, key: 'nav.login' }
+];
 
 // Footer columns (RM-style spacing). The social links + sponsor logos render
 // separately (sponsors fetched from the API; socials from ClubInfo).
