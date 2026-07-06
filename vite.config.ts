@@ -17,6 +17,13 @@ export default defineConfig({
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, '')
 			}
+			// NOTE: /prijava + /admin are NOT proxied here. In PROD one nginx serves
+			// the public site + the dashboard under one origin (so /prijava works
+			// same-origin). In DEV the dashboard is a separate Vite server (:5174) and
+			// two SvelteKit dev servers can't share one origin (their internal /@fs +
+			// /.svelte-kit asset routes collide → 403 → no client JS). So in dev the
+			// dashboard is reached on :5174 directly; the public 'Prijava' link points
+			// there (see src/lib/nav.ts). Prod = single origin; dev = two ports.
 		}
 	},
 	// rolldown-vite (Vite 8) defaults to the lightningcss CSS transformer/minifier,
