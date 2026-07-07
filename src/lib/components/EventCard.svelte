@@ -19,9 +19,12 @@
 	const tag = $derived(localeTag(locale));
 
 	const NEUTRAL_COLOR = '#888888'; // level-less events ("Ostalo")
+	const CANCELLED_COLOR = '#9c8b6e'; // cancelled events: dark beige (muted, not a level colour)
 
-	// Legend colour for an event: its resolved level colour, else neutral.
-	const eventColor = (e: ClubEventResolved): string => e.level?.color ?? NEUTRAL_COLOR;
+	// Legend colour for an event: dark beige when cancelled (so the card reads as
+	// "cancelled" rather than a live level), else its resolved level colour, else neutral.
+	const eventColor = (e: ClubEventResolved): string =>
+		e.isCancelled ? CANCELLED_COLOR : (e.level?.color ?? NEUTRAL_COLOR);
 	// Same colour, but lightened if needed so the LEVEL TEXT meets WCAG contrast on
 	// the navy header (the icon keeps the raw colour — it has a white glow already).
 	const levelTextColor = (e: ClubEventResolved): string => ensureReadable(eventColor(e));

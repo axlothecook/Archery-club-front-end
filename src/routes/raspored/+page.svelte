@@ -49,15 +49,18 @@
 	// and lay out the grid entirely in UTC so an event always lands on exactly the
 	// date stored (using local time could shift it a day in negative-offset zones).
 	const NEUTRAL_COLOR = '#888888'; // level-less events ("Ostalo")
+	const CANCELLED_COLOR = '#9c8b6e'; // cancelled events: dark beige (muted, not a level colour)
 	const MAX_VISIBLE = 3; // events shown in a cell before the "+N više" chip
 
 	// `dayKey` (UTC "YYYY-MM-DD") is imported from $lib/calendar — the join between an
 	// event's day(s) and a grid cell. Shared with the unit-tested grid builder.
 
-	// Legend colour for an event: its resolved level colour, else neutral.
-	// (levelTextColor lightens it if needed so the level NAME meets WCAG contrast on
-	// the navy card header — the icon/dot keep the raw colour.)
+	// Legend colour for an event: dark beige when cancelled (so the schedule dot + card
+	// read as "cancelled" rather than a live level), else its resolved level colour,
+	// else neutral. (levelTextColor lightens it if needed so the level NAME meets WCAG
+	// contrast on the navy card header — the icon/dot keep the raw colour.)
 	function eventColor(ev: ClubEventResolved): string {
+		if (ev.isCancelled) return CANCELLED_COLOR;
 		return ev.level?.color ?? NEUTRAL_COLOR;
 	}
 	const levelTextColor = (ev: ClubEventResolved): string => ensureReadable(eventColor(ev));
