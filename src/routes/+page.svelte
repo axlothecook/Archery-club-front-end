@@ -1465,14 +1465,17 @@
 
 	/* Phone: swap the 3D coverflow for the PSG hero + 2-up ArticleCard grid. */
 	@media (max-width: 720px) {
-		/* Join title on phone. Sized to fit; ALLOWED to wrap so a long title (e.g. the English
-		   "BECOME PART OF THE CLUB") breaks to a second line inside the padded container instead
-		   of overflowing to the right screen edge (the Croatian "Postani dio kluba" still fits on
-		   one line). balance keeps the wrapped lines even. */
+		/* Join title on phone: ONE row that always fits the screen with a clear side margin.
+		   The negative margin reclaims .home-join-inner's 1.5rem side padding so the single
+		   row can use the full 90vw card width (text must FIT the box — Chrome shoves
+		   centered-overflow off the RIGHT edge only, so overflowing is not an option).
+		   6.2vw is the largest viewport-proportional size where the LONGEST title (English
+		   "BECOME PART OF THE CLUB") still fits that box — ~23px from each screen edge at
+		   390px (measured); scales down on narrower phones so it never overflows. */
 		.home-join-title {
-			font-size: 1.7rem;
-			white-space: normal;
-			text-wrap: balance;
+			font-size: clamp(1.1rem, 6.2vw, 1.7rem);
+			white-space: nowrap;
+			margin-inline: -1.5rem;
 		}
 		.home-news-coverflow {
 			display: none;

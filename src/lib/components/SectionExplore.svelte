@@ -142,14 +142,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0 ($sp * 1.25); // horizontal room from the card sides
+		padding: 0 $sp; // horizontal room from the card sides
 		text-align: center;
 		color: $white;
 		// Sized so the LONGEST single-word label ("Achievements" / "Postignuća") fits inside a
 		// narrow card (~197px in the 4-across row) WITHOUT touching the sides. The old
 		// clamp(1.5rem, 2.6vw, 2.1rem) was too big — "Achievements" (one unwrappable word)
-		// overflowed the padding. Lower floor + cap keeps it inside; still bold + readable.
-		font-size: clamp(0.95rem, 1.35vw, 1.3rem);
+		// overflowed the padding. This size is the sweet spot: as large as it can go while the
+		// longest label (incl. its hover scale) still keeps a clear gap from the card sides.
+		font-size: clamp(1rem, 1.45vw, 1.4rem);
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
