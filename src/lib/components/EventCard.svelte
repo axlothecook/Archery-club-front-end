@@ -109,7 +109,8 @@
 		// radius via the library .br-md utility (12px) on the markup; box-shadow/
 		// gradient/grid stay scoped (utilities can't express them).
 		box-shadow: 0 0 16px rgba(16, 46, 102, 0.12);
-		cursor: pointer;
+		// The card is a plain display <article> (not a link / no click handler), so it must
+		// use the normal cursor — a pointer cursor falsely signalled it was clickable.
 		-webkit-tap-highlight-color: transparent; // no blue tap-flash on phone
 		// Column so the body can stretch to equal heights across a row/carousel.
 		display: flex;
@@ -140,8 +141,9 @@
 	.ev-scope {
 		display: inline-flex;
 		// color set inline (level colour) → the currentColor SVG tints to it.
-		filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.65))
-			drop-shadow(0 0 14px rgba(255, 255, 255, 0.4)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+		// A single subtle dark drop-shadow for legibility on the navy band. The old white
+		// glow halo (two big white drop-shadows) read as an "AI glow" — removed.
+		filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
 	}
 	.ev-level {
 		font-size: 1.55rem;
@@ -151,7 +153,8 @@
 		text-align: center;
 		line-height: 1.15;
 		min-width: 0;
-		text-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+		// No white text-glow (removed with the scope-icon glow) — the level name reads
+		// cleanly on the navy band via its colour + contrast alone.
 	}
 	// Body — #f8f8f8, rounded top, pulled UP so it overlaps onto the navy band.
 	.ev-card-body {

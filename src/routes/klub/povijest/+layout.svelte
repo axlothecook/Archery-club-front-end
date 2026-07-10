@@ -2,8 +2,11 @@
 	import { page } from '$app/state';
 	import Flourish from '$lib/components/Flourish.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
+	import { t } from '$lib/i18n';
 
 	let { children } = $props();
+
+	const locale = $derived(page.data.locale);
 
 	// Same hero photo as the identity page (reused per the design).
 	const HERO_IMAGE =
@@ -31,7 +34,7 @@
 				onload={() => (heroLoaded = true)}
 			/>
 			<div class="history-hero-overlay"></div>
-			<h1 class="history-hero-title">Povijest</h1>
+			<h1 class="history-hero-title">{t(locale, 'nav.history')}</h1>
 		</header>
 
 		<!-- Content: white card on the dark page bg. -->

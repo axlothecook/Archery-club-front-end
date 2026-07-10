@@ -27,6 +27,7 @@
 	import { page } from '$app/state';
 	import { t } from '$lib/i18n';
 	import { tick } from 'svelte';
+	import { releaseArcherNav } from '$lib/archerNavGuard';
 
 	let { children } = $props();
 
@@ -122,6 +123,9 @@
 				await wait(SWIPE_MS / 2);
 				wipePhase = null;
 				wipeDir = null;
+				// The page-transition wipe has finished → release the one-click archer-card
+				// guard so the next click can navigate again.
+				releaseArcherNav();
 			})();
 		});
 	});

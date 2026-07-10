@@ -1395,7 +1395,9 @@
 		padding: 1rem; // tighter, equal on all 4 sides
 		border-radius: 16px;
 		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		// No visible white border at rest (removed per request) — the border is transparent
+		// so it takes no space, and only tints GOLD on hover (below) for the highlight.
+		border: 1px solid transparent;
 		overflow: hidden; // clip the sparkles to the card
 		cursor: pointer;
 		// Kill the blue flash mobile browsers paint on tap (default tap-highlight).
