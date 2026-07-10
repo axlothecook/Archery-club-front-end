@@ -113,11 +113,15 @@
 	// hover darkens + emphasises.
 	.explore-card {
 		flex: 1 1 0; // share the row width equally
-		max-width: 480px; // bigger cards
+		max-width: 480px; // bigger cards (a ceiling; in the 4-across row cards are much narrower)
 		aspect-ratio: 5 / 3; // longer than tall
 		position: relative;
 		overflow: hidden;
 		border-radius: 12px;
+		// Size container so the LABEL can be sized in cqi (% of the CARD's width) — the card
+		// width varies a lot with screen size (~197px at 1440px up to ~274px on wide screens),
+		// so a viewport-based font is either too big on small screens or too small on big ones.
+		container-type: inline-size;
 		text-decoration: none;
 		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 	}
@@ -142,10 +146,18 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0 $sp;
+		padding: 0 $sp; // horizontal room from the card sides
 		text-align: center;
 		color: $white;
-		font-size: clamp(1.5rem, 2.6vw, 2.1rem); /* larger card labels */
+		// Sized off the CARD's own width (cqi) so the label is as big as the card allows at
+		// EVERY screen size — the old viewport-based clamp made "Achievements" (the longest,
+		// unwrappable label) touch the card sides ON HOVER on wide desktops, where the cards
+		// are ~274px but the font capped at a size tuned for narrower windows. 10.5cqi is the
+		// budget where the longest label + its hover widening (scale 1.06 + letter-spacing)
+		// still keeps a clear gap from the sides. The vw line is a fallback for browsers
+		// without container-query units (the cqi line wins where supported).
+		font-size: clamp(1rem, 1.45vw, 1.4rem);
+		font-size: clamp(1rem, 10.5cqi, 2rem);
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);

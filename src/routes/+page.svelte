@@ -1396,13 +1396,11 @@
 		text-transform: uppercase;
 		text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
 	}
-	/* "kluba" — gold with a soft glow. */
+	/* "kluba" — gold. The yellow glow (two gold text-shadow halos) was removed; a plain dark
+	   shadow stays for legibility over the photo. */
 	.home-join-gold {
 		color: var(--color-accent);
-		text-shadow:
-			0 0 18px rgba(239, 181, 47, 0.55),
-			0 0 36px rgba(239, 181, 47, 0.35),
-			0 2px 24px rgba(0, 0, 0, 0.5);
+		text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
 	}
 	.home-join-sub {
 		margin: 0 0 2rem;
@@ -1467,11 +1465,17 @@
 
 	/* Phone: swap the 3D coverflow for the PSG hero + 2-up ArticleCard grid. */
 	@media (max-width: 720px) {
-		/* "Postani dio kluba" on ONE row, sized to fit the phone width (this block is
-		   AFTER the base .home-join-title rule, so it wins). */
+		/* Join title on phone: ONE row that always fits the screen with a clear side margin.
+		   The negative margin reclaims .home-join-inner's 1.5rem side padding so the single
+		   row can use the full 90vw card width (text must FIT the box — Chrome shoves
+		   centered-overflow off the RIGHT edge only, so overflowing is not an option).
+		   6.2vw is the largest viewport-proportional size where the LONGEST title (English
+		   "BECOME PART OF THE CLUB") still fits that box — ~23px from each screen edge at
+		   390px (measured); scales down on narrower phones so it never overflows. */
 		.home-join-title {
-			font-size: 1.7rem;
+			font-size: clamp(1.1rem, 6.2vw, 1.7rem);
 			white-space: nowrap;
+			margin-inline: -1.5rem;
 		}
 		.home-news-coverflow {
 			display: none;
