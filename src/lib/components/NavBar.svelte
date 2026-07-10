@@ -574,6 +574,7 @@
 		}
 		.strip-link {
 			font-size: clamp(0.62rem, 3vw, 0.85rem);
+			font-weight: 700; // match the black topbar links' weight on phone (base is 600)
 			letter-spacing: 0.01em;
 			white-space: nowrap;
 		}
