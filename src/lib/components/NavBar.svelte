@@ -521,7 +521,9 @@
 		// the halves shrink so the links stay on screen.
 		.cluster {
 			flex: 1 1 0;
-			gap: 1.5rem; // more air between the links within each half (phone)
+			// 1.2rem (not 1.5) — the width freed up goes to a BIGGER link font below; with
+			// 1.5rem gaps + the bigger font the Croatian labels ran into the screen edges.
+			gap: 1.2rem;
 			min-width: 0;
 		}
 		// Fill the full nav height (var --nav-h, ~64px) with the black pill so NO navy
@@ -529,7 +531,7 @@
 		// vertical padding makes the black bar cover that gap; links sit centred in it.
 		// `gap` here sets the space the LOGO gets from its flanking links.
 		.pill {
-			gap: 1.5rem;
+			gap: 1.2rem;
 			padding: 1rem 0.6rem;
 			align-items: center;
 		}
@@ -539,15 +541,17 @@
 		.navbar.scrolled.section .pill {
 			gap: 1.1rem;
 		}
-		// Bigger + bolder link / Meni text (was 0.7rem/500).
+		// Bigger + bolder link / Meni text. vw-scaled so it grows with the phone width but
+		// the row (Croatian labels are the widest set) always keeps a clear margin from the
+		// screen edges — 3.5vw ≈ 14.4px at 412px leaves ~16px each side (measured).
 		.nav-link {
-			font-size: 0.82rem;
+			font-size: clamp(0.82rem, 3.5vw, 0.98rem);
 			font-weight: 700;
 			letter-spacing: 0.02em;
 		}
 		.menu-button {
 			gap: 0.3rem;
-			font-size: 0.82rem;
+			font-size: clamp(0.82rem, 3.5vw, 0.98rem);
 			font-weight: 700;
 		}
 		.logo img {
@@ -576,11 +580,15 @@
 	}
 
 	// Narrow phones (≤400px): keep the "Meni" word visible next to its icon (per request).
-	// Links shrink slightly but keep a bit MORE gap between them (per request); a hair less
-	// than the ≤720px gap so the Meni word + links still fit the narrow row.
+	// Tighter gap than the ≤720px bucket so the bigger vw-scaled font still fits — 3.5vw
+	// ≈ 13.7px at 390px leaves ~18px from each screen edge with the Croatian labels
+	// (measured); it keeps shrinking on narrower phones so the row never overflows.
 	@media (max-width: 400px) {
 		.nav-link {
-			font-size: 0.72rem;
+			font-size: clamp(0.72rem, 3.5vw, 0.9rem);
+		}
+		.menu-button {
+			font-size: clamp(0.72rem, 3.5vw, 0.9rem);
 		}
 		.cluster {
 			gap: 1rem;
