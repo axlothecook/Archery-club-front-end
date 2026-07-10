@@ -293,16 +293,10 @@
 	// Clicking any day with events opens a centered modal listing that day's events
 	// as RM-style cards. `selectedDay` holds the open cell (null = closed).
 	//
-	// DEFAULT-SELECT today on load (if today has events): build today's cell directly
-	// so it's selected from the FIRST render (SSR included → no hint flash), showing
-	// today in its selected state (stronger red) + its cards in the side panel.
-	function todayCell(): DayCell | null {
-		const d = new Date(`${todayKey}T00:00:00.000Z`);
-		const events = eventsByDay.get(todayKey) ?? [];
-		if (events.length === 0) return null;
-		return { date: d, key: todayKey, dayNum: d.getUTCDate(), inMonth: true, isToday: true, events };
-	}
-	let selectedDay = $state<DayCell | null>(todayCell());
+	// Starts CLOSED (null) — NO modal/selection auto-opens on load. The modal only opens
+	// when the user clicks a day with events (openDay). (Previously it default-selected
+	// today, which on phone auto-popped the modal over the calendar.)
+	let selectedDay = $state<DayCell | null>(null);
 	// The key of the currently-selected (clicked) day → drives the `.selected` cell
 	// highlight (distinct from today's `.today` marker).
 	const selectedKey = $derived(selectedDay?.key ?? null);
@@ -682,7 +676,9 @@
 		onkeydown={(e) => e.key === 'Enter' && closeModal()}
 		transition:fade={{ duration: 200 }}
 	>
-		<!-- Stop propagation so clicks inside the panel don't close it -->
+		<!-- The event CARD itself is the modal (no white wrapper / no date header band): a
+		     transparent dialog holding the card(s), with a floating close button over the
+		     top-right corner. Stop propagation so clicks inside don't close it. -->
 		<div
 			class="modal-panel"
 			role="dialog"
@@ -693,12 +689,9 @@
 			onkeydown={() => {}}
 			transition:scale={{ duration: 240, start: 0.92, opacity: 0, easing: cubicOut }}
 		>
-			<header class="modal-head">
-				<h3>{LONG_FMT.format(selectedDay.date)}</h3>
-				<button class="modal-close br-full" onclick={closeModal} aria-label={t(locale, 'sched.close')}>
-					<CloseIcon size={20} />
-				</button>
-			</header>
+			<button class="modal-close br-full" onclick={closeModal} aria-label={t(locale, 'sched.close')}>
+				<CloseIcon size={20} />
+			</button>
 
 			<div class="modal-cards">
 				{#each selectedDay.events as ev (ev.id)}
@@ -1163,51 +1156,43 @@
 		background: rgba(8, 18, 40, 0.55);
 		backdrop-filter: blur(2px);
 	}
+	// The panel is now a TRANSPARENT wrapper (no white box) — the event card itself is the
+	// visible modal. Relative so the floating close button anchors to it.
 	.modal-panel {
+		position: relative;
 		width: 100%;
 		max-width: 380px;
 		max-height: 85vh;
 		display: flex;
 		flex-direction: column;
-		background: #fff;
-		border-radius: 14px;
-		overflow: hidden;
-		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+		overflow: visible;
 	}
-	.modal-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 1rem 1.25rem;
-		border-bottom: 1px solid rgba(16, 46, 102, 0.1);
-	}
-	.modal-head h3 {
-		margin: 0;
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: $navy;
-		text-transform: capitalize;
-	}
+	// Close button floats over the card's top-right corner (no header band).
 	.modal-close {
+		position: absolute;
+		top: -0.6rem;
+		right: -0.6rem;
+		z-index: 2;
 		display: grid;
 		place-items: center;
 		width: 34px;
 		height: 34px;
 		border: none;
-		background: rgba(16, 46, 102, 0.06);
+		background: #fff;
 		color: $navy;
 		cursor: pointer;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 		transition: background-color 0.15s ease;
 	}
 	.modal-close:hover {
-		background: rgba(16, 46, 102, 0.14);
+		background: #eef1f3;
 	}
 	.modal-cards {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		padding: 1.25rem;
 		overflow-y: auto;
+		// The cards carry their own shadow (RM look); no wrapper padding needed.
 	}
 
 	// One RM-style event card. No overflow:hidden — the body needs to overlap up
@@ -1216,7 +1201,7 @@
 		// radius via the library .br-md utility (12px) on the markup; box-shadow/
 		// gradient/grid stay scoped (utilities can't express them).
 		box-shadow: 0 0 16px rgba(16, 46, 102, 0.12);
-		cursor: pointer;
+		// Plain display <article> (not a link) → normal cursor, not a pointer.
 		// Column so the body can stretch to equal heights across a row/carousel.
 		display: flex;
 		flex-direction: column;
@@ -1245,10 +1230,9 @@
 	.ev-scope {
 		display: inline-flex;
 		// color set inline (level colour) → the currentColor SVG tints to it.
-		// Stronger white glow (RM lit-up look) + a faint dark shadow for depth.
-		filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.65))
-			drop-shadow(0 0 14px rgba(255, 255, 255, 0.4))
-			drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+		// Single subtle dark shadow for depth; the white glow halo (read as an "AI glow")
+		// was removed to match the homepage EventCard.
+		filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
 	}
 	.ev-level {
 		font-size: 1.55rem;
@@ -1262,8 +1246,7 @@
 		// they fit. min-width:0 lets the flex item shrink so wrapping kicks in instead
 		// of the text overflowing the band.
 		min-width: 0;
-		// Subtle white glow behind the text (RM-style lit-up look on the navy band).
-		text-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+		// No white text-glow (removed with the scope-icon glow) — reads cleanly on navy.
 	}
 	// Body — #f8f8f8, rounded top, pulled UP so it overlaps onto the navy band
 	// (RM "card sitting on top of the blue" look).
