@@ -9,6 +9,7 @@
 	import type { ArcherCard } from 'archery-contracts';
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
+	import { archerNavGuard } from '$lib/archerNavGuard';
 
 	type Tone = 'blue-dress' | 'navy';
 	// fullSize = render the photo box at full card size; otherwise it's framed (more
@@ -29,7 +30,7 @@
 	const middleWords = $derived(lastWords.slice(0, -1));
 </script>
 
-<a class="archer-card" data-tone={tone} href="/momcad/{archer.slug}">
+<a class="archer-card" data-tone={tone} href="/momcad/{archer.slug}" onclick={archerNavGuard}>
 	<div class="ac-photo" class:full={fullSize} style="--photo-scale:{scale}">
 		{#if archer.cardPhoto}
 			<ImageWithLoader src={archer.cardPhoto.url} alt={archer.cardPhoto.alt} fit="contain" />

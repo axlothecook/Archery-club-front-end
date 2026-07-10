@@ -218,14 +218,20 @@
 			background-color: color.change($navy, $alpha: 0.3);
 		}
 		:global(.carousel-dots .carousel-dot.current) {
-			// Active dot is a CIRCLE (same size as the others), not an elongated pill.
-			width: 0.5rem;
+			// Active dot is a LONG PILL (not a dot), same navy tone as the inactive dots
+			// (no gold): the ticking progress fill inside it shows the dwell. ~3x+ the old
+			// pill length so the progress has room to read.
+			width: 5.5rem;
 			height: 0.5rem;
-			border-radius: 50%;
-			background-color: color.change($gold, $alpha: 0.3);
+			border-radius: 999px;
+			background-color: color.change($navy, $alpha: 0.3);
 		}
-		:global(.carousel-dots .carousel-dot-progress) {
-			background-color: $gold;
+		// NB: match the library's OWN selector depth (.carousel-dots .carousel-dot
+		// .carousel-dot-progress = 4 classes with .default-carousel) or its grey default wins.
+		:global(.carousel-dots .carousel-dot .carousel-dot-progress) {
+			// Progress fill = a SOLID navy (same family as the dots, not gold) that ticks
+			// across the pill as the slide dwells.
+			background-color: color.change($navy, $alpha: 0.85);
 			animation-duration: 6s; // = AUTO_MS
 		}
 		&.paused :global(.carousel-dot-progress) {

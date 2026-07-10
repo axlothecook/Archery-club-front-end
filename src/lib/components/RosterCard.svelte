@@ -11,6 +11,7 @@
 	import ImageWithLoader from '$lib/components/ImageWithLoader.svelte';
 	import PersonIcon from '$lib/components/icons/PersonIcon.svelte';
 	import { bowLabelI18n } from '$lib/archer';
+	import { archerNavGuard } from '$lib/archerNavGuard';
 	import { page } from '$app/state';
 
 	let {
@@ -94,6 +95,7 @@
 	class:tall={tall}
 	class:flush-letters={flushLetters}
 	href="/momcad/{archer.slug}"
+	onclick={archerNavGuard}
 >
 	<!-- The colour card (background panel that grows on hover). It also holds the PHONE
 	     bow (a faint watermark clipped by the box's overflow:hidden on phone). The phone
