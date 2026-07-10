@@ -1471,6 +1471,11 @@
 		z-index: 1; // above the sparkle layer
 		margin: auto 0 0;
 		padding-top: ($sp * 1.5);
+		// Extra SIDE room so the longest titles ("European Outdoor Championship medals")
+		// don't run right up to the card edges — the card's own 1rem padding left them
+		// ~4px from the sides. This padding pulls the text in and makes long titles wrap
+		// a touch sooner, keeping a clear margin on both sides.
+		padding-inline: ($sp * 1.25);
 		font-size: 1.18rem;
 		font-weight: 700;
 		color: $white;
@@ -1970,6 +1975,9 @@
 		}
 		.pf-honour-name {
 			padding-top: ($sp);
+			// Narrower cards on phone (240px) → slightly less side padding than desktop so
+			// long titles keep enough width, while still clearing the card edges.
+			padding-inline: ($sp * 0.75);
 			font-size: 0.9rem;
 		}
 

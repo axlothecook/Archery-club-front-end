@@ -113,7 +113,7 @@
 	// hover darkens + emphasises.
 	.explore-card {
 		flex: 1 1 0; // share the row width equally
-		max-width: 480px; // bigger cards
+		max-width: 480px; // bigger cards (a ceiling; in the 4-across row cards are much narrower)
 		aspect-ratio: 5 / 3; // longer than tall
 		position: relative;
 		overflow: hidden;
@@ -142,10 +142,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0 $sp;
+		padding: 0 ($sp * 1.25); // horizontal room from the card sides
 		text-align: center;
 		color: $white;
-		font-size: clamp(1.5rem, 2.6vw, 2.1rem); /* larger card labels */
+		// Sized so the LONGEST single-word label ("Achievements" / "Postignuća") fits inside a
+		// narrow card (~197px in the 4-across row) WITHOUT touching the sides. The old
+		// clamp(1.5rem, 2.6vw, 2.1rem) was too big — "Achievements" (one unwrappable word)
+		// overflowed the padding. Lower floor + cap keeps it inside; still bold + readable.
+		font-size: clamp(0.95rem, 1.35vw, 1.3rem);
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);

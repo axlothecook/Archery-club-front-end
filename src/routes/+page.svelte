@@ -1396,13 +1396,11 @@
 		text-transform: uppercase;
 		text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
 	}
-	/* "kluba" — gold with a soft glow. */
+	/* "kluba" — gold. The yellow glow (two gold text-shadow halos) was removed; a plain dark
+	   shadow stays for legibility over the photo. */
 	.home-join-gold {
 		color: var(--color-accent);
-		text-shadow:
-			0 0 18px rgba(239, 181, 47, 0.55),
-			0 0 36px rgba(239, 181, 47, 0.35),
-			0 2px 24px rgba(0, 0, 0, 0.5);
+		text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
 	}
 	.home-join-sub {
 		margin: 0 0 2rem;
@@ -1467,11 +1465,14 @@
 
 	/* Phone: swap the 3D coverflow for the PSG hero + 2-up ArticleCard grid. */
 	@media (max-width: 720px) {
-		/* "Postani dio kluba" on ONE row, sized to fit the phone width (this block is
-		   AFTER the base .home-join-title rule, so it wins). */
+		/* Join title on phone. Sized to fit; ALLOWED to wrap so a long title (e.g. the English
+		   "BECOME PART OF THE CLUB") breaks to a second line inside the padded container instead
+		   of overflowing to the right screen edge (the Croatian "Postani dio kluba" still fits on
+		   one line). balance keeps the wrapped lines even. */
 		.home-join-title {
 			font-size: 1.7rem;
-			white-space: nowrap;
+			white-space: normal;
+			text-wrap: balance;
 		}
 		.home-news-coverflow {
 			display: none;
