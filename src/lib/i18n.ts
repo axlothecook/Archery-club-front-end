@@ -137,7 +137,7 @@ const hr: Dict = {
 	'news.featuredAria': 'Istaknute vijesti',
 	'news.prev': 'Prethodna',
 	'news.next': 'Sljedeća',
-	'news.readMore': 'Pročitaj više →',
+	'news.readMore': 'Pročitaj više',
 	'news.seoDesc':
 		'Najnovije vijesti Varaždinskog streličarskog kluba: rezultati, natjecanja i događanja.',
 	// Newsletter disclaimer (inert placeholder; link to privacy policy is rendered inline)
@@ -175,7 +175,7 @@ const hr: Dict = {
 	'pf.roleCoach': 'Trener',
 	'pf.roleArcher': 'Streličar',
 	'pf.biography': 'Biografija',
-	'pf.waProfile': 'World Archery profil ↗',
+	'pf.waProfile': 'World Archery profil',
 	'pf.achievements': 'Postignuća',
 	'pf.statsOrResults': 'Statistika ili rezultati',
 	'pf.statsByYear': 'Statistika po godinama',
@@ -536,7 +536,7 @@ const en: Dict = {
 	'news.featuredAria': 'Featured news',
 	'news.prev': 'Previous',
 	'news.next': 'Next',
-	'news.readMore': 'Read more →',
+	'news.readMore': 'Read more',
 	'news.seoDesc':
 		'The latest news from Varaždin Archery Club: results, competitions and events.',
 	'news.disclaimerBefore':
@@ -572,7 +572,7 @@ const en: Dict = {
 	'pf.roleCoach': 'Coach',
 	'pf.roleArcher': 'Archer',
 	'pf.biography': 'Biography',
-	'pf.waProfile': 'World Archery profile ↗',
+	'pf.waProfile': 'World Archery profile',
 	'pf.achievements': 'Achievements',
 	'pf.statsOrResults': 'Statistics or results',
 	'pf.statsByYear': 'Statistics by year',

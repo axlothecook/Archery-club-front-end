@@ -19,6 +19,7 @@
 	import EuropeRecordIcon from '$lib/components/icons/EuropeRecordIcon.svelte';
 	import CroatiaRecordIcon from '$lib/components/icons/CroatiaRecordIcon.svelte';
 	import VzRecordIcon from '$lib/components/icons/VzRecordIcon.svelte';
+	import OpenExternalIcon from '$lib/components/icons/OpenExternalIcon.svelte';
 	import RosterCard from '$lib/components/RosterCard.svelte';
 	import BowViewer from '$lib/components/bow/BowViewer.svelte';
 	import NewsRoster from '$lib/components/NewsRoster.svelte';
@@ -595,6 +596,7 @@
 				{#if waUrl}
 					<a class="pf-wa" href={waUrl} target="_blank" rel="noopener">
 						{t(locale, 'pf.waProfile')}
+						<OpenExternalIcon size={14} />
 					</a>
 				{/if}
 			</div>
@@ -1277,12 +1279,17 @@
 		}
 	}
 	.pf-wa {
-		display: inline-block;
+		display: inline-flex; // text + external-link icon on one baseline row
+		align-items: center;
+		gap: ($sp * 0.4);
 		color: $gold;
 		font-weight: 700;
 		text-decoration: none;
 		&:hover {
 			text-decoration: underline;
+		}
+		:global(svg) {
+			display: block; // kill the inline-svg baseline gap
 		}
 	}
 	.pf-bio-scroll {
@@ -1395,20 +1402,12 @@
 		padding: 1rem; // tighter, equal on all 4 sides
 		border-radius: 16px;
 		background: rgba(255, 255, 255, 0.05);
-		// No visible white border at rest (removed per request) — the border is transparent
-		// so it takes no space, and only tints GOLD on hover (below) for the highlight.
+		// Transparent border keeps the box size stable; the card is inert — no hover/
+		// click/touch styling of any kind (gold hover border + lift removed per request).
 		border: 1px solid transparent;
 		overflow: hidden; // clip the sparkles to the card
-		cursor: pointer;
 		// Kill the blue flash mobile browsers paint on tap (default tap-highlight).
 		-webkit-tap-highlight-color: transparent;
-		transition:
-			transform 0.2s ease,
-			border-color 0.2s ease;
-		&:hover {
-			transform: translateY(-4px);
-			border-color: color.change($gold, $alpha: 0.5);
-		}
 	}
 	.pf-honour-top {
 		position: relative;
@@ -1952,9 +1951,6 @@
 			height: 148px;
 			padding: 1rem; // tighter, equal on all 4 sides
 			scroll-snap-align: start;
-			&:hover {
-				transform: none; // no hover lift on touch
-			}
 		}
 		.pf-honour-top {
 			min-height: 72px;
