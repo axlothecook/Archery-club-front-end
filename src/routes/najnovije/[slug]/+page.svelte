@@ -34,7 +34,25 @@
 
 	// Split the body on blank lines into readable paragraphs (FB text stores breaks
 	// as "\n\n"). Extra `images` (beyond the poster) render below the prose.
-	const rawParagraphs = $derived(splitParagraphs(article.body));
+	//
+	// FB posts open with their own headline, so the body's first line often repeats the
+	// article title — which the hero already shows. Drop that leading duplicate.
+	// Compared on a normalised key (markers, punctuation, spacing and case removed):
+	// the machine translations drift from the title (en-dash vs hyphen in de, an added
+	// "CEC - " prefix in es, a dropped one in zh, extra spaces in ko), so an exact match
+	// would only catch some locales. The length guard keeps a genuine opening paragraph
+	// that merely BEGINS with the title from being swallowed.
+	const titleKey = (s: string) => s.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+	const rawParagraphs = $derived.by(() => {
+		const paras = splitParagraphs(article.body);
+		const first = paras[0];
+		if (!first || first.includes('\n')) return paras;
+		const a = titleKey(first);
+		const b = titleKey(article.title ?? '');
+		if (!a || !b) return paras;
+		const echoesTitle = (a.includes(b) || b.includes(a)) && Math.abs(a.length - b.length) <= 12;
+		return echoesTitle ? paras.slice(1) : paras;
+	});
 
 	// Classify each paragraph so result listings render as readable ROWS under a bold
 	// section title (the body used to hold markdown tables; the backend now stores them
@@ -99,16 +117,28 @@
 		});
 	});
 
-	// Escape HTML, then: (1) turn markdown links [text](url) into gold <a> tags, and
-	// (2) colour any #hashtag word (supermarket blue). Rendered via {@html}. We escape
-	// first (the body is plain text) so only our own markup is ever injected; the URL
-	// is restricted to http(s) so the {@html} can't inject a javascript: link.
+	// The FB-sourced bodies carry markdown **bold** around the archers who medalled
+	// ("- **Alen Remar** - 1. mjesto") and around section headings. Turn it into real
+	// <strong> so the emphasis survives and the markers never show as literal text.
+	// Runs on ALREADY-ESCAPED html, and `[^*]+` can't span a marker, so it only ever
+	// wraps plain inner text.
+	function renderBold(html: string): string {
+		return html.replace(/\*\*([^*]+)\*\*/g, '<strong class="post-strong">$1</strong>');
+	}
+
+	// Escape HTML, then: (1) **bold** → <strong>, (2) turn markdown links [text](url)
+	// into gold <a> tags, and (3) colour any #hashtag word (supermarket blue). Rendered
+	// via {@html}. We escape first (the body is plain text) so only our own markup is
+	// ever injected; the URL is restricted to http(s) so the {@html} can't inject a
+	// javascript: link.
 	function renderPara(text: string): string {
 		let html = text
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;');
+
+		html = renderBold(html);
 
 		// [label](https://…) → <a class="post-link" href="…">label</a>
 		html = html.replace(
@@ -137,10 +167,12 @@
 	// embed a placement — e.g. "Recurve muškarci, 1. mjesto (1699)" — medal-colour the
 	// "N. mjesto" word; plain otherwise. Escaped first (own data), only our span added.
 	function renderTitle(text: string, colorMedals: boolean): string {
-		const esc = text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;');
+		const esc = renderBold(
+			text
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+		);
 		if (!colorMedals) return esc;
 		return esc.replace(/(\b[123]\.\s*mjesto)/g, (m) => {
 			const cls = medalClass(m);
@@ -152,11 +184,27 @@
 	// every archer gets a row (the rows stay tight together via the .post-rows styles).
 	// The part AFTER " - " is the placement (+ value); colour it by medal where the
 	// archer placed 1st/2nd/3rd.
+	// A **bold** pair that spans the " - " separator ("3. **Amanda Mlinarić - 940**")
+	// would be orphaned by the name/rest split below — each half gets one unpaired
+	// marker and renders as literal asterisks. Re-scope it to per-segment pairs first:
+	// "**A - B**" → "**A** - **B**".
+	function rescopeBoldAcrossSep(l: string): string {
+		return l.replace(/\*\*([^*]+)\*\*/g, (m, inner: string) =>
+			inner.includes(' - ')
+				? inner
+						.split(' - ')
+						.map((s) => (s.trim() ? `**${s}**` : s))
+						.join(' - ')
+				: m
+		);
+	}
+
 	function renderRows(text: string, colorMedals: boolean): string {
 		return text
 			.split('\n')
 			.map((l) => l.trim())
 			.filter((l) => l !== '')
+			.map((l) => rescopeBoldAcrossSep(l))
 			.map((l) => {
 				const sep = l.indexOf(' - ');
 				if (sep === -1) return `<span class="result-row">${renderPara(l)}</span>`;
@@ -612,10 +660,24 @@
 		line-height: 1.6; // standard paragraph line spacing (was a loose 1.8)
 	}
 	// Drop cap: enlarge the first letter of the opening paragraph.
+	// `flow-root` makes this paragraph contain its own float. Without it a SHORT opening
+	// paragraph (e.g. a two-line place/date line) is shorter than the ~3-line drop cap,
+	// so the float overhangs and indents the first lines of the NEXT paragraph.
+	.post-para:first-of-type {
+		display: flow-root;
+	}
+	// Medalled archers arrive from the FB source as **bold**, inside prose set at
+	// weight 300 — state the emphasis weight explicitly.
+	.post-strong {
+		font-weight: 700;
+	}
 	.post-para:first-of-type::first-letter {
 		float: left;
 		margin: 0.05em ($sp * 0.7) 0 0;
-		font-size: 5.6em;
+		// 4em ≈ a 3-line cap (the classic drop-cap height). The old 5.6em spanned 4.25
+		// lines — taller than most openers on this site (FB posts open with 2–4-line
+		// paragraphs), so the float overhung and left an empty gap below short openers.
+		font-size: 4em;
 		font-weight: 800;
 		line-height: 0.8;
 		color: $gold;
@@ -977,6 +1039,18 @@
 	// PHONE: weave the gallery images BETWEEN paragraphs (one after each) instead of
 	// the side column — so hide the aside's gallery and reveal the inline figures.
 	@media (max-width: 720px) {
+		// Cover: on desktop the frame is height-driven (top/bottom 0 + 3:2 ratio, blur
+		// showing either side). On a narrow screen that computed width overflows,
+		// max-width clamps it and the ratio collapses the frame into a short strip at
+		// the top — the band's lower half showed bare blur/gradient with the title on
+		// it. Let the sharp photo cover the WHOLE band instead (portrait centre crop),
+		// so the phone reads like desktop: photo behind, title over its lower part.
+		.post-hero-frame {
+			aspect-ratio: auto;
+			left: 0;
+			right: 0;
+			transform: none;
+		}
 		// Hide the aside's photo gallery on phone (images now appear inline between
 		// paragraphs). The "U ovom članku" archer cards in the aside stay.
 		.post-gallery {
