@@ -331,12 +331,6 @@ const hr: Dict = {
 	'nr.aria': 'Najnovije vijesti',
 	'nr.tag': 'Najnovije',
 
-	// ── SponsorInquiryModal ───────────────────────────────────────────────────
-	'sm.close': 'Zatvori',
-	'sm.title': 'Postanite naš partner',
-	'sm.sub': 'Ostavite svoje podatke i naš tim će vas kontaktirati u vezi mogućnosti suradnje.',
-	'sm.interestPlaceholder': 'npr. oprema, dresovi, sufinanciranje natjecanja',
-
 	// ── NewsCoverflow arrows ──────────────────────────────────────────────────
 	'cf.prev': 'Prethodna vijest',
 	'cf.next': 'Sljedeća vijest',
@@ -727,12 +721,6 @@ const en: Dict = {
 	'nr.headingRest': 'news',
 	'nr.aria': 'Latest news',
 	'nr.tag': 'Latest',
-
-	// ── SponsorInquiryModal ───────────────────────────────────────────────────
-	'sm.close': 'Close',
-	'sm.title': 'Become our partner',
-	'sm.sub': 'Leave your details and our team will contact you about partnership opportunities.',
-	'sm.interestPlaceholder': 'e.g. equipment, jerseys, co-funding competitions',
 
 	// ── NewsCoverflow arrows ──────────────────────────────────────────────────
 	'cf.prev': 'Previous article',

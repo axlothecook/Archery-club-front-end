@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { SponsorResolved } from 'archery-contracts';
 	import Seo from '$lib/components/Seo.svelte';
-	import SponsorInquiryModal from '$lib/components/SponsorInquiryModal.svelte';
 	import SectionExplore from '$lib/components/SectionExplore.svelte';
 	import Flourish from '$lib/components/Flourish.svelte';
 	import { t } from '$lib/i18n';
@@ -14,7 +13,6 @@
 		'https://images.axlothecook.com/archery/achivements/sponsors-cover.jpg';
 
 	let heroLoaded = $state(false);
-	let inquiryOpen = $state(false);
 
 	// Each description ENDS with "...posjetite <host>." (e.g. "lasercopy.hr").
 	// Turn that host, in place, into the clickable website link — so the link is
@@ -64,9 +62,12 @@
 		<div class="sp-hero-inner">
 			<h1 class="sp-hero-title">{t(locale, 'spon.title')}</h1>
 			<p class="sp-hero-text">{t(locale, 'spon.heroText')}</p>
-			<button class="sp-hero-cta" type="button" onclick={() => (inquiryOpen = true)}>
+			<!-- Deep-links to the sponsor inquiry form on /kontakt (?vrsta=sponzorstvo
+			     selects the Sponzorstvo tab), same as the footer's sponsorship link —
+			     one canonical form instead of a duplicate popup on this page. -->
+			<a class="sp-hero-cta" href="/kontakt?vrsta=sponzorstvo">
 				{t(locale, 'spon.join')}
-			</button>
+			</a>
 		</div>
 	</header>
 
@@ -108,8 +109,6 @@
 	<div class="sp-flourish"><Flourish /></div>
 	<SectionExplore />
 </div>
-
-<SponsorInquiryModal bind:open={inquiryOpen} />
 
 <style lang="scss">
 	@use 'axlothecook-sass-library/sass-library/variables' as lib;
@@ -188,6 +187,10 @@
 		line-height: 1.6;
 	}
 	.sp-hero-cta {
+		// It's an <a> now (deep-links to the /kontakt sponsor form), so give it the
+		// button box + drop the underline — visually identical to the old <button>.
+		display: inline-block;
+		text-decoration: none;
 		padding: ($sp * 0.85) ($sp * 2.5);
 		font: inherit;
 		font-weight: 700;
