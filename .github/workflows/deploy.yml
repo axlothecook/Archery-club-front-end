@@ -1,8 +1,11 @@
 # Build the archery FRONTEND image (arm64), publish to GHCR, then deploy to the Pi.
 # Mirrors the create-resume/game-shop pipeline. Runs on every push to main.
-#   1. build-and-push — build linux/arm64 with the same-origin API base baked in,
+#   1. test           — typecheck + unit tests; the gate that stops a broken build
+#      reaching prod (a push to main goes straight to the Pi). Mirrors the backend/
+#      dashboard gate.
+#   2. build-and-push — build linux/arm64 with the same-origin API base baked in,
 #      push ghcr.io/axlothecook/archery-club-frontend:latest
-#   2. deploy-to-pi    — join the tailnet, SSH to the Pi, pull + restart the stack.
+#   3. deploy-to-pi    — join the tailnet, SSH to the Pi, pull + restart the stack.
 name: Build, publish, and deploy frontend
 
 on:
@@ -15,7 +18,44 @@ permissions:
   packages: write
 
 jobs:
+  # Gate: typecheck + unit tests must pass BEFORE we build/deploy. The frontend
+  # tests are node-only (no DB, no browser), so this is a lightweight gate —
+  # unlike the backend's, it needs no Postgres service.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          path: Archery-club-front-end
+
+      # archery-contracts is a `file:../Archery-contracts` sibling (types-only).
+      # npm ci needs it checked out next door to resolve the link.
+      - name: Checkout archery-contracts (sibling dep)
+        uses: actions/checkout@v5
+        with:
+          repository: axlothecook/Archery-contracts
+          path: Archery-contracts
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        working-directory: Archery-club-front-end
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: Archery-club-front-end
+        run: npm run check
+
+      - name: Unit tests
+        working-directory: Archery-club-front-end
+        run: npm run test:unit
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
