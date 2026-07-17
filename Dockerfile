@@ -2,18 +2,14 @@
 # Built by CI for linux/arm64 (the Pi) and pushed to GHCR; the Pi only pulls.
 #
 # adapter-node produces a self-contained Node server in /app/build, run with
-# `node build`. The public API base URL is a BUILD-TIME SvelteKit public env
-# (PUBLIC_API_BASE_URL) — it's baked into the client bundle, so it must be passed
-# as a build ARG (CI sets it to https://archery.axlothecook.com/api). The reverse
-# proxy serves the SPA at / and proxies /api/* to the backend (same origin).
+# `node build`. The public API base URL (PUBLIC_API_BASE_URL) is read at RUNTIME
+# via $env/dynamic/public (src/lib/api.ts) — nothing is baked at build time; the
+# compose service sets it as an env var (same-origin /api). The reverse proxy
+# serves the app at / and proxies /api/* to the backend (same origin).
 
 # ---- build stage ----
 FROM node:24-slim AS build
 WORKDIR /app
-
-# Baked-in public API base (same-origin /api in prod). Default keeps local builds working.
-ARG PUBLIC_API_BASE_URL=https://archery.axlothecook.com/api
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 COPY package*.json ./
 RUN npm ci
