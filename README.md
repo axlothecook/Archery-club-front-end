@@ -15,7 +15,6 @@ The public website of the archery club, built with SvelteKit, rendered via SSR. 
   <li>Croatian + English, switchable via a cookie-driven language toggle</li>
 </ul>
 <br />
-<br />
 
 ## Data flow
 The diagram shows how a page gets its data. Every page renders on the server first: the route loader asks the backend for data in the visitor's language, either Croatian or English (for now). If the backend is unreachable, the loader falls back to empty data, so the page still renders, just with no content.
@@ -34,7 +33,6 @@ The styling highlights and the tools used to create them:
   <li><b>Page transition:</b> a custom full-screen wipe overlay in the root layout using Svelte state and CSS</li>
   <li><b>Animation on scroll:</b> my own `reveal` Svelte action (IntersectionObserver) with CSS transitions</li>
 </ul>
-<br />
 <br />
 
 ## Testing
