@@ -14,13 +14,15 @@ The public website of the archery club, built with SvelteKit, rendered via SSR. 
   <li>fully responsive, with a dedicated mobile pass across every page</li>
   <li>Croatian + English, switchable via a cookie-driven language toggle</li>
 </ul>
-
+<br />
+<br />
 
 ## Data flow
 The diagram shows how a page gets its data. Every page renders on the server first: the route loader asks the backend for data in the visitor's language, either Croatian or English (for now). If the backend is unreachable, the loader falls back to empty data, so the page still renders, just with no content.
 
-// graph goes here
-
+![image](https://github.com/user-attachments/assets/fda7d352-c219-403c-8f01-aaf1ad977a5d)
+<br />
+<br />
 
 ## Styling
 The styling highlights and the tools used to create them:
@@ -32,11 +34,13 @@ The styling highlights and the tools used to create them:
   <li><b>Page transition:</b> a custom full-screen wipe overlay in the root layout using Svelte state and CSS</li>
   <li><b>Animation on scroll:</b> my own `reveal` Svelte action (IntersectionObserver) with CSS transitions</li>
 </ul>
-
+<br />
+<br />
 
 ## Testing
 The date and calendar logic and the route loaders are covered by 17 unit tests. They run in CI together with the type check before every deploy; if any fail, nothing gets deployed. The deployment pipeline itself is explained in [homelab-ci-cd](https://github.com/axlothecook/homelab-ci-cd).
-
+<br />
+<br />
 
 ## Tech stack
 [SvelteKit 2](https://svelte.dev/docs/kit) / [Svelte 5 (runes)](https://svelte.dev): whole app; runes forced project-wide <br />
@@ -49,7 +53,8 @@ i18n: cookie-driven HR/EN switching of all text on the website <br />
 [Vite 8](https://vite.dev): used for building and development server <br />
 [flag-icons](https://github.com/lipis/flag-icons): the individual country flag icons in the language switcher <br />
 [@fontsource/inter](https://fontsource.org/fonts/inter): fonts used in public site and dashboard
-
+<br />
+<br />
 
 ## Shared types
 The TypeScript data shapes shared with the backend come from [archery-contracts](https://github.com/axlothecook/Archery-contracts), imported as a local file dependency.
