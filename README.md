@@ -19,7 +19,7 @@ The public website of the archery club, built with SvelteKit, rendered via SSR. 
 ## Data flow
 The diagram shows how a page gets its data. Every page renders on the server first: the route loader asks the backend for data in the visitor's language, either Croatian or English (for now). If the backend is unreachable, the loader falls back to empty data, so the page still renders, just with no content.
 
-![image](https://github.com/user-attachments/assets/fda7d352-c219-403c-8f01-aaf1ad977a5d)
+![image](https://github.com/user-attachments/assets/c7c99125-ce24-472c-b3f9-1d2bec712760)
 <br />
 <br />
 
